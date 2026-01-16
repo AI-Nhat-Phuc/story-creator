@@ -75,10 +75,8 @@ def test_storage():
     """Test storage functionality."""
     print("\nTesting storage...")
     
-    # Create temporary directory
-    temp_dir = tempfile.mkdtemp()
-    
-    try:
+    # Use context manager for temporary directory
+    with tempfile.TemporaryDirectory() as temp_dir:
         storage = Storage(temp_dir)
         
         # Test world storage
@@ -103,10 +101,6 @@ def test_storage():
         assert len(stories) == 1
         
         print("✅ Storage passed")
-        
-    finally:
-        # Clean up
-        shutil.rmtree(temp_dir)
 
 
 def test_generators():

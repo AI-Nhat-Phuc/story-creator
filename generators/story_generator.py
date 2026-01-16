@@ -140,7 +140,7 @@ class StoryGenerator:
                 # Get the next few words
                 remaining = prompt[idx:].split()
                 if remaining:
-                    return " ".join(remaining[:5]).strip('.,!?"')
+                    return " ".join(remaining[:5]).strip('.,!?\'"')
         
         return None
     
