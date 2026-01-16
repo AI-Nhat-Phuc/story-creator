@@ -3,7 +3,8 @@
 # NoSQL Database for improved performance
 tinydb>=4.8.0
 
-# GPT-4 Integration for AI features
+# GPT-4o Integration for AI features (upgraded from GPT-4 Turbo)
+# Latest multimodal model with improved performance and lower cost
 openai>=1.0.0
 
 # For GUI interface (usually comes with Python)
