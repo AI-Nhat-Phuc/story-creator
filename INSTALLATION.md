@@ -7,7 +7,7 @@
 3. [Cấu hình](#cấu-hình)
 4. [Sử dụng cơ bản](#sử-dụng-cơ-bản)
 5. [Sử dụng nâng cao](#sử-dụng-nâng-cao)
-6. [Tính năng GPT-4o](#tính-năng-gpt-4o)
+6. [Tính năng GPT-5 Mini](#tính-năng-gpt-5-mini)
 7. [Xử lý sự cố](#xử-lý-sự-cố)
 
 ---
@@ -111,11 +111,11 @@ python test.py
 
 ## ⚙️ Cấu Hình
 
-### Cấu hình cơ bản (Không cần GPT-4o)
+### Cấu hình cơ bản (Không cần GPT-5 Mini)
 
 Không cần cấu hình gì thêm. Có thể sử dụng ngay!
 
-### Cấu hình GPT-4o (Tùy chọn - Upgraded từ GPT-4 Turbo)
+### Cấu hình GPT-5 Mini (Tùy chọn - Upgraded từ GPT-4o)
 
 #### Bước 1: Lấy API Key
 
@@ -261,7 +261,7 @@ python demo.py
 # Demo NoSQL
 python demo_nosql.py
 
-# Demo GPT-4o (cần API key - phản hồi nhanh hơn GPT-4 Turbo)
+# Demo GPT-5 Mini (cần API key - model mới nhất, hiệu suất tối ưu)
 python demo_gpt_simulation.py
 ```
 
@@ -334,9 +334,9 @@ tar -xzf backup_20260116.tar.gz
 
 ---
 
-## 🤖 Tính Năng GPT-4o
+## 🤖 Tính Năng GPT-5 Mini
 
-**⚡ Mới**: Đã nâng cấp từ GPT-4 Turbo lên GPT-4o - Phản hồi nhanh hơn, chất lượng cao hơn, chi phí thấp hơn!
+**⚡ Mới**: Đã nâng cấp lên GPT-5 Mini (2025-08-07) - Model mới nhất với hiệu suất tối ưu, chất lượng cao và chi phí thấp!
 
 ### Cài đặt và cấu hình
 
@@ -410,7 +410,7 @@ Tất cả văn bản tự động dịch sang tiếng Việt và lưu trong dat
 
 ### AI Decision Making
 
-Nhân vật không điều khiển sẽ có GPT-4o quyết định dựa trên:
+Nhân vật không điều khiển sẽ có GPT-5 Mini quyết định dựa trên:
 - Tính cách nhân vật
 - Thuộc tính (Strength, Intelligence, etc.)
 - Ngữ cảnh câu chuyện
@@ -437,7 +437,7 @@ pip install tinydb openai
 # Thiết lập API key
 export OPENAI_API_KEY='sk-your-key'
 
-# Hoặc chạy không cần GPT-4o
+# Hoặc chạy không cần GPT-5 Mini
 python main.py -i terminal  # Không simulation
 ```
 
@@ -485,13 +485,13 @@ python main.py -s nosql
 # Chọn 3 thay vì 10
 ```
 
-### GPT-4o timeout
+### GPT-5 Mini timeout
 
 **Lỗi**: `Request timeout`
 
 **Giải pháp**:
 1. Kiểm tra kết nối internet
-2. GPT-4o thường nhanh hơn, nhưng nếu timeout vẫn xảy ra:
+2. GPT-5 Mini thường nhanh hơn, nhưng nếu timeout vẫn xảy ra:
 3. Thử lại sau vài phút
 4. Chạy demo không cần GPT:
 ```bash

@@ -35,7 +35,7 @@ try:
 
     # Gửi request đơn giản
     response = client.chat.completions.create(
-        model="gpt-4o-mini",  # Dùng model rẻ hơn để test
+        model="gpt-5-mini-2025-08-07",  # Dùng model mới nhất để test
         messages=[
             {"role": "user", "content": "Say 'API test successful' in Vietnamese"}
         ],

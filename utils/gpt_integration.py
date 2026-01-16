@@ -1,4 +1,4 @@
-"""GPT-4o integration for story creator system."""
+"""GPT-5 Mini integration for story creator system."""
 
 import os
 from typing import Dict, Any, List, Optional
@@ -9,7 +9,7 @@ except ImportError:
 
 
 class GPTIntegration:
-    """Handles GPT-4o integration for translation and character simulation."""
+    """Handles GPT-5 Mini integration for translation and character simulation."""
 
     def __init__(self, api_key: Optional[str] = None):
         """
@@ -26,8 +26,8 @@ class GPTIntegration:
             raise ValueError("OpenAI API key required. Set OPENAI_API_KEY env var or pass api_key parameter.")
 
         self.client = OpenAI(api_key=self.api_key)
-        # Using GPT-4o - Latest multimodal model with improved performance and lower cost
-        # Upgraded from gpt-4-turbo-preview for better quality and faster responses
+        # Using GPT-5 Mini - Latest efficient model with excellent quality and low cost
+        # Upgraded from gpt-4o for even better performance
         self.model = "gpt-5-mini-2025-08-07"
 
     def translate_eng_to_vn(self, text: str) -> str:

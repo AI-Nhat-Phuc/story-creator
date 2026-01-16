@@ -1,6 +1,6 @@
 # Story Creator
 
-Dự án tạo thế giới và câu chuyện bằng Python với giao diện trực quan, database NoSQL, và tích hợp GPT-4o cho mô phỏng nhân vật.
+Dự án tạo thế giới và câu chuyện bằng Python với giao diện trực quan, database NoSQL, và tích hợp GPT-5 Mini cho mô phỏng nhân vật.
 
 ## Tính năng
 
@@ -32,17 +32,17 @@ Dự án tạo thế giới và câu chuyện bằng Python với giao diện tr
   - Conflict → Historical World
   - Discovery → Sci-Fi World
 
-### 🎮 GPT-4o Interactive Simulation Mode
-- 🤖 **Tích hợp GPT-4o** (Upgraded from GPT-4 Turbo) để tự động dịch thuật ENG→VN
+### 🎮 GPT-5 Mini Interactive Simulation Mode
+- 🤖 **Tích hợp GPT-5 Mini** (Upgraded from GPT-4o) để tự động dịch thuật ENG→VN
 - 💾 Lưu kết quả dịch thuật vào database và ánh xạ vào câu chuyện
 - 👤 **Giả lập là nhân vật** trong câu chuyện
 - 📚 Đọc câu chuyện của nhân vật một cách liên mạch theo thứ tự thời gian nón ánh sáng
 - ⚔️ Lựa chọn hành động của nhân vật tại các thời điểm trong nón ánh sáng
   - 3 lựa chọn: 2 đối nghịch + 1 từ bỏ
-- 🤖 Nhân vật không được giả lập sẽ được GPT-4o lựa chọn tự động
+- 🤖 Nhân vật không được giả lập sẽ được GPT-5 Mini lựa chọn tự động
 - ⏱️ Mỗi nhân vật có tiến trình xử lý riêng và chung 1 dòng thời gian
 - 🔮 Dự đoán tình huống xảy ra từ câu chuyện và sự liên kết của các nhân vật
-- ⚡ **Hiệu suất cải thiện**: Phản hồi nhanh hơn và chi phí thấp hơn so với GPT-4 Turbo
+- ⚡ **Hiệu suất tối ưu**: Model mới nhất với chất lượng cao và chi phí thấp
 
 ### User Interfaces
 - 🖥️ Giao diện Terminal (TUI) trực quan
@@ -59,7 +59,7 @@ cd story-creator
 # Cài đặt dependencies
 pip install -r requirements.txt
 
-# (Optional) Set OpenAI API key for GPT-4o features
+# (Optional) Set OpenAI API key for GPT-5 Mini features
 export OPENAI_API_KEY='your-api-key-here'
 ```
 
@@ -73,7 +73,7 @@ python main.py -i terminal -s nosql
 python main.py
 ```
 
-### 🎮 Chế độ Simulation (GPT-4o Interactive)
+### 🎮 Chế độ Simulation (GPT-5 Mini Interactive)
 
 ```bash
 # Requires OPENAI_API_KEY environment variable

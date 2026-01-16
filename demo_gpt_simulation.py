@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Demo script for GPT-4o integrated simulation mode."""
+"""Demo script for GPT-5 Mini integrated simulation mode."""
 
 import os
 from models import World, Story, Entity, Location, TimeCone
@@ -16,7 +16,7 @@ def print_section(title):
 
 def main():
     """Run the GPT integration demo."""
-    print_section("STORY CREATOR - GPT-4o SIMULATION DEMO")
+    print_section("STORY CREATOR - GPT-5 MINI SIMULATION DEMO")
     
     # Check for API key
     api_key = os.getenv("OPENAI_API_KEY")
@@ -29,9 +29,9 @@ def main():
         print("✅ OpenAI API key found")
         try:
             gpt = GPTIntegration(api_key)
-            print("✅ GPT-4o integration initialized (upgraded from GPT-4 Turbo)")
+            print("✅ GPT-5 Mini integration initialized (upgraded from GPT-4o)")
         except Exception as e:
-            print(f"❌ GPT-4o initialization failed: {e}")
+            print(f"❌ GPT-5 Mini initialization failed: {e}")
             gpt = None
     
     # Initialize storage
