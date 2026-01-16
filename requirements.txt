@@ -3,6 +3,9 @@
 # NoSQL Database for improved performance
 tinydb>=4.8.0
 
+# GPT-4 Integration for AI features
+openai>=1.0.0
+
 # For GUI interface (usually comes with Python)
 # tkinter - included in most Python installations
 

@@ -2,7 +2,7 @@
 Story Creator - Trình tạo thế giới và câu chuyện
 
 Main entry point for the story creator application.
-Provides both terminal and GUI interfaces.
+Provides both terminal and GUI interfaces, plus character simulation mode.
 """
 
 import sys
@@ -17,9 +17,9 @@ def main():
     parser.add_argument(
         "--interface",
         "-i",
-        choices=["terminal", "gui"],
+        choices=["terminal", "gui", "simulation"],
         default="terminal",
-        help="Chọn giao diện: terminal hoặc gui (mặc định: terminal)"
+        help="Chọn giao diện: terminal, gui, hoặc simulation (mặc định: terminal)"
     )
     parser.add_argument(
         "--data-dir",
@@ -42,7 +42,11 @@ def main():
     
     args = parser.parse_args()
     
-    if args.interface == "gui":
+    if args.interface == "simulation":
+        # Character simulation mode
+        from interfaces.simulation_interface import main as sim_main
+        sim_main()
+    elif args.interface == "gui":
         from interfaces.gui_interface import GUIInterface
         app = GUIInterface(
             data_dir=args.data_dir,

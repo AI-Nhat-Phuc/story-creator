@@ -1,9 +1,10 @@
 # Story Creator
 
-Dự án tạo thế giới và câu chuyện bằng Python với giao diện trực quan và database NoSQL.
+Dự án tạo thế giới và câu chuyện bằng Python với giao diện trực quan, database NoSQL, và tích hợp GPT-4 cho mô phỏng nhân vật.
 
 ## Tính năng
 
+### Core Features
 - ✨ Tạo thế giới (worlds) theo các thể loại: Fantasy, Sci-Fi, Modern, Historical
 - 📖 Tạo câu chuyện (stories) với nhiều thể loại khác nhau
 - 📍 Quản lý địa điểm (locations) trong thế giới
@@ -12,8 +13,22 @@ Dự án tạo thế giới và câu chuyện bằng Python với giao diện tr
 - 🔗 Liên kết các câu chuyện với nhau theo thực thể, địa điểm, và thời gian
 - 💾 Lưu trữ dữ liệu: **NoSQL Database (TinyDB)** hoặc JSON files
 - ⚡ **Hiệu suất cao** với NoSQL database (mặc định)
+
+### 🎮 NEW: GPT-4 Interactive Simulation Mode
+- 🤖 **Tích hợp GPT-4.1** để tự động dịch thuật ENG→VN
+- 💾 Lưu kết quả dịch thuật vào database và ánh xạ vào câu chuyện
+- 👤 **Giả lập là nhân vật** trong câu chuyện
+- 📚 Đọc câu chuyện của nhân vật một cách liên mạch theo thứ tự thời gian nón ánh sáng
+- ⚔️ Lựa chọn hành động của nhân vật tại các thời điểm trong nón ánh sáng
+  - 3 lựa chọn: 2 đối nghịch + 1 từ bỏ
+- 🤖 Nhân vật không được giả lập sẽ được GPT-4 lựa chọn tự động
+- ⏱️ Mỗi nhân vật có tiến trình xử lý riêng và chung 1 dòng thời gian
+- 🔮 Dự đoán tình huống xảy ra từ câu chuyện và sự liên kết của các nhân vật
+
+### User Interfaces
 - 🖥️ Giao diện Terminal (TUI) trực quan
 - 🎨 Giao diện đồ họa (GUI) với tkinter
+- 🎮 **Giao diện Simulation (Interactive Character Mode)**
 
 ## Cài đặt
 
@@ -24,6 +39,9 @@ cd story-creator
 
 # Cài đặt dependencies
 pip install -r requirements.txt
+
+# (Optional) Set OpenAI API key for GPT-4 features
+export OPENAI_API_KEY='your-api-key-here'
 ```
 
 ## Sử dụng
@@ -34,6 +52,16 @@ pip install -r requirements.txt
 python main.py -i terminal -s nosql
 # hoặc đơn giản (NoSQL là mặc định)
 python main.py
+```
+
+### 🎮 Chế độ Simulation (GPT-4 Interactive)
+
+```bash
+# Requires OPENAI_API_KEY environment variable
+python main.py -i simulation
+
+# Or run the demo
+python demo_gpt_simulation.py
 ```
 
 ### Giao diện GUI với NoSQL
@@ -253,11 +281,74 @@ Hệ thống sử dụng các thuật toán logic để liên kết các câu ch
 - Dataset nhỏ (<100 records)
 - Không quan tâm performance
 
+## 🎮 GPT-4 Simulation Mode Features
+
+### Interactive Character Simulation
+
+Chế độ simulation cho phép bạn:
+
+1. **Tự động dịch thuật (ENG→VN)**
+   - GPT-4 tự động dịch tất cả văn bản từ Tiếng Anh sang Tiếng Việt
+   - Kết quả dịch được lưu vào database
+   - Ánh xạ vào câu chuyện đã tạo và sắp tạo
+
+2. **Giả lập nhân vật**
+   - Chọn một nhân vật để điều khiển
+   - Đọc câu chuyện theo góc nhìn của nhân vật đó
+   - Thứ tự theo nón ánh sáng thời gian (light cone chronology)
+
+3. **Lựa chọn tương tác**
+   - Tại mỗi thời điểm quan trọng, chọn hành động cho nhân vật
+   - 3 lựa chọn được tạo tự động:
+     - **A**: Hành động chính
+     - **B**: Hành động đối nghịch
+     - **C**: Từ bỏ/Rút lui
+   
+4. **AI điều khiển nhân vật phụ**
+   - Nhân vật không được điều khiển sẽ có GPT-4 quyết định
+   - Dựa trên tính cách và thuộc tính của nhân vật
+   
+5. **Timeline riêng biệt**
+   - Mỗi nhân vật có tiến trình xử lý riêng
+   - Tất cả chia sẻ một dòng thời gian chung
+   - Đồng bộ hóa qua global time index
+
+6. **Dự đoán tình huống**
+   - GPT-4 dự đoán tình huống tiếp theo
+   - Dựa trên câu chuyện và quyết định của các nhân vật
+   - Liên kết logic giữa các sự kiện
+
+### Ví dụ Sử dụng
+
+```bash
+# Set API key
+export OPENAI_API_KEY='sk-...'
+
+# Start simulation mode
+python main.py -i simulation
+
+# Follow the prompts to:
+# 1. Select a world
+# 2. Choose your character
+# 3. Enable/disable auto-translation
+# 4. Make decisions at key moments
+# 5. Watch the story unfold
+```
+
+### Demo Simulation
+
+```bash
+# Run full demo (works without API key in limited mode)
+python demo_gpt_simulation.py
+```
+
 ## Yêu cầu hệ thống
 
 - Python 3.7 trở lên
 - TinyDB >= 4.8.0 (cài tự động với pip install -r requirements.txt)
+- OpenAI >= 1.0.0 (cho GPT-4 features)
 - tkinter (thường đi kèm với Python, cho GUI)
+- **OpenAI API Key** (cho simulation mode với GPT-4)
 
 ## License
 
