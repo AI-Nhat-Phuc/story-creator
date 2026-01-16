@@ -292,33 +292,37 @@ class TerminalInterface:
         if edit_choice == 'y':
             print("\nNhập giá trị mới (Enter để giữ nguyên):")
             
-            new_people = input(f"Số người [{config['num_people']}]: ").strip()
-            if new_people:
-                config['num_people'] = int(new_people)
-            
-            new_forests = input(f"Có rừng (y/n) [{'y' if config['has_forests'] else 'n'}]: ").strip().lower()
-            if new_forests:
-                config['has_forests'] = new_forests == 'y'
-            
-            new_rivers = input(f"Số sông [{config['num_rivers']}]: ").strip()
-            if new_rivers:
-                config['num_rivers'] = int(new_rivers)
-            
-            new_lakes = input(f"Số hồ [{config['num_lakes']}]: ").strip()
-            if new_lakes:
-                config['num_lakes'] = int(new_lakes)
-            
-            new_river_danger = input(f"Mức độ nguy hiểm sông (0-10) [{config['river_danger']}]: ").strip()
-            if new_river_danger:
-                config['river_danger'] = int(new_river_danger)
-            
-            new_forest_danger = input(f"Mức độ nguy hiểm rừng (0-10) [{config['forest_danger']}]: ").strip()
-            if new_forest_danger:
-                config['forest_danger'] = int(new_forest_danger)
-            
-            new_lake_danger = input(f"Mức độ nguy hiểm hồ (0-10) [{config['lake_danger']}]: ").strip()
-            if new_lake_danger:
-                config['lake_danger'] = int(new_lake_danger)
+            try:
+                new_people = input(f"Số người [{config['num_people']}]: ").strip()
+                if new_people:
+                    config['num_people'] = int(new_people)
+                
+                new_forests = input(f"Có rừng (y/n) [{'y' if config['has_forests'] else 'n'}]: ").strip().lower()
+                if new_forests:
+                    config['has_forests'] = new_forests == 'y'
+                
+                new_rivers = input(f"Số sông [{config['num_rivers']}]: ").strip()
+                if new_rivers:
+                    config['num_rivers'] = int(new_rivers)
+                
+                new_lakes = input(f"Số hồ [{config['num_lakes']}]: ").strip()
+                if new_lakes:
+                    config['num_lakes'] = int(new_lakes)
+                
+                new_river_danger = input(f"Mức độ nguy hiểm sông (0-10) [{config['river_danger']}]: ").strip()
+                if new_river_danger:
+                    config['river_danger'] = max(0, min(10, int(new_river_danger)))
+                
+                new_forest_danger = input(f"Mức độ nguy hiểm rừng (0-10) [{config['forest_danger']}]: ").strip()
+                if new_forest_danger:
+                    config['forest_danger'] = max(0, min(10, int(new_forest_danger)))
+                
+                new_lake_danger = input(f"Mức độ nguy hiểm hồ (0-10) [{config['lake_danger']}]: ").strip()
+                if new_lake_danger:
+                    config['lake_danger'] = max(0, min(10, int(new_lake_danger)))
+            except ValueError as e:
+                print(f"\n⚠️ Giá trị không hợp lệ: {e}. Sử dụng cấu hình hiện tại.")
+                return
             
             # Regenerate world with new config
             print("\n🔄 Đang tạo lại thế giới với cấu hình mới...")

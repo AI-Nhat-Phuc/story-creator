@@ -533,8 +533,6 @@ class GUIInterface:
     
     def create_auto_story_world(self) -> None:
         """Handle auto-generation of world and story."""
-        import random as rnd
-        
         genre = self.auto_genre_var.get()
         description = self.auto_story_desc_text.get("1.0", tk.END).strip()
         

@@ -441,7 +441,12 @@ class WorldGenerator:
             name = f"Dangerous {creature_type.title()} {i + 1}"
             
             # Higher danger means stronger creatures
-            avg_danger = total_danger / max(1, (has_forests + (num_rivers > 0) + (num_lakes > 0)))
+            # Calculate average danger only if there are dangerous areas
+            num_dangerous_areas = int(has_forests) + int(num_rivers > 0) + int(num_lakes > 0)
+            if num_dangerous_areas > 0 and total_danger > 0:
+                avg_danger = total_danger / num_dangerous_areas
+            else:
+                avg_danger = 1  # Minimum danger if somehow we have creatures with no danger
             
             entity = Entity(
                 name=name,
