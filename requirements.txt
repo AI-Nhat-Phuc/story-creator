@@ -1,0 +1,15 @@
+# Story Creator Requirements
+# No external dependencies required - uses only Python standard library
+# Minimum Python version: 3.7
+
+# For GUI interface (usually comes with Python)
+# tkinter - included in most Python installations
+
+# Standard library modules used:
+# - json
+# - uuid
+# - datetime
+# - pathlib
+# - typing
+# - argparse
+# - random
