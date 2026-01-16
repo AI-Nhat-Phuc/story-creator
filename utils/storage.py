@@ -1,7 +1,6 @@
 """Storage utilities for managing JSON files."""
 
 import json
-import os
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 
