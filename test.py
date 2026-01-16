@@ -2,7 +2,6 @@
 """Test script to verify all functionality."""
 
 import sys
-import os
 import tempfile
 import shutil
 from models import World, Story, Location, Entity, TimeCone

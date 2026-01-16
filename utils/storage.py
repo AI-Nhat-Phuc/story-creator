@@ -142,7 +142,15 @@ class Storage:
         return stories
     
     def save_location(self, location_data: Dict[str, Any]) -> str:
-        """Save a location to a JSON file."""
+        """
+        Save a location to a JSON file.
+        
+        Args:
+            location_data: Location data dictionary
+            
+        Returns:
+            Path to the saved file
+        """
         location_id = location_data["location_id"]
         file_path = self.data_dir / "locations" / f"{location_id}.json"
         
@@ -152,7 +160,15 @@ class Storage:
         return str(file_path)
     
     def load_location(self, location_id: str) -> Optional[Dict[str, Any]]:
-        """Load a location from a JSON file."""
+        """
+        Load a location from a JSON file.
+        
+        Args:
+            location_id: Location ID
+            
+        Returns:
+            Location data dictionary or None if not found
+        """
         file_path = self.data_dir / "locations" / f"{location_id}.json"
         
         if not file_path.exists():
@@ -162,7 +178,15 @@ class Storage:
             return json.load(f)
     
     def save_entity(self, entity_data: Dict[str, Any]) -> str:
-        """Save an entity to a JSON file."""
+        """
+        Save an entity to a JSON file.
+        
+        Args:
+            entity_data: Entity data dictionary
+            
+        Returns:
+            Path to the saved file
+        """
         entity_id = entity_data["entity_id"]
         file_path = self.data_dir / "entities" / f"{entity_id}.json"
         
@@ -172,7 +196,15 @@ class Storage:
         return str(file_path)
     
     def load_entity(self, entity_id: str) -> Optional[Dict[str, Any]]:
-        """Load an entity from a JSON file."""
+        """
+        Load an entity from a JSON file.
+        
+        Args:
+            entity_id: Entity ID
+            
+        Returns:
+            Entity data dictionary or None if not found
+        """
         file_path = self.data_dir / "entities" / f"{entity_id}.json"
         
         if not file_path.exists():
@@ -182,7 +214,15 @@ class Storage:
             return json.load(f)
     
     def save_time_cone(self, time_cone_data: Dict[str, Any]) -> str:
-        """Save a time cone to a JSON file."""
+        """
+        Save a time cone to a JSON file.
+        
+        Args:
+            time_cone_data: Time cone data dictionary
+            
+        Returns:
+            Path to the saved file
+        """
         time_cone_id = time_cone_data["time_cone_id"]
         file_path = self.data_dir / "time_cones" / f"{time_cone_id}.json"
         
@@ -192,7 +232,15 @@ class Storage:
         return str(file_path)
     
     def load_time_cone(self, time_cone_id: str) -> Optional[Dict[str, Any]]:
-        """Load a time cone from a JSON file."""
+        """
+        Load a time cone from a JSON file.
+        
+        Args:
+            time_cone_id: Time cone ID
+            
+        Returns:
+            Time cone data dictionary or None if not found
+        """
         file_path = self.data_dir / "time_cones" / f"{time_cone_id}.json"
         
         if not file_path.exists():
@@ -202,7 +250,15 @@ class Storage:
             return json.load(f)
     
     def delete_world(self, world_id: str) -> bool:
-        """Delete a world file."""
+        """
+        Delete a world file.
+        
+        Args:
+            world_id: World ID
+            
+        Returns:
+            True if deleted, False if not found
+        """
         file_path = self.data_dir / "worlds" / f"{world_id}.json"
         
         if file_path.exists():
@@ -211,7 +267,15 @@ class Storage:
         return False
     
     def delete_story(self, story_id: str) -> bool:
-        """Delete a story file."""
+        """
+        Delete a story file.
+        
+        Args:
+            story_id: Story ID
+            
+        Returns:
+            True if deleted, False if not found
+        """
         file_path = self.data_dir / "stories" / f"{story_id}.json"
         
         if file_path.exists():
