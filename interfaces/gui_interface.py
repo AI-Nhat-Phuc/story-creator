@@ -5,20 +5,34 @@ from tkinter import ttk, scrolledtext, messagebox
 from typing import Optional, List
 from models import World, Story
 from generators import WorldGenerator, StoryGenerator, StoryLinker
-from utils import Storage
+from utils import Storage, NoSQLStorage
 
 
 class GUIInterface:
     """Graphical user interface for creating and managing worlds and stories."""
     
-    def __init__(self, data_dir: str = "data"):
+    def __init__(
+        self,
+        data_dir: str = "data",
+        storage_type: str = "nosql",
+        db_path: str = "story_creator.db"
+    ):
         """
         Initialize the GUIInterface.
         
         Args:
-            data_dir: Directory to store data files
+            data_dir: Directory to store data files (for JSON storage)
+            storage_type: Type of storage ("json" or "nosql")
+            db_path: Path to database file (for NoSQL storage)
         """
-        self.storage = Storage(data_dir)
+        # Initialize storage based on type
+        if storage_type == "nosql":
+            self.storage = NoSQLStorage(db_path)
+            storage_label = "NoSQL Database"
+        else:
+            self.storage = Storage(data_dir)
+            storage_label = "JSON Files"
+        
         self.world_generator = WorldGenerator()
         self.story_generator = StoryGenerator()
         self.story_linker = StoryLinker()
@@ -26,7 +40,7 @@ class GUIInterface:
         
         # Create main window
         self.root = tk.Tk()
-        self.root.title("Story Creator - Trình tạo thế giới và câu chuyện")
+        self.root.title(f"Story Creator - {storage_label}")
         self.root.geometry("900x700")
         
         self.setup_ui()

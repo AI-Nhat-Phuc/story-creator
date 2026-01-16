@@ -4,20 +4,34 @@ import sys
 from typing import Optional, List
 from models import World, Story, Location, Entity, TimeCone
 from generators import WorldGenerator, StoryGenerator, StoryLinker
-from utils import Storage
+from utils import Storage, NoSQLStorage
 
 
 class TerminalInterface:
     """Terminal-based user interface for creating and managing worlds and stories."""
     
-    def __init__(self, data_dir: str = "data"):
+    def __init__(
+        self,
+        data_dir: str = "data",
+        storage_type: str = "nosql",
+        db_path: str = "story_creator.db"
+    ):
         """
         Initialize the TerminalInterface.
         
         Args:
-            data_dir: Directory to store data files
+            data_dir: Directory to store data files (for JSON storage)
+            storage_type: Type of storage ("json" or "nosql")
+            db_path: Path to database file (for NoSQL storage)
         """
-        self.storage = Storage(data_dir)
+        # Initialize storage based on type
+        if storage_type == "nosql":
+            self.storage = NoSQLStorage(db_path)
+            self.storage_type = "NoSQL"
+        else:
+            self.storage = Storage(data_dir)
+            self.storage_type = "JSON"
+        
         self.world_generator = WorldGenerator()
         self.story_generator = StoryGenerator()
         self.story_linker = StoryLinker()
@@ -28,6 +42,7 @@ class TerminalInterface:
         print("\n" + "="*60)
         print("  STORY CREATOR - Terminal Interface")
         print("  Tạo thế giới và câu chuyện bằng Python")
+        print(f"  Storage: {self.storage_type}")
         print("="*60 + "\n")
         
         while True:

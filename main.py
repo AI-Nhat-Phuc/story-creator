@@ -25,18 +25,38 @@ def main():
         "--data-dir",
         "-d",
         default="data",
-        help="Thư mục lưu trữ dữ liệu (mặc định: data)"
+        help="Thư mục lưu trữ dữ liệu (chỉ dùng cho JSON) (mặc định: data)"
+    )
+    parser.add_argument(
+        "--storage",
+        "-s",
+        choices=["json", "nosql"],
+        default="nosql",
+        help="Loại storage: json (file-based) hoặc nosql (database) (mặc định: nosql)"
+    )
+    parser.add_argument(
+        "--db-path",
+        default="story_creator.db",
+        help="Đường dẫn đến database (chỉ dùng cho NoSQL) (mặc định: story_creator.db)"
     )
     
     args = parser.parse_args()
     
     if args.interface == "gui":
         from interfaces.gui_interface import GUIInterface
-        app = GUIInterface(data_dir=args.data_dir)
+        app = GUIInterface(
+            data_dir=args.data_dir,
+            storage_type=args.storage,
+            db_path=args.db_path
+        )
         app.run()
     else:
         from interfaces.terminal_interface import TerminalInterface
-        app = TerminalInterface(data_dir=args.data_dir)
+        app = TerminalInterface(
+            data_dir=args.data_dir,
+            storage_type=args.storage,
+            db_path=args.db_path
+        )
         app.run()
 
 
