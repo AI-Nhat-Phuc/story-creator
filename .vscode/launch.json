@@ -1,0 +1,149 @@
+{
+    // VSCode Launch Configuration for Story Creator
+    // Sử dụng: F5 để debug, Ctrl+F5 để run without debugging
+    "version": "0.2.0",
+    "configurations": [
+        // ============================================
+        // RUN/DEBUG CONFIGURATIONS
+        // ============================================
+        {
+            "name": "🚀 Run Terminal Interface",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": [
+                "-i",
+                "terminal"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🎨 Run GUI Interface",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": [
+                "-i",
+                "gui"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🎮 Run Simulation Mode",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": [
+                "-i",
+                "simulation"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+            }
+        },
+        {
+            "name": "🗄️ Run with NoSQL Storage",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": [
+                "-i",
+                "terminal",
+                "-s",
+                "nosql"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "📄 Run with JSON Storage",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": [
+                "-i",
+                "terminal",
+                "-s",
+                "json",
+                "-d",
+                "data"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        // ============================================
+        // DEMO CONFIGURATIONS
+        // ============================================
+        {
+            "name": "🎬 Debug Basic Demo",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🎬 Debug NoSQL Demo",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo_nosql.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🎬 Debug GPT-4 Simulation Demo",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo_gpt_simulation.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+            }
+        },
+        // ============================================
+        // TEST CONFIGURATIONS
+        // ============================================
+        {
+            "name": "✅ Debug All Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "✅ Debug NoSQL Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_nosql.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        // ============================================
+        // DEBUG SPECIFIC FILES
+        // ============================================
+        {
+            "name": "🔧 Debug Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🔧 Debug Current File (No JustMyCode)",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ],
+    // Compound configurations (chạy nhiều cấu hình cùng lúc)
+    "compounds": []
+}

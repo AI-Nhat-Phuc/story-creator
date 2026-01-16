@@ -1,0 +1,368 @@
+{
+    // VSCode Tasks Configuration for Story Creator
+    // Sử dụng: Ctrl+Shift+P → "Tasks: Run Task" hoặc Ctrl+Shift+B
+    "version": "2.0.0",
+    "tasks": [
+        // ============================================
+        // RUN APPLICATION TASKS
+        // ============================================
+        {
+            "label": "🚀 Run Terminal Interface",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "main.py",
+                "-i",
+                "terminal"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "🎨 Run GUI Interface",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "main.py",
+                "-i",
+                "gui"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "🎮 Run Simulation Mode",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "main.py",
+                "-i",
+                "simulation"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "🗄️ Run with NoSQL Storage",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "main.py",
+                "-i",
+                "terminal",
+                "-s",
+                "nosql"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "📄 Run with JSON Storage",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "main.py",
+                "-i",
+                "terminal",
+                "-s",
+                "json",
+                "-d",
+                "data"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        // ============================================
+        // DEMO TASKS
+        // ============================================
+        {
+            "label": "🎬 Run Basic Demo",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "demo.py"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "🎬 Run NoSQL Demo",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "demo_nosql.py"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "🎬 Run GPT-4 Simulation Demo",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "demo_gpt_simulation.py"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        // ============================================
+        // TEST TASKS
+        // ============================================
+        {
+            "label": "✅ Run All Tests",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "test.py"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "✅ Run NoSQL Tests",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "test_nosql.py"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "✅ Run All Tests (Complete)",
+            "dependsOn": [
+                "✅ Run All Tests",
+                "✅ Run NoSQL Tests"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        // ============================================
+        // UTILITY TASKS
+        // ============================================
+        {
+            "label": "📦 Install Dependencies",
+            "type": "shell",
+            "command": "pip",
+            "args": [
+                "install",
+                "-r",
+                "requirements.txt"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "🔍 Check Python Version",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "--version"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "label": "📋 List Installed Packages",
+            "type": "shell",
+            "command": "pip",
+            "args": [
+                "list"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "🗑️ Clean Database Files",
+            "type": "shell",
+            "command": "${command:python.interpreterPath}",
+            "args": [
+                "-c",
+                "import os; [os.remove(f) for f in ['story_creator.db', 'demo_simulation.db', 'test.db'] if os.path.exists(f)]; print('✅ Database files cleaned')"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "label": "🗑️ Clean JSON Data",
+            "type": "shell",
+            "command": "${command:python.interpreterPath}",
+            "args": [
+                "-c",
+                "import shutil, os; shutil.rmtree('data', ignore_errors=True) if os.path.exists('data') else None; print('✅ JSON data directory cleaned')"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        // ============================================
+        // HELP TASKS
+        // ============================================
+        {
+            "label": "❓ Show Help",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "main.py",
+                "--help"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "📖 Open README",
+            "type": "shell",
+            "command": "code",
+            "args": [
+                "README.md"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": false,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "📖 Open Installation Guide",
+            "type": "shell",
+            "command": "code",
+            "args": [
+                "INSTALLATION.md"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": false,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false
+            }
+        }
+    ]
+}

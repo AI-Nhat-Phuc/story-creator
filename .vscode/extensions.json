@@ -1,0 +1,37 @@
+{
+    // VSCode Extension Recommendations for Story Creator
+    // VSCode sẽ gợi ý cài đặt các extensions này
+    
+    "recommendations": [
+        // Python Development
+        "ms-python.python",                  // Python extension (Required)
+        "ms-python.vscode-pylance",         // Python language server (Recommended)
+        
+        // Code Quality
+        "ms-python.autopep8",               // Auto-formatting
+        
+        // Git & Version Control
+        "eamodio.gitlens",                  // Enhanced Git features
+        
+        // Documentation
+        "yzhang.markdown-all-in-one",       // Markdown support
+        "davidanson.vscode-markdownlint",   // Markdown linting
+        
+        // File Icons
+        "vscode-icons-team.vscode-icons",   // Better file icons
+        
+        // Utilities
+        "streetsidesoftware.code-spell-checker", // Spell checker
+        "gruntfuggly.todo-tree",           // TODO/FIXME highlighter
+        
+        // JSON
+        "zainchen.json",                    // JSON tools
+        
+        // Additional Python Tools (Optional)
+        "donjayamanne.python-environment-manager", // Python env manager
+        "kevinrose.vsc-python-indent"      // Better Python indentation
+    ],
+    
+    // Extensions không nên dùng với project này
+    "unwantedRecommendations": []
+}
