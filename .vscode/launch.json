@@ -113,6 +113,15 @@
                 "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
             }
         },
+        {
+            "name": "⭐ Debug Auto-World Generation Demo",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo_auto_world.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
         // ============================================
         // TEST CONFIGURATIONS
         // ============================================

@@ -54,6 +54,7 @@ class GUIInterface:
         # Create tabs
         self.create_world_tab()
         self.create_story_tab()
+        self.create_auto_story_tab()
         self.create_view_tab()
         
         # Status bar
@@ -223,6 +224,157 @@ class GUIInterface:
         )
         link_btn.pack(pady=5)
     
+    def create_auto_story_tab(self) -> None:
+        """Create the auto-generate story with world tab."""
+        auto_frame = ttk.Frame(self.notebook)
+        self.notebook.add(auto_frame, text="⭐ Tạo tự động")
+        
+        # Title
+        title_label = tk.Label(
+            auto_frame,
+            text="Tạo câu chuyện + tự động tạo thế giới",
+            font=("Arial", 16, "bold")
+        )
+        title_label.pack(pady=10)
+        
+        # Genre selection
+        genre_frame = ttk.LabelFrame(auto_frame, text="Chọn thể loại câu chuyện", padding=10)
+        genre_frame.pack(fill=tk.X, padx=20, pady=10)
+        
+        self.auto_genre_var = tk.StringVar(value="adventure")
+        
+        genres = [
+            ("Adventure (Phiêu lưu) → Fantasy World", "adventure"),
+            ("Mystery (Bí ẩn) → Modern World", "mystery"),
+            ("Conflict (Xung đột) → Historical World", "conflict"),
+            ("Discovery (Khám phá) → Sci-Fi World", "discovery")
+        ]
+        
+        for text, value in genres:
+            rb = ttk.Radiobutton(
+                genre_frame,
+                text=text,
+                variable=self.auto_genre_var,
+                value=value
+            )
+            rb.pack(anchor=tk.W)
+        
+        # World configuration (editable)
+        config_frame = ttk.LabelFrame(auto_frame, text="Cấu hình thế giới (tùy chỉnh)", padding=10)
+        config_frame.pack(fill=tk.X, padx=20, pady=10)
+        
+        # Grid layout for config
+        row = 0
+        
+        # Number of people
+        tk.Label(config_frame, text="Số người:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=2)
+        self.auto_people_var = tk.StringVar(value="random")
+        people_spinbox = ttk.Spinbox(
+            config_frame,
+            from_=3,
+            to=20,
+            textvariable=self.auto_people_var,
+            width=10
+        )
+        people_spinbox.grid(row=row, column=1, padx=5, pady=2)
+        tk.Label(config_frame, text="(random = ngẫu nhiên 3-15)").grid(row=row, column=2, sticky=tk.W, padx=5)
+        row += 1
+        
+        # Has forests
+        tk.Label(config_frame, text="Có rừng:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=2)
+        self.auto_forests_var = tk.BooleanVar(value=True)
+        forest_check = ttk.Checkbutton(config_frame, text="Bật", variable=self.auto_forests_var)
+        forest_check.grid(row=row, column=1, sticky=tk.W, padx=5, pady=2)
+        row += 1
+        
+        # Number of rivers
+        tk.Label(config_frame, text="Số sông:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=2)
+        self.auto_rivers_var = tk.StringVar(value="random")
+        rivers_spinbox = ttk.Spinbox(
+            config_frame,
+            from_=0,
+            to=5,
+            textvariable=self.auto_rivers_var,
+            width=10
+        )
+        rivers_spinbox.grid(row=row, column=1, padx=5, pady=2)
+        tk.Label(config_frame, text="(random = ngẫu nhiên 0-5)").grid(row=row, column=2, sticky=tk.W, padx=5)
+        row += 1
+        
+        # Number of lakes
+        tk.Label(config_frame, text="Số hồ:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=2)
+        self.auto_lakes_var = tk.StringVar(value="random")
+        lakes_spinbox = ttk.Spinbox(
+            config_frame,
+            from_=0,
+            to=3,
+            textvariable=self.auto_lakes_var,
+            width=10
+        )
+        lakes_spinbox.grid(row=row, column=1, padx=5, pady=2)
+        tk.Label(config_frame, text="(random = ngẫu nhiên 0-3)").grid(row=row, column=2, sticky=tk.W, padx=5)
+        row += 1
+        
+        # River danger
+        tk.Label(config_frame, text="Nguy hiểm sông:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=2)
+        self.auto_river_danger_var = tk.StringVar(value="random")
+        river_danger_spinbox = ttk.Spinbox(
+            config_frame,
+            from_=0,
+            to=10,
+            textvariable=self.auto_river_danger_var,
+            width=10
+        )
+        river_danger_spinbox.grid(row=row, column=1, padx=5, pady=2)
+        tk.Label(config_frame, text="(0-10, random = ngẫu nhiên)").grid(row=row, column=2, sticky=tk.W, padx=5)
+        row += 1
+        
+        # Forest danger
+        tk.Label(config_frame, text="Nguy hiểm rừng:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=2)
+        self.auto_forest_danger_var = tk.StringVar(value="random")
+        forest_danger_spinbox = ttk.Spinbox(
+            config_frame,
+            from_=0,
+            to=10,
+            textvariable=self.auto_forest_danger_var,
+            width=10
+        )
+        forest_danger_spinbox.grid(row=row, column=1, padx=5, pady=2)
+        tk.Label(config_frame, text="(0-10, random = ngẫu nhiên)").grid(row=row, column=2, sticky=tk.W, padx=5)
+        row += 1
+        
+        # Lake danger
+        tk.Label(config_frame, text="Nguy hiểm hồ:").grid(row=row, column=0, sticky=tk.W, padx=5, pady=2)
+        self.auto_lake_danger_var = tk.StringVar(value="random")
+        lake_danger_spinbox = ttk.Spinbox(
+            config_frame,
+            from_=0,
+            to=10,
+            textvariable=self.auto_lake_danger_var,
+            width=10
+        )
+        lake_danger_spinbox.grid(row=row, column=1, padx=5, pady=2)
+        tk.Label(config_frame, text="(0-10, random = ngẫu nhiên)").grid(row=row, column=2, sticky=tk.W, padx=5)
+        
+        # Story description
+        desc_frame = ttk.LabelFrame(auto_frame, text="Mô tả câu chuyện", padding=10)
+        desc_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
+        self.auto_story_desc_text = scrolledtext.ScrolledText(
+            desc_frame,
+            height=4,
+            wrap=tk.WORD
+        )
+        self.auto_story_desc_text.pack(fill=tk.BOTH, expand=True)
+        
+        # Create button
+        create_btn = ttk.Button(
+            auto_frame,
+            text="🚀 Tạo tự động (Thế giới + Câu chuyện)",
+            command=self.create_auto_story_world
+        )
+        create_btn.pack(pady=10)
+    
     def create_view_tab(self) -> None:
         """Create the view/browse tab."""
         view_frame = ttk.Frame(self.notebook)
@@ -377,6 +529,136 @@ class GUIInterface:
             self.storage.save_story(story.to_dict())
         
         messagebox.showinfo("Thành công", "Đã liên kết các câu chuyện!")
+        self.refresh_view()
+    
+    def create_auto_story_world(self) -> None:
+        """Handle auto-generation of world and story."""
+        import random as rnd
+        
+        genre = self.auto_genre_var.get()
+        description = self.auto_story_desc_text.get("1.0", tk.END).strip()
+        
+        if not description:
+            messagebox.showerror("Lỗi", "Vui lòng nhập mô tả câu chuyện!")
+            return
+        
+        # Parse configuration
+        config = {}
+        
+        # Number of people
+        people_val = self.auto_people_var.get()
+        if people_val != "random":
+            try:
+                config['num_people'] = int(people_val)
+            except ValueError:
+                pass
+        
+        # Has forests
+        config['has_forests'] = self.auto_forests_var.get()
+        
+        # Number of rivers
+        rivers_val = self.auto_rivers_var.get()
+        if rivers_val != "random":
+            try:
+                config['num_rivers'] = int(rivers_val)
+            except ValueError:
+                pass
+        
+        # Number of lakes
+        lakes_val = self.auto_lakes_var.get()
+        if lakes_val != "random":
+            try:
+                config['num_lakes'] = int(lakes_val)
+            except ValueError:
+                pass
+        
+        # River danger
+        river_danger_val = self.auto_river_danger_var.get()
+        if river_danger_val != "random":
+            try:
+                config['river_danger'] = int(river_danger_val)
+            except ValueError:
+                pass
+        
+        # Forest danger
+        forest_danger_val = self.auto_forest_danger_var.get()
+        if forest_danger_val != "random":
+            try:
+                config['forest_danger'] = int(forest_danger_val)
+            except ValueError:
+                pass
+        
+        # Lake danger
+        lake_danger_val = self.auto_lake_danger_var.get()
+        if lake_danger_val != "random":
+            try:
+                config['lake_danger'] = int(lake_danger_val)
+            except ValueError:
+                pass
+        
+        # Generate world
+        self.status_bar.config(text="Đang tạo thế giới tự động...")
+        self.root.update()
+        
+        world, locations, entities, final_config = self.world_generator.auto_generate_from_genre(
+            genre,
+            editable_config=config if config else None
+        )
+        
+        # Save world and entities
+        self.storage.save_world(world.to_dict())
+        for location in locations:
+            self.storage.save_location(location.to_dict())
+        for entity in entities:
+            self.storage.save_entity(entity.to_dict())
+        
+        self.current_world = world
+        
+        # Create story
+        self.status_bar.config(text="Đang tạo câu chuyện...")
+        self.root.update()
+        
+        story = self.story_generator.generate(
+            description,
+            world.world_id,
+            genre,
+            locations=[loc.location_id for loc in locations[:2]],
+            entities=[ent.entity_id for ent in entities[:3]]
+        )
+        
+        # Generate time cone
+        time_cone = self.story_generator.generate_time_cone(
+            story,
+            world.world_id
+        )
+        
+        # Save
+        self.storage.save_story(story.to_dict())
+        self.storage.save_time_cone(time_cone.to_dict())
+        
+        # Update world
+        world.add_story(story.story_id)
+        self.storage.save_world(world.to_dict())
+        
+        # Show success message with details
+        num_dangerous = len(entities) - final_config['num_people']
+        success_msg = (
+            f"✅ Đã tạo thành công!\n\n"
+            f"🌍 Thế giới: {world.name}\n"
+            f"  - {len(locations)} địa điểm\n"
+            f"  - {final_config['num_people']} người\n"
+            f"  - {num_dangerous} sinh vật nguy hiểm\n"
+            f"  - Rừng: {'Có' if final_config['has_forests'] else 'Không'}\n"
+            f"  - Sông: {final_config['num_rivers']}\n"
+            f"  - Hồ: {final_config['num_lakes']}\n\n"
+            f"📖 Câu chuyện: {story.title}\n"
+            f"  - Thể loại: {genre}"
+        )
+        
+        messagebox.showinfo("Thành công", success_msg)
+        
+        self.status_bar.config(text=f"Thế giới hiện tại: {world.name}")
+        self.refresh_worlds()
         self.refresh_view()
     
     def refresh_worlds(self) -> None:

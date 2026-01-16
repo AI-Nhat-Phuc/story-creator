@@ -14,7 +14,25 @@ Dự án tạo thế giới và câu chuyện bằng Python với giao diện tr
 - 💾 Lưu trữ dữ liệu: **NoSQL Database (TinyDB)** hoặc JSON files
 - ⚡ **Hiệu suất cao** với NoSQL database (mặc định)
 
-### 🎮 NEW: GPT-4 Interactive Simulation Mode
+### ⭐ NEW: Auto-Generate World from Story Genre
+- 🌍 **Tự động tạo thế giới** khi chọn thể loại câu chuyện
+- 🎲 **Cấu hình ngẫu nhiên** có thể chỉnh sửa:
+  - Số lượng người (3-15, ngẫu nhiên)
+  - Có rừng hay không (ngẫu nhiên 70% có)
+  - Số lượng sông (0-5, ngẫu nhiên)
+  - Số lượng hồ (0-3, ngẫu nhiên)
+  - Mức độ nguy hiểm của sông/rừng/hồ (0-10, ngẫu nhiên)
+- 👹 **Sinh vật nguy hiểm** tự động tạo dựa trên mức độ nguy hiểm
+  - Càng nguy hiểm → càng nhiều sinh vật nguy hiểm
+  - Mỗi 3 điểm danger = 1 sinh vật
+  - Thuộc tính động dựa trên mức độ nguy hiểm
+- 🎯 **Genre-based World Type Mapping**:
+  - Adventure → Fantasy World
+  - Mystery → Modern World
+  - Conflict → Historical World
+  - Discovery → Sci-Fi World
+
+### 🎮 GPT-4 Interactive Simulation Mode
 - 🤖 **Tích hợp GPT-4.1** để tự động dịch thuật ENG→VN
 - 💾 Lưu kết quả dịch thuật vào database và ánh xạ vào câu chuyện
 - 👤 **Giả lập là nhân vật** trong câu chuyện
@@ -62,6 +80,19 @@ python main.py -i simulation
 
 # Or run the demo
 python demo_gpt_simulation.py
+```
+
+### ⭐ Demo: Auto-Generate World from Story Genre
+
+```bash
+# Run the auto-generation demo
+python demo_auto_world.py
+
+# This will demonstrate:
+# - Creating worlds automatically for each genre
+# - Random configuration generation
+# - Customizing world configuration
+# - Dangerous creatures based on danger levels
 ```
 
 ### Giao diện GUI với NoSQL

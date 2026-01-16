@@ -165,6 +165,23 @@
                 "clear": true
             }
         },
+        {
+            "label": "⭐ Run Auto-World Generation Demo",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "demo_auto_world.py"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
         // ============================================
         // TEST TASKS
         // ============================================

@@ -58,10 +58,12 @@ class TerminalInterface:
             elif choice == "4":
                 self.create_story_menu()
             elif choice == "5":
-                self.list_stories_menu()
+                self.create_story_with_auto_world_menu()
             elif choice == "6":
-                self.link_stories_menu()
+                self.list_stories_menu()
             elif choice == "7":
+                self.link_stories_menu()
+            elif choice == "8":
                 self.view_world_details()
             elif choice == "0":
                 print("\nCảm ơn bạn đã sử dụng Story Creator!")
@@ -77,10 +79,11 @@ class TerminalInterface:
         print("1. Tạo thế giới mới")
         print("2. Xem danh sách thế giới")
         print("3. Chọn thế giới hiện tại")
-        print("4. Tạo câu chuyện mới")
-        print("5. Xem danh sách câu chuyện")
-        print("6. Liên kết các câu chuyện")
-        print("7. Xem chi tiết thế giới")
+        print("4. Tạo câu chuyện mới (cần chọn thế giới trước)")
+        print("5. Tạo câu chuyện + tự động tạo thế giới ⭐")
+        print("6. Xem danh sách câu chuyện")
+        print("7. Liên kết các câu chuyện")
+        print("8. Xem chi tiết thế giới")
         print("0. Thoát")
         print("-"*60)
         
@@ -245,6 +248,135 @@ class TerminalInterface:
         print(f"\n✅ Đã tạo câu chuyện: {story.title}")
         print(f"   ID: {story.story_id}")
         print(f"   Thể loại: {genre}")
+    
+    def create_story_with_auto_world_menu(self) -> None:
+        """Menu for creating a story with auto-generated world."""
+        print("\n" + "="*60)
+        print("TẠO CÂU CHUYỆN + TỰ ĐỘNG TẠO THẾ GIỚI")
+        print("="*60)
+        
+        print("\nChọn thể loại câu chuyện:")
+        print("1. Adventure (Phiêu lưu) → Tự động tạo thế giới Fantasy")
+        print("2. Mystery (Bí ẩn) → Tự động tạo thế giới Modern")
+        print("3. Conflict (Xung đột) → Tự động tạo thế giới Historical")
+        print("4. Discovery (Khám phá) → Tự động tạo thế giới Sci-Fi")
+        
+        genre_choice = input("\nChọn thể loại (1-4): ").strip()
+        genres = {
+            "1": "adventure",
+            "2": "mystery",
+            "3": "conflict",
+            "4": "discovery"
+        }
+        
+        genre = genres.get(genre_choice, "adventure")
+        
+        # Auto-generate world with random configuration
+        print("\n🌍 Đang tự động tạo thế giới...")
+        world, locations, entities, config = self.world_generator.auto_generate_from_genre(genre)
+        
+        # Display generated world configuration
+        print(f"\n✨ Đã tạo thế giới: {world.name}")
+        print("\n📊 Cấu hình thế giới (có thể chỉnh sửa):")
+        print(f"  1. Số người: {config['num_people']}")
+        print(f"  2. Có rừng: {'Có' if config['has_forests'] else 'Không'}")
+        print(f"  3. Số sông: {config['num_rivers']}")
+        print(f"  4. Số hồ: {config['num_lakes']}")
+        print(f"  5. Mức độ nguy hiểm sông: {config['river_danger']}/10")
+        print(f"  6. Mức độ nguy hiểm rừng: {config['forest_danger']}/10")
+        print(f"  7. Mức độ nguy hiểm hồ: {config['lake_danger']}/10")
+        
+        # Ask if user wants to edit
+        edit_choice = input("\nBạn có muốn chỉnh sửa cấu hình? (y/n): ").strip().lower()
+        
+        if edit_choice == 'y':
+            print("\nNhập giá trị mới (Enter để giữ nguyên):")
+            
+            new_people = input(f"Số người [{config['num_people']}]: ").strip()
+            if new_people:
+                config['num_people'] = int(new_people)
+            
+            new_forests = input(f"Có rừng (y/n) [{'y' if config['has_forests'] else 'n'}]: ").strip().lower()
+            if new_forests:
+                config['has_forests'] = new_forests == 'y'
+            
+            new_rivers = input(f"Số sông [{config['num_rivers']}]: ").strip()
+            if new_rivers:
+                config['num_rivers'] = int(new_rivers)
+            
+            new_lakes = input(f"Số hồ [{config['num_lakes']}]: ").strip()
+            if new_lakes:
+                config['num_lakes'] = int(new_lakes)
+            
+            new_river_danger = input(f"Mức độ nguy hiểm sông (0-10) [{config['river_danger']}]: ").strip()
+            if new_river_danger:
+                config['river_danger'] = int(new_river_danger)
+            
+            new_forest_danger = input(f"Mức độ nguy hiểm rừng (0-10) [{config['forest_danger']}]: ").strip()
+            if new_forest_danger:
+                config['forest_danger'] = int(new_forest_danger)
+            
+            new_lake_danger = input(f"Mức độ nguy hiểm hồ (0-10) [{config['lake_danger']}]: ").strip()
+            if new_lake_danger:
+                config['lake_danger'] = int(new_lake_danger)
+            
+            # Regenerate world with new config
+            print("\n🔄 Đang tạo lại thế giới với cấu hình mới...")
+            world, locations, entities, config = self.world_generator.auto_generate_from_genre(
+                genre,
+                name=world.name,
+                editable_config=config
+            )
+            print("✅ Đã cập nhật thế giới!")
+        
+        # Save world and entities
+        self.storage.save_world(world.to_dict())
+        for location in locations:
+            self.storage.save_location(location.to_dict())
+        for entity in entities:
+            self.storage.save_entity(entity.to_dict())
+        
+        print(f"\n✅ Đã lưu thế giới với:")
+        print(f"   - {len(locations)} địa điểm")
+        print(f"   - {len(entities)} thực thể ({config['num_people']} người, {len(entities) - config['num_people']} sinh vật nguy hiểm)")
+        
+        # Set as current world
+        self.current_world = world
+        
+        # Now create the story
+        prompt = input("\nMô tả câu chuyện: ").strip()
+        
+        if not prompt:
+            print("❌ Mô tả không được để trống!")
+            return
+        
+        # Generate story
+        story = self.story_generator.generate(
+            prompt,
+            world.world_id,
+            genre,
+            locations=[loc.location_id for loc in locations[:2]],  # Use first 2 locations
+            entities=[ent.entity_id for ent in entities[:3]]  # Use first 3 entities
+        )
+        
+        # Generate time cone
+        time_cone = self.story_generator.generate_time_cone(
+            story,
+            world.world_id
+        )
+        
+        # Save
+        self.storage.save_story(story.to_dict())
+        self.storage.save_time_cone(time_cone.to_dict())
+        
+        # Update world
+        world.add_story(story.story_id)
+        self.storage.save_world(world.to_dict())
+        
+        print(f"\n✅ Đã tạo câu chuyện: {story.title}")
+        print(f"   ID: {story.story_id}")
+        print(f"   Thể loại: {genre}")
+        print(f"   Thế giới: {world.name}")
     
     def list_stories_menu(self) -> None:
         """Menu for listing all stories."""

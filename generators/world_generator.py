@@ -223,3 +223,240 @@ class WorldGenerator:
             base_description += f" This {world_type} world features elements of {theme_text}."
         
         return base_description
+    
+    def auto_generate_from_genre(
+        self,
+        genre: str,
+        name: Optional[str] = None,
+        editable_config: Optional[Dict[str, Any]] = None
+    ) -> tuple:
+        """
+        Auto-generate a complete world based on story genre with random entities.
+        
+        Args:
+            genre: Story genre (adventure, mystery, conflict, discovery)
+            name: Optional world name (auto-generated if not provided)
+            editable_config: Optional configuration to override defaults
+                - num_people: Number of people (default: random 3-15)
+                - has_forests: Whether to include forests (default: random)
+                - num_rivers: Number of rivers (default: random 0-5)
+                - num_lakes: Number of lakes (default: random 0-3)
+                - river_danger: Danger level of rivers 0-10 (default: random)
+                - forest_danger: Danger level of forests 0-10 (default: random)
+                - lake_danger: Danger level of lakes 0-10 (default: random)
+                
+        Returns:
+            Tuple of (World, List[Location], List[Entity], Dict[config])
+        """
+        # Map genre to world type
+        genre_to_world_type = {
+            "adventure": "fantasy",
+            "mystery": "modern",
+            "conflict": "historical",
+            "discovery": "sci-fi"
+        }
+        
+        world_type = genre_to_world_type.get(genre, "fantasy")
+        
+        # Initialize editable configuration with random values
+        config = editable_config or {}
+        
+        # Random number of people (3-15)
+        num_people = config.get("num_people", random.randint(3, 15))
+        
+        # Random forest presence (70% chance)
+        has_forests = config.get("has_forests", random.random() < 0.7)
+        
+        # Random number of rivers (0-5)
+        num_rivers = config.get("num_rivers", random.randint(0, 5))
+        
+        # Random number of lakes (0-3)
+        num_lakes = config.get("num_lakes", random.randint(0, 3))
+        
+        # Random danger levels (0-10)
+        river_danger = config.get("river_danger", random.randint(0, 10))
+        forest_danger = config.get("forest_danger", random.randint(0, 10))
+        lake_danger = config.get("lake_danger", random.randint(0, 10))
+        
+        # Store final config for editing
+        final_config = {
+            "num_people": num_people,
+            "has_forests": has_forests,
+            "num_rivers": num_rivers,
+            "num_lakes": num_lakes,
+            "river_danger": river_danger,
+            "forest_danger": forest_danger,
+            "lake_danger": lake_danger,
+            "genre": genre,
+            "world_type": world_type
+        }
+        
+        # Generate world name
+        world_name = name or self._generate_name(world_type)
+        
+        # Create world description based on config
+        description = f"A {world_type} world created for {genre} stories. "
+        description += f"Population: {num_people} people. "
+        if has_forests:
+            description += f"Contains forests (danger level: {forest_danger}/10). "
+        if num_rivers > 0:
+            description += f"Has {num_rivers} river(s) (danger level: {river_danger}/10). "
+        if num_lakes > 0:
+            description += f"Has {num_lakes} lake(s) (danger level: {lake_danger}/10)."
+        
+        # Create world
+        world = World(
+            name=world_name,
+            description=description,
+            metadata={
+                "world_type": world_type,
+                "genre": genre,
+                "auto_generated": True,
+                **final_config
+            }
+        )
+        
+        # Generate locations
+        locations = []
+        
+        # Add villages/settlements based on population
+        num_settlements = max(1, num_people // 5)
+        for i in range(num_settlements):
+            settlement_type = random.choice(["village", "town", "settlement", "camp"])
+            location = Location(
+                name=f"{settlement_type.title()} {i + 1}",
+                description=f"A {settlement_type} with approximately {num_people // num_settlements} inhabitants",
+                world_id=world.world_id,
+                coordinates={
+                    "x": random.uniform(-1000, 1000),
+                    "y": random.uniform(-1000, 1000),
+                    "z": random.uniform(0, 100)
+                },
+                metadata={"location_type": settlement_type, "population": num_people // num_settlements}
+            )
+            locations.append(location)
+            world.add_location(location.location_id)
+        
+        # Add forests if enabled
+        if has_forests:
+            num_forests = random.randint(1, 3)
+            for i in range(num_forests):
+                forest = Location(
+                    name=f"Forest {i + 1}",
+                    description=f"A forest area with danger level {forest_danger}/10",
+                    world_id=world.world_id,
+                    coordinates={
+                        "x": random.uniform(-1000, 1000),
+                        "y": random.uniform(-1000, 1000),
+                        "z": random.uniform(0, 50)
+                    },
+                    metadata={"location_type": "forest", "danger_level": forest_danger}
+                )
+                locations.append(forest)
+                world.add_location(forest.location_id)
+        
+        # Add rivers
+        for i in range(num_rivers):
+            river = Location(
+                name=f"River {i + 1}",
+                description=f"A river with danger level {river_danger}/10",
+                world_id=world.world_id,
+                coordinates={
+                    "x": random.uniform(-1000, 1000),
+                    "y": random.uniform(-1000, 1000),
+                    "z": 0
+                },
+                metadata={"location_type": "river", "danger_level": river_danger}
+            )
+            locations.append(river)
+            world.add_location(river.location_id)
+        
+        # Add lakes
+        for i in range(num_lakes):
+            lake = Location(
+                name=f"Lake {i + 1}",
+                description=f"A lake with danger level {lake_danger}/10",
+                world_id=world.world_id,
+                coordinates={
+                    "x": random.uniform(-1000, 1000),
+                    "y": random.uniform(-1000, 1000),
+                    "z": 0
+                },
+                metadata={"location_type": "lake", "danger_level": lake_danger}
+            )
+            locations.append(lake)
+            world.add_location(lake.location_id)
+        
+        # Generate entities (people and creatures)
+        entities = []
+        
+        # Generate people entities
+        if world_type in self.WORLD_TYPES:
+            entity_types = self.WORLD_TYPES[world_type]["entity_types"]
+        else:
+            entity_types = ["character"]
+        
+        for i in range(num_people):
+            entity_type = random.choice(entity_types)
+            name = f"{entity_type.title()} {i + 1}"
+            
+            entity = Entity(
+                name=name,
+                entity_type=entity_type,
+                description=f"A {entity_type} in {world.name}",
+                world_id=world.world_id,
+                attributes={
+                    "strength": random.randint(1, 10),
+                    "intelligence": random.randint(1, 10),
+                    "charisma": random.randint(1, 10),
+                    "is_dangerous": False
+                }
+            )
+            entities.append(entity)
+            world.add_entity(entity.entity_id)
+        
+        # Generate dangerous creatures based on danger levels
+        total_danger = 0
+        if has_forests:
+            total_danger += forest_danger
+        if num_rivers > 0:
+            total_danger += river_danger
+        if num_lakes > 0:
+            total_danger += lake_danger
+        
+        # More dangerous areas = more dangerous creatures
+        num_dangerous_creatures = total_danger // 3  # 1 creature per 3 danger points
+        
+        dangerous_creature_types = {
+            "fantasy": ["dragon", "monster", "beast", "demon"],
+            "sci-fi": ["alien predator", "rogue AI", "mutant", "hostile drone"],
+            "modern": ["criminal", "wild animal", "aggressive dog"],
+            "historical": ["bandit", "wild beast", "raider"]
+        }
+        
+        creature_types = dangerous_creature_types.get(world_type, ["creature"])
+        
+        for i in range(num_dangerous_creatures):
+            creature_type = random.choice(creature_types)
+            name = f"Dangerous {creature_type.title()} {i + 1}"
+            
+            # Higher danger means stronger creatures
+            avg_danger = total_danger / max(1, (has_forests + (num_rivers > 0) + (num_lakes > 0)))
+            
+            entity = Entity(
+                name=name,
+                entity_type=creature_type,
+                description=f"A dangerous {creature_type} in {world.name}",
+                world_id=world.world_id,
+                attributes={
+                    "strength": int(avg_danger),
+                    "intelligence": random.randint(1, 5),
+                    "charisma": random.randint(1, 3),
+                    "is_dangerous": True,
+                    "threat_level": int(avg_danger)
+                }
+            )
+            entities.append(entity)
+            world.add_entity(entity.entity_id)
+        
+        return world, locations, entities, final_config
