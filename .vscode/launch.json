@@ -11,6 +11,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "-i",
                 "terminal"
@@ -23,6 +24,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "-i",
                 "gui"
@@ -35,6 +37,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "-i",
                 "simulation"
@@ -50,6 +53,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "-i",
                 "terminal",
@@ -64,6 +68,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "-i",
                 "terminal",
@@ -83,6 +88,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/demo.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -91,6 +97,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/demo_nosql.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -99,6 +106,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/demo_gpt_simulation.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "console": "integratedTerminal",
             "justMyCode": true,
             "env": {
@@ -113,6 +121,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -121,6 +130,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/test_nosql.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -132,6 +142,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -140,6 +151,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "console": "integratedTerminal",
             "justMyCode": false
         }
