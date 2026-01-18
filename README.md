@@ -1,6 +1,6 @@
 # Story Creator
 
-Dự án tạo thế giới và câu chuyện bằng Python với giao diện trực quan, database NoSQL, và tích hợp GPT-5 Mini cho mô phỏng nhân vật.
+Hệ thống tạo thế giới và câu chuyện tương tác với **React Frontend + Flask API Backend**, database NoSQL, và tích hợp GPT-4o-mini cho mô phỏng nhân vật.
 
 ## Tính năng
 
@@ -32,106 +32,140 @@ Dự án tạo thế giới và câu chuyện bằng Python với giao diện tr
   - Conflict → Historical World
   - Discovery → Sci-Fi World
 
-### 🎮 GPT-5 Mini Interactive Simulation Mode
-- 🤖 **Tích hợp GPT-5 Mini** (Upgraded from GPT-4o) để tự động dịch thuật ENG→VN
+### 🎮 GPT-5 Nano Interactive Simulation Mode
+- 🤖 **Tích hợp GPT-5 Nano** - Model nhỏ gọn, hiệu quả nhất
 - 💾 Lưu kết quả dịch thuật vào database và ánh xạ vào câu chuyện
 - 👤 **Giả lập là nhân vật** trong câu chuyện
 - 📚 Đọc câu chuyện của nhân vật một cách liên mạch theo thứ tự thời gian nón ánh sáng
 - ⚔️ Lựa chọn hành động của nhân vật tại các thời điểm trong nón ánh sáng
   - 3 lựa chọn: 2 đối nghịch + 1 từ bỏ
-- 🤖 Nhân vật không được giả lập sẽ được GPT-5 Mini lựa chọn tự động
+- 🤖 Nhân vật không được giả lập sẽ được GPT-4o Mini lựa chọn tự động
 - ⏱️ Mỗi nhân vật có tiến trình xử lý riêng và chung 1 dòng thời gian
 - 🔮 Dự đoán tình huống xảy ra từ câu chuyện và sự liên kết của các nhân vật
-- ⚡ **Hiệu suất tối ưu**: Model mới nhất với chất lượng cao và chi phí thấp
+- ✅ **Modal xác nhận** khi sử dụng GPT (không còn checkbox)
+- 🔗 **Sơ đồ quan hệ**: Hiển thị mối quan hệ giữa các nhân vật
 
 ### User Interfaces
-- 🖥️ Giao diện Terminal (TUI) trực quan
-- 🎨 Giao diện đồ họa (GUI) với tkinter
-- 🎮 **Giao diện Simulation (Interactive Character Mode)**
 
-## Cài đặt
+**⚛️ React Web Application (Default)**
+- 🌟 **React 18** với TailwindCSS + DaisyUI
+- 🎨 Responsive, modern UI/UX
+- 🔄 Real-time updates với REST API
+- 📊 Dashboard với thống kê
+- 🌍 Quản lý thế giới với GPT analysis
+- 📖 Quản lý câu chuyện với auto-character detection
+- 🔗 Visualize relationships giữa nhân vật
+- 📚 **Swagger UI** - Interactive API documentation
+
+**🎮 Simulation Interface**
+- Interactive character mode với GPT decision-making
+- Terminal-based character control
+- Run: `python main.py -i simulation`
+
+**📦 Legacy (Archived in `legacy/`)**
+- Flask templates web interface
+- Tkinter GUI
+- Demo scripts
+
+## Quick Start
+
+### 🚀 React + API Mode (Recommended)
 
 ```bash
-# Clone repository
-git clone https://github.com/AI-Nhat-Phuc/story-creator.git
-cd story-creator
-
-# Cài đặt dependencies
+# 1. Cài đặt dependencies
 pip install -r requirements.txt
+npm install                        # Install concurrently
+cd frontend && npm install && cd ..
 
-# (Optional) Set OpenAI API key for GPT-5 Mini features
-export OPENAI_API_KEY='your-api-key-here'
+# 2. Chạy cả frontend và backend
+npm run dev
+
+# Hoặc chạy riêng từng phần:
+# Terminal 1 (activate venv trước):
+.venv\Scripts\Activate.ps1        # Windows PowerShell
+python main.py -i api
+
+# Terminal 2:
+cd frontend && npm run dev
 ```
+
+**Truy cập:**
+- Frontend: http://localhost:3000
+- API Swagger: http://localhost:5000/api/docs
+- API Root: http://localhost:5000/ (auto-redirect to Swagger)
+
+### 📚 Chi tiết
+
+Xem [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) và [docs/REACT_ARCHITECTURE.md](docs/REACT_ARCHITECTURE.md)
 
 ## Sử dụng
 
-### Giao diện Terminal với NoSQL (Khuyến nghị - Hiệu suất cao)
+### API Backend Mode (for React)
 
 ```bash
-python main.py -i terminal -s nosql
-# hoặc đơn giản (NoSQL là mặc định)
-python main.py
+python main.py -i api              # API server on port 5000 with Swagger UI
+python main.py -i api --debug      # With debug mode
 ```
 
-### 🎮 Chế độ Simulation (GPT-5 Mini Interactive)
+### Legacy Web Interface
 
 ```bash
-# Requires OPENAI_API_KEY environment variable
-python main.py -i simulation
-
-# Or run the demo
-python demo_gpt_simulation.py
+python main.py -i web              # Flask templates (deprecated)
 ```
 
-### ⭐ Demo: Auto-Generate World from Story Genre
+### Simulation Mode
 
 ```bash
-# Run the auto-generation demo
-python demo_auto_world.py
-
-# This will demonstrate:
-# - Creating worlds automatically for each genre
-# - Random configuration generation
-# - Customizing world configuration
-# - Dangerous creatures based on danger levels
-```
-
-### Giao diện GUI với NoSQL
-
-```bash
-python main.py -i gui -s nosql
-```
-
-### Sử dụng JSON files (legacy)
-
-```bash
-python main.py -i terminal -s json -d data/
-python main.py -i gui -s json -d data/
-```
-
-### Chỉ định database file
-
-```bash
-python main.py -s nosql --db-path my_stories.db
+python main.py -i simulation       # Character simulation with GPT
 ```
 
 ## Cấu trúc dự án
 
 ```
 story-creator/
-├── models/              # Data models (World, Story, Location, Entity, TimeCone)
-│   ├── __init__.py
-│   ├── world.py
-│   ├── story.py
-│   ├── location.py
-│   ├── entity.py
-│   └── time_cone.py
-├── generators/          # Generators for worlds and stories
-│   ├── __init__.py
+├── frontend/            # ⚛️ React application
+│   ├── src/
+│   │   ├── components/ # UI components
+│   │   ├── pages/      # Page components
+│   │   ├── services/   # API client
+│   │   └── App.jsx
+│   ├── package.json
+│   └── vite.config.js
+│
+├── interfaces/         # Backend interfaces
+│   ├── api_backend.py  # ✨ Pure REST API (NEW)
+│   ├── web_interface.py # Flask templates (legacy)
+│   └── simulation_interface.py
+│
+├── services/           # Business logic layer
+│   ├── gpt_service.py
+│   └── character_service.py
+│
+├── core/
+│   └── models/        # Data models
+│       ├── world.py
+│       ├── story.py
+│       ├── location.py
+│       ├── entity.py
+│       └── time_cone.py
+│
+├── generators/        # Content generators
 │   ├── world_generator.py
 │   ├── story_generator.py
 │   └── story_linker.py
-├── utils/              # Utilities (Storage, etc.)
+│
+├── storage/          # Storage backends
+│   ├── nosql_storage.py  # TinyDB (default)
+│   └── json_storage.py   # File-based (legacy)
+│
+├── ai/               # AI integration
+│   ├── gpt_client.py
+│   └── prompts.py
+│
+├── main.py          # Entry point
+├── package.json     # Root npm scripts
+└── requirements.txt # Python dependencies
+```
 │   ├── __init__.py
 │   └── storage.py
 ├── interfaces/         # User interfaces
@@ -335,11 +369,11 @@ Chế độ simulation cho phép bạn:
      - **A**: Hành động chính
      - **B**: Hành động đối nghịch
      - **C**: Từ bỏ/Rút lui
-   
+
 4. **AI điều khiển nhân vật phụ**
    - Nhân vật không được điều khiển sẽ có GPT-4 quyết định
    - Dựa trên tính cách và thuộc tính của nhân vật
-   
+
 5. **Timeline riêng biệt**
    - Mỗi nhân vật có tiến trình xử lý riêng
    - Tất cả chia sẻ một dòng thời gian chung
@@ -353,39 +387,26 @@ Chế độ simulation cho phép bạn:
 ### Ví dụ Sử dụng
 
 ```bash
-# Set API key
-export OPENAI_API_KEY='sk-...'
+# Story Creator
 
-# Start simulation mode
-python main.py -i simulation
+Story Creator is an interactive world and story generation platform with a modern React frontend, Flask REST API backend, and GPT-4o-mini AI integration. Build, link, and simulate fictional worlds, stories, characters, and locations with high performance and a clean service architecture.
 
-# Follow the prompts to:
-# 1. Select a world
-# 2. Choose your character
-# 3. Enable/disable auto-translation
-# 4. Make decisions at key moments
-# 5. Watch the story unfold
-```
+## Features
+- 🌍 Create and manage worlds (fantasy, sci-fi, modern, historical)
+- 📖 Write and link stories with auto-detected characters and locations
+- 🗺️ Visualize timelines, maps, and character relationships
+- 🤖 GPT-4o-mini integration for world/story/character generation
+- 🧑‍💻 React 18 + TailwindCSS + DaisyUI frontend
+- 🚀 Fast NoSQL (TinyDB) or JSON storage
+- 🧩 Modular service layer for business logic
 
-### Demo Simulation
+## Quick Start
+1. Clone the repo & install Python/Node.js dependencies
+2. (Optional) Add your OpenAI API key to `.env`
+3. Run `npm run dev` for full stack, or see [docs/INSTALLATION.md](docs/INSTALLATION.md)
+4. Access UI at http://localhost:3000, API docs at http://localhost:5000/api/docs
 
-```bash
-# Run full demo (works without API key in limited mode)
-python demo_gpt_simulation.py
-```
-
-## Yêu cầu hệ thống
-
-- Python 3.7 trở lên
-- TinyDB >= 4.8.0 (cài tự động với pip install -r requirements.txt)
-- OpenAI >= 1.0.0 (cho GPT-4 features)
-- tkinter (thường đi kèm với Python, cho GUI)
-- **OpenAI API Key** (cho simulation mode với GPT-4)
-
-## License
-
-MIT License
-
-## Author
-
+## Documentation
+- See [docs/](docs/) for architecture, API, models, storage, and more
+- For Copilot/service/frontend coding rules, see [.github/copilot-instructions.md](.github/copilot-instructions.md)
 AI-Nhat-Phuc

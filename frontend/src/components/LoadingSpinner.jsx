@@ -1,0 +1,17 @@
+import React from 'react'
+
+function LoadingSpinner({ size = 'md' }) {
+  const sizeClasses = {
+    sm: 'loading-sm',
+    md: 'loading-md',
+    lg: 'loading-lg'
+  }
+
+  return (
+    <div className="flex justify-center items-center p-8">
+      <span className={`loading loading-spinner ${sizeClasses[size]}`}></span>
+    </div>
+  )
+}
+
+export default LoadingSpinner

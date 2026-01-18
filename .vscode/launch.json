@@ -7,27 +7,28 @@
         // RUN/DEBUG CONFIGURATIONS
         // ============================================
         {
-            "name": "🚀 Run Terminal Interface",
+            "name": "🚀 Run API Backend",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "-i",
-                "terminal"
+                "api"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
         },
         {
-            "name": "🎨 Run GUI Interface",
+            "name": "🔍 Run API with Debug Logging",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "-i",
-                "gui"
+                "api",
+                "--debug"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -49,14 +50,14 @@
             }
         },
         {
-            "name": "🗄️ Run with NoSQL Storage",
+            "name": "🗄️ Run API with NoSQL Storage",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "-i",
-                "terminal",
+                "api",
                 "-s",
                 "nosql"
             ],
@@ -64,14 +65,14 @@
             "justMyCode": true
         },
         {
-            "name": "📄 Run with JSON Storage",
+            "name": "📄 Run API with JSON Storage",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "-i",
-                "terminal",
+                "api",
                 "-s",
                 "json",
                 "-d",

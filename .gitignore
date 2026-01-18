@@ -205,8 +205,27 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Story Creator specific
 data/
 demo_data/
 *.db
 *.db-*
-INSTALLATION.md
+
+# Legacy files (deprecated)
+legacy/
+
+# Build output
+static/dist/
+
+# Frontend
+node_modules/
+*/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
