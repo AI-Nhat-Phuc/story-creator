@@ -237,9 +237,9 @@ function WorldDetailView({
                     loadingText="Đang tạo..."
                     disabled={!storyForm.title}
                     variant="secondary"
-                    size="sm"
+                    size="xs"
                   >
-                    Tự động tạo mô tả
+                    Tạo mô tả
                   </GptButton>
                 </div>
                 <textarea
@@ -254,7 +254,7 @@ function WorldDetailView({
                   <span className="label-text-alt">
                     {storyForm.description.length > 0
                       ? `${storyForm.description.length} ký tự`
-                      : '💡 Click nút GPT để tự động tạo mô tả'}
+                      : 'Click nút GPT để tự động tạo mô tả'}
                   </span>
                 </label>
               </div>

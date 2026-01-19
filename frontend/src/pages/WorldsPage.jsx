@@ -277,7 +277,7 @@ function WorldsPage({ showToast }) {
                     variant="secondary"
                     size="xs"
                   >
-                    Tự động tạo mô tả
+                    Tạo mô tả
                   </GptButton>
                 </label>
                 <textarea
@@ -290,7 +290,7 @@ function WorldsPage({ showToast }) {
                 />
                 <label className="label">
                   <span className="label-text-alt">{formData.description.length} ký tự</span>
-                  <span className="label-text-alt text-accent">💡 Click nút bên trên để GPT tạo mô tả tự động</span>
+                  <span className="label-text-alt text-gray-400">Click nút bên trên để GPT tạo mô tả tự động</span>
                 </label>
               </div>
 

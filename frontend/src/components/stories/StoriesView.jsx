@@ -1,3 +1,4 @@
+{/* Đảm bảo màu nền trắng cho nội dung card */ }
 import React from 'react'
 import { Link } from 'react-router-dom'
 import GptButton, { OpenAILogo } from '../GptButton'
@@ -66,11 +67,11 @@ function StoriesView({
               {/* Scroll Container */}
               <div className="flex h-[220px]">
                 {/* Left Scroll Rod */}
-                <div className={`relative bg-gradient-to-r ${colors.rod} shadow-md rounded-l-sm w-5`}>
+                <div className={`relative bg-gradient-to-r ${colors.rod} shadow-md rounded-l-sm w-7`}>
                   {/* World name vertical text */}
                   <div className="absolute inset-0 flex justify-center items-center">
                     <span
-                      className={`font-bold text-[10px] ${colors.text} whitespace-nowrap origin-center drop-shadow-sm`}
+                      className={`font-bold text-[16px] ${colors.text} whitespace-nowrap origin-center drop-shadow-sm`}
                       style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                     >
                       {worldName}
@@ -79,46 +80,31 @@ function StoriesView({
                 </div>
 
                 {/* Scroll Paper */}
-                <div className="relative flex-1 bg-gradient-to-r from-amber-50 via-amber-100 to-amber-50 shadow-xl group-hover:shadow-2xl border border-amber-200 border-l-0 rounded-r-sm overflow-hidden transition-all">
-                  {/* Paper texture overlay */}
-                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMDAwIiBvcGFjaXR5PSIwLjAyIi8+PC9zdmc+')] opacity-50"></div>
-
-                  {/* Content */}
+                <div className="relative flex-1 bg-white shadow-xl group-hover:shadow-2xl border border-gray-200 border-l-0 rounded-r-sm overflow-hidden transition-all">
                   <div className="z-10 relative flex flex-col p-4 h-full">
-                    {/* Title */}
-                    <h2 className="mb-2 font-bold text-amber-900 text-lg line-clamp-2 leading-tight">
+                    <h2 className="mb-2 font-bold text-gray-900 text-lg line-clamp-2 leading-tight">
                       {story.title}
                     </h2>
-
-                    {/* Badges */}
                     <div className="flex flex-wrap gap-1 mb-2">
-                      <span className="bg-amber-100/70 px-2 py-0.5 rounded text-amber-700 text-xs">
+                      <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-700 text-xs">
                         ⏰ {formatWorldTime(story)}
                       </span>
                     </div>
-
-                    {/* Content preview */}
                     <div className="flex-1 overflow-hidden">
                       {story.content ? (
-                        <p className="text-amber-800/80 text-sm line-clamp-4 leading-relaxed">
+                        <p className="text-gray-800 text-sm line-clamp-4 leading-relaxed">
                           {story.content}
                         </p>
                       ) : (
-                        <p className="text-amber-600/50 text-sm italic">
+                        <p className="text-gray-400 text-sm italic">
                           Chưa có mô tả...
                         </p>
                       )}
                     </div>
-
-                    {/* Decorative line */}
-                    <div className="mt-2 pt-2 border-amber-300 border-t border-dashed">
-                      <span className="text-amber-600/60 text-xs">📜 Click để đọc thêm</span>
+                    <div className="mt-2 pt-2 border-gray-300 border-t border-dashed">
+                      <span className="text-gray-400 text-xs">📜 Click để đọc thêm</span>
                     </div>
                   </div>
-
-                  {/* Edge shadow effects */}
-                  <div className="top-0 right-0 left-0 absolute bg-gradient-to-b from-amber-200/30 to-transparent h-3"></div>
-                  <div className="right-0 bottom-0 left-0 absolute bg-gradient-to-t from-amber-200/30 to-transparent h-3"></div>
                 </div>
               </div>
             </Link>
@@ -204,20 +190,22 @@ function StoriesView({
               </div>
 
               <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Mô tả *</span>
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <GptButton
-                    onClick={onGenerateDescription}
-                    loading={gptGenerating}
-                    loadingText="Đang tạo..."
-                    disabled={!formData.world_id || !formData.title}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    Tự động tạo mô tả
-                  </GptButton>
+                <div className='flex justify-between'>
+                  <label className="label">
+                    <span className="label-text">Mô tả *</span>
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <GptButton
+                      onClick={onGenerateDescription}
+                      loading={gptGenerating}
+                      loadingText="Đang tạo..."
+                      disabled={!formData.world_id || !formData.title}
+                      variant="secondary"
+                      size="xs"
+                    >
+                      Tạo Mô tả
+                    </GptButton>
+                  </div>
                 </div>
                 <textarea
                   name="description"
@@ -231,7 +219,7 @@ function StoriesView({
                   <span className="label-text-alt">
                     {formData.description.length > 0
                       ? `${formData.description.length} ký tự`
-                      : '💡 Click nút GPT để tự động tạo mô tả'}
+                      : <span className="px-2 py-1 rounded font-semibold text-gray-400">Click nút GPT để tự động tạo mô tả</span>}
                   </span>
                 </label>
               </div>
