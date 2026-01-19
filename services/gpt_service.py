@@ -67,6 +67,7 @@ class GPTService:
         world_type: str,
         world_description: str,
         base_description: str = "",
+        genre_label: str = None,
         callback_success=None,
         callback_error=None
     ) -> None:
@@ -85,6 +86,13 @@ class GPTService:
 
         def gpt_request():
             try:
+                # Select template for this genre (backend logic)
+                template_list = PromptTemplates.STORY_TEMPLATES.get(genre.upper())
+                template_str = template_list[0] if template_list else None
+                # Compose context for prompt
+                context = f"Thể loại: {genre_label or genre}"
+                if template_str:
+                    context += f"\nMẫu mô tả: {template_str}"
                 if base_description:
                     prompt = PromptTemplates.STORY_DESCRIPTION_WITH_BASE_TEMPLATE.format(
                         base_description=base_description,
@@ -98,6 +106,8 @@ class GPTService:
                         world_type=world_type,
                         world_description=world_description[:200]
                     )
+                # Inject context and template into prompt
+                prompt = f"{context}\n\n{prompt}"
 
                 response = self.gpt.client.chat.completions.create(
                     model=self.gpt.model,

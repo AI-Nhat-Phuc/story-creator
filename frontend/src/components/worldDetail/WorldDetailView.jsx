@@ -227,10 +227,10 @@ function WorldDetailView({
               </div>
 
               <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Mô tả *</span>
-                </label>
-                <div className="flex gap-2 mb-2">
+                <div className='flex justify-between'>
+                  <label className="label">
+                    <span className="label-text">Mô tả *</span>
+                  </label>
                   <GptButton
                     onClick={onGenerateStoryDescription}
                     loading={gptGenerating}

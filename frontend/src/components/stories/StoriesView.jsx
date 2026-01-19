@@ -1,7 +1,8 @@
 {/* Đảm bảo màu nền trắng cho nội dung card */ }
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import GptButton, { OpenAILogo } from '../GptButton'
+import { STORY_TEMPLATES } from '../storyTemplates'
 
 function StoriesView({
   stories,
@@ -20,8 +21,56 @@ function StoriesView({
   onAnalyzeStory,
   onClearAnalyzedEntities,
   formatWorldTime,
-  getWorldName
+  getWorldName,
+  availableCharacters = [],
+  selectedCharacters = [],
+  setSelectedCharacters = () => {},
 }) {
+    // Checkbox state for character selection
+    const [createNewCharacter, setCreateNewCharacter] = useState(false);
+
+    // Handle checkbox change
+    const handleCharacterCheckbox = (e) => {
+      const { value, checked } = e.target;
+      if (value === '__new__') {
+        setCreateNewCharacter(checked);
+        if (checked) {
+          setSelectedCharacters((prev) => prev.filter((id) => id !== '__new__').concat(['__new__']));
+        } else {
+          setSelectedCharacters((prev) => prev.filter((id) => id !== '__new__'));
+        }
+        return;
+      }
+      if (checked) {
+        setSelectedCharacters((prev) => prev.concat([value]));
+      } else {
+        setSelectedCharacters((prev) => prev.filter((id) => id !== value));
+      }
+    };
+  // Popup state for template selection
+  const [selectedTemplate, setSelectedTemplate] = useState('')
+  const [selectedGenre, setSelectedGenre] = useState('adventure')
+
+  // Open template modal
+  // const handleOpenTemplateModal = () => {
+  //   setSelectedGenre(formData.genre || 'adventure')
+  //   setShowTemplateModal(true)
+  // }
+
+  // Handle template select and trigger GPT
+  const handleSelectTemplate = (template) => {
+    setSelectedTemplate(template)
+    // Pass template to GPT handler
+    onGenerateDescription(template)
+  }
+
+  // Change genre in modal
+  const handleChangeGenre = (e) => {
+    setSelectedGenre(e.target.value)
+  }
+
+  // Get templates for selected genre
+  const genreTemplates = STORY_TEMPLATES.find(t => t.genre === selectedGenre)
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -138,7 +187,36 @@ function StoriesView({
           <div className="max-w-2xl modal-box">
             <h3 className="mb-4 font-bold text-lg">Tạo câu chuyện mới</h3>
             <form onSubmit={onSubmit}>
+              {/* Character selection group */}
               <div className="mb-4 form-control">
+                <label className="label">
+                  <span className="label-text">Chọn nhân vật tham gia</span>
+                </label>
+                <div className="flex flex-col gap-2">
+                  {availableCharacters.map((char) => (
+                    <label key={char.entity_id} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        value={char.entity_id}
+                        checked={selectedCharacters.includes(char.entity_id)}
+                        onChange={handleCharacterCheckbox}
+                        className="checkbox checkbox-sm"
+                      />
+                      <span>👤 {char.name}</span>
+                    </label>
+                  ))}
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      value="__new__"
+                      checked={selectedCharacters.includes('__new__')}
+                      onChange={handleCharacterCheckbox}
+                      className="checkbox checkbox-sm"
+                    />
+                    <span>➕ Tạo nhân vật mới (GPT sẽ đặt tên)</span>
+                  </label>
+                </div>
+              {/* END character selection group */}
                 <label className="label">
                   <span className="label-text">Thế giới *</span>
                 </label>
@@ -196,7 +274,7 @@ function StoriesView({
                   </label>
                   <div className="flex gap-2 mb-2">
                     <GptButton
-                      onClick={onGenerateDescription}
+                      // onClick={handleOpenTemplateModal}
                       loading={gptGenerating}
                       loadingText="Đang tạo..."
                       disabled={!formData.world_id || !formData.title}

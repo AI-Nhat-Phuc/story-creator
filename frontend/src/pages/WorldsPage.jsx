@@ -61,8 +61,8 @@ function WorldsPage({ showToast }) {
           const resultData = result.data.result
           console.log('[DEBUG] Result data:', resultData)
           const generatedDesc = 'description' in resultData
-                                ? resultData.description
-                                : (typeof resultData === 'string' ? resultData : '')
+            ? resultData.description
+            : (typeof resultData === 'string' ? resultData : '')
           console.log('[DEBUG] Generated desc:', generatedDesc)
           setFormData({ ...formData, description: generatedDesc })
           showToast('Đã tạo mô tả bằng GPT!', 'success')
@@ -267,8 +267,10 @@ function WorldsPage({ showToast }) {
               </div>
 
               <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Mô tả *</span>
+                <div className='flex justify-between'>
+                  <label className="label">
+                    <span className="label-text">Mô tả *</span>
+                  </label>
                   <GptButton
                     onClick={generateDescriptionWithGPT}
                     loading={gptAnalyzing}
@@ -279,7 +281,7 @@ function WorldsPage({ showToast }) {
                   >
                     Tạo mô tả
                   </GptButton>
-                </label>
+                </div>
                 <textarea
                   name="description"
                   value={formData.description}

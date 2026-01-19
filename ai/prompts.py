@@ -10,6 +10,30 @@ class PromptTemplates:
     OUTPUT_LANGUAGE = "Vietnamese"
     OUTPUT_LANGUAGE_INSTRUCTION = "Always respond in Vietnamese."
 
+    # Story templates by genre (dùng cho prompt tạo mô tả tự động)
+    STORY_TEMPLATES = {
+        "ADVENTURE": [
+            "A journey to {location} where {entity} discovers {element}",
+            "{entity} embarks on a quest to find {element} in {location}",
+            "An unexpected adventure leads {entity} to {location}"
+        ],
+        "MYSTERY": [
+            "A strange occurrence in {location} draws {entity} into investigation",
+            "{entity} uncovers secrets about {element} in {location}",
+            "The mystery of {location} challenges {entity}"
+        ],
+        "CONFLICT": [
+            "{entity} faces a great challenge in {location}",
+            "A battle for {element} unfolds in {location}",
+            "{entity} must defend {location} against threats"
+        ],
+        "DISCOVERY": [
+            "{entity} makes a groundbreaking discovery in {location}",
+            "Hidden knowledge about {element} is revealed to {entity}",
+            "An ancient secret in {location} changes everything for {entity}"
+        ]
+    }
+
     # ===== SYSTEM PROMPTS =====
     TRANSLATOR_SYSTEM = (
         "You are a professional English to Vietnamese translator. "

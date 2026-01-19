@@ -78,6 +78,7 @@ def create_story_bp(storage, story_generator, flush_data):
             description = data.get('description', '')
             genre = data.get('genre', 'adventure')
             time_index = data.get('time_index', 0)
+            selected_characters = data.get('selected_characters', None)
 
             world_data = storage.load_world(world_id)
             if not world_data:
@@ -85,29 +86,53 @@ def create_story_bp(storage, story_generator, flush_data):
 
             world = World.from_dict(world_data)
 
-            # Auto-detect mentioned characters
-            entity_data_list = []
-            for ent_id in world.entities:
+            # Use selected_characters if provided, else auto-detect
+            linked_entities = []
+            if selected_characters:
+              # Remove duplicates
+              selected_ids = set(selected_characters)
+              # Handle new character creation
+              if '__new__' in selected_ids:
+                # Create a new character entity with a placeholder name (GPT will name in description)
+                new_entity = Entity(
+                  name='(GPT đặt tên)',
+                  entity_type='character',
+                  description='Nhân vật mới được tạo bởi GPT',
+                  world_id=world_id
+                )
+                storage.save_entity(new_entity.to_dict())
+                linked_entities.append(new_entity.entity_id)
+                # Add to world
+                if new_entity.entity_id not in world.entities:
+                  world.entities.append(new_entity.entity_id)
+                selected_ids.remove('__new__')
+              # Add existing character IDs
+              for ent_id in selected_ids:
+                if ent_id in world.entities:
+                  linked_entities.append(ent_id)
+            else:
+              # Auto-detect mentioned characters
+              entity_data_list = []
+              for ent_id in world.entities:
                 ent_data = storage.load_entity(ent_id)
                 if ent_data:
-                    entity_data_list.append(ent_data)
-
-            _, mentioned_entity_ids = CharacterService.detect_mentioned_characters(
+                  entity_data_list.append(ent_data)
+              _, mentioned_entity_ids = CharacterService.detect_mentioned_characters(
                 description, entity_data_list
-            )
-            linked_entities = mentioned_entity_ids or (
+              )
+              linked_entities = mentioned_entity_ids or (
                 [world.entities[0]] if world.entities else []
-            )
+              )
 
             # Generate story
             story = story_generator.generate(
+                title,
                 description,
                 world.world_id,
                 genre,
                 locations=world.locations[:1] if world.locations else None,
                 entities=linked_entities
             )
-            story.title = title
 
             # Set world time based on time_index
             calendar = world.metadata.get('calendar', {})
@@ -155,8 +180,8 @@ def create_story_bp(storage, story_generator, flush_data):
             flush_data()
 
             return jsonify({
-                'story': story.to_dict(),
-                'time_cone': time_cone.to_dict()
+              'story': story.to_dict(),
+              'time_cone': time_cone.to_dict()
             }), 201
 
     @story_bp.route('/api/stories/<story_id>', methods=['GET', 'PUT', 'DELETE'])

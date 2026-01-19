@@ -1,44 +1,42 @@
 """Story generator using prompts and algorithms."""
 
-import random
 from typing import Dict, Any, Optional, List
 from core.models import Story, TimeCone
-
 
 class StoryGenerator:
     """Generates stories based on prompts and world context."""
 
-    # Story templates by genre
-    STORY_TEMPLATES = {
-        "adventure": [
-            "A journey to {location} where {entity} discovers {element}",
-            "{entity} embarks on a quest to find {element} in {location}",
-            "An unexpected adventure leads {entity} to {location}"
-        ],
-        "mystery": [
-            "A strange occurrence in {location} draws {entity} into investigation",
-            "{entity} uncovers secrets about {element} in {location}",
-            "The mystery of {location} challenges {entity}"
-        ],
-        "conflict": [
-            "{entity} faces a great challenge in {location}",
-            "A battle for {element} unfolds in {location}",
-            "{entity} must defend {location} against threats"
-        ],
-        "discovery": [
-            "{entity} makes a groundbreaking discovery in {location}",
-            "Hidden knowledge about {element} is revealed to {entity}",
-            "An ancient secret in {location} changes everything for {entity}"
-        ]
-    }
-
     def __init__(self):
-        """Initialize the StoryGenerator."""
         pass
+
+    def _analyze_title_with_gpt(self, description: str, current_title: str) -> str:
+        """
+        Use GPT to analyze the description and suggest a better title if possible.
+        Returns the new title if suggested, otherwise returns the current title.
+        """
+        try:
+            from services.gpt_service import GPTService
+            from ai.gpt_client import GPTIntegration
+            gpt = GPTIntegration()
+            gpt_service = GPTService(gpt)
+            # Synchronous GPT call for title extraction
+            result = gpt_service.analyze_story_title_sync(
+                description=description,
+                current_title=current_title
+            )
+            if result and isinstance(result, dict):
+                new_title = result.get('title')
+                if new_title and isinstance(new_title, str) and new_title.strip():
+                    return new_title.strip()
+            return current_title
+        except Exception:
+            return current_title
+
 
     def generate(
         self,
-        prompt: str,
+        title: str,
+        description: str,
         world_id: str,
         genre: str = "adventure",
         locations: Optional[List[str]] = None,
@@ -46,10 +44,10 @@ class StoryGenerator:
         metadata: Optional[Dict[str, Any]] = None
     ) -> Story:
         """
-        Generate a story based on a prompt.
+        Generate a story based on a description.
 
         Args:
-            prompt: User prompt describing the desired story
+            description: Description of the desired story
             world_id: ID of the world this story belongs to
             genre: Story genre (adventure, mystery, conflict, discovery)
             locations: Optional list of location IDs
@@ -59,20 +57,20 @@ class StoryGenerator:
         Returns:
             Generated Story object
         """
-        # Extract title from prompt or generate one
-        title = self._extract_title(prompt) or self._generate_title(genre)
-
-        # Generate story content
-        content = self._generate_content(prompt, genre)
+        # Fallback title if GPT fails
+        fallback_title = title if title and isinstance(title, str) and title.strip() else "Untitled Story"
+        new_title = self._analyze_title_with_gpt(description, current_title=fallback_title)
+        if not new_title or not isinstance(new_title, str) or not new_title.strip():
+            new_title = fallback_title
 
         # Add genre to metadata
         story_metadata = metadata or {}
         story_metadata["genre"] = genre
-        story_metadata["prompt"] = prompt
+        story_metadata["description"] = description
 
         story = Story(
-            title=title,
-            content=content,
+            title=new_title,
+            content=description,
             world_id=world_id,
             metadata=story_metadata
         )
@@ -131,58 +129,4 @@ class StoryGenerator:
 
         return time_cone
 
-    def _extract_title(self, prompt: str) -> Optional[str]:
-        """Extract story title from prompt."""
-        # Look for title indicators
-        keywords = ["titled ", "called ", "story of ", "tale of "]
-        prompt_lower = prompt.lower()
 
-        for keyword in keywords:
-            if keyword in prompt_lower:
-                idx = prompt_lower.index(keyword) + len(keyword)
-                # Get the next few words
-                remaining = prompt[idx:].split()
-                if remaining:
-                    return " ".join(remaining[:5]).strip('.,!?\'"')
-
-        return None
-
-    def _generate_title(self, genre: str) -> str:
-        """Generate a title based on genre."""
-        title_parts = {
-            "adventure": ["The Quest", "Journey", "Adventure", "Voyage", "Expedition"],
-            "mystery": ["The Mystery", "Secret", "Enigma", "Case", "Investigation"],
-            "conflict": ["The Battle", "War", "Conflict", "Struggle", "Confrontation"],
-            "discovery": ["The Discovery", "Revelation", "Finding", "Uncovering", "Awakening"]
-        }
-
-        parts = title_parts.get(genre, ["The Story"])
-        base_title = random.choice(parts)
-
-        # Add a descriptor
-        descriptors = ["Begins", "Unfolds", "Continues", "of Destiny", "of Fate"]
-        descriptor = random.choice(descriptors)
-
-        return f"{base_title} {descriptor}"
-
-    def _generate_content(self, prompt: str, genre: str) -> str:
-        """Generate story content based on prompt and genre."""
-        # Start with the prompt as base content
-        content = prompt
-
-        # Add genre-specific elements
-        if genre in self.STORY_TEMPLATES:
-            templates = self.STORY_TEMPLATES[genre]
-            template = random.choice(templates)
-
-            # Simple template filling
-            filled_template = template.replace("{location}", "a mysterious place")
-            filled_template = filled_template.replace("{entity}", "the protagonist")
-            filled_template = filled_template.replace("{element}", "something important")
-
-            content += f"\n\n{filled_template}"
-
-        # Add conclusion
-        content += "\n\nThe story unfolds with unexpected turns and meaningful moments."
-
-        return content

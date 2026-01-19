@@ -21,6 +21,19 @@ function StoriesContainer({ showToast }) {
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [detectedCharacters, setDetectedCharacters] = useState([])
   const [analyzedEntities, setAnalyzedEntities] = useState(null)
+  const [availableCharacters, setAvailableCharacters] = useState([]);
+  const [selectedCharacters, setSelectedCharacters] = useState([]);
+  // Fetch characters for selected world when modal opens or world changes
+  React.useEffect(() => {
+    if (showCreateModal && formData.world_id) {
+      worldsAPI.getCharacters(formData.world_id).then(res => {
+        setAvailableCharacters(res.data || []);
+      });
+    } else if (!showCreateModal) {
+      setAvailableCharacters([]);
+      setSelectedCharacters([]);
+    }
+  }, [showCreateModal, formData.world_id]);
 
   useEffect(() => {
     loadData()
@@ -142,12 +155,19 @@ function StoriesContainer({ showToast }) {
       setGptGenerating(true)
       const worldResponse = await worldsAPI.getById(formData.world_id)
       const world = worldResponse.data
+      // Compose character names for GPT
+      let characterNames = availableCharacters
+        .filter(c => selectedCharacters.includes(c.entity_id))
+        .map(c => c.name);
+      if (selectedCharacters.includes('__new__')) {
+        characterNames.push('NEW_CHARACTER'); // Special marker for GPT to generate a new name
+      }
       const response = await gptAPI.generateDescription({
         type: 'story',
         story_title: formData.title,
         story_genre: formData.genre,
         world_description: world.description,
-        characters: world.characters?.map(c => c.name).join(', ') || ''
+        characters: characterNames.join(', ')
       })
 
       const taskId = response.data.task_id
@@ -257,7 +277,10 @@ function StoriesContainer({ showToast }) {
     }
   }
 
-  const handleOpenModal = () => setShowCreateModal(true)
+  const handleOpenModal = () => {
+    setShowCreateModal(true);
+    setSelectedCharacters([]);
+  }
 
   const handleCloseModal = () => {
     setShowCreateModal(false)
@@ -266,6 +289,8 @@ function StoriesContainer({ showToast }) {
     setAnalyzedEntities(null)
     setGptGenerating(false)
     setGptAnalyzing(false)
+    setAvailableCharacters([]);
+    setSelectedCharacters([]);
   }
 
   if (loading) return <LoadingSpinner />
@@ -289,6 +314,9 @@ function StoriesContainer({ showToast }) {
       onClearAnalyzedEntities={handleClearAnalyzedEntities}
       formatWorldTime={formatWorldTime}
       getWorldName={getWorldName}
+      availableCharacters={availableCharacters}
+      selectedCharacters={selectedCharacters}
+      setSelectedCharacters={setSelectedCharacters}
     />
   )
 }
