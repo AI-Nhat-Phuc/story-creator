@@ -1,0 +1,37 @@
+# Story Creator Requirements
+
+# Web Framework
+Flask>=3.0.0
+
+# CORS support for React frontend
+Flask-CORS>=4.0.0
+
+# Swagger/OpenAPI documentation
+flasgger>=0.9.7
+
+# NoSQL Database for improved performance
+tinydb>=4.8.0
+
+# Process management for server control
+psutil>=5.9.0
+
+# GPT-5 Mini Integration for AI features (upgraded from GPT-4o)
+# Latest efficient model with excellent quality and low cost
+openai>=1.0.0
+
+# Environment variable management for API keys
+python-dotenv>=0.19.0
+
+# For GUI interface (usually comes with Python)
+# tkinter - included in most Python installations
+
+# Standard library modules used:
+# - json
+# - uuid
+# - datetime
+# - pathlib
+# - typing
+# - argparse
+# - random
+
+# Minimum Python version: 3.7

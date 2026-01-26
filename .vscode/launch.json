@@ -1,0 +1,171 @@
+{
+    // VSCode Launch Configuration for Story Creator
+    // Sử dụng: F5 để debug, Ctrl+F5 để run without debugging
+    "version": "0.2.0",
+    "configurations": [
+        // ============================================
+        // RUN/DEBUG CONFIGURATIONS
+        // ============================================
+        {
+            "name": "🚀 Run API Backend",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-i",
+                "api"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🔍 Run API with Debug Logging",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-i",
+                "api",
+                "--debug"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🎮 Run Simulation Mode",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-i",
+                "simulation"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+            }
+        },
+        {
+            "name": "🗄️ Run API with NoSQL Storage",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-i",
+                "api",
+                "-s",
+                "nosql"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "📄 Run API with JSON Storage",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-i",
+                "api",
+                "-s",
+                "json",
+                "-d",
+                "data"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        // ============================================
+        // DEMO CONFIGURATIONS
+        // ============================================
+        {
+            "name": "🎬 Debug Basic Demo",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🎬 Debug NoSQL Demo",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo_nosql.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🎬 Debug GPT-4 Simulation Demo",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo_gpt_simulation.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+            }
+        },
+        {
+            "name": "⭐ Debug Auto-World Generation Demo",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo_auto_world.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        // ============================================
+        // TEST CONFIGURATIONS
+        // ============================================
+        {
+            "name": "✅ Debug All Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "✅ Debug NoSQL Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_nosql.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        // ============================================
+        // DEBUG SPECIFIC FILES
+        // ============================================
+        {
+            "name": "🔧 Debug Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🔧 Debug Current File (No JustMyCode)",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ],
+    // Compound configurations (chạy nhiều cấu hình cùng lúc)
+    "compounds": []
+}

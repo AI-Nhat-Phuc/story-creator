@@ -1,0 +1,100 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run API Backend",
+            "type": "shell",
+            "command": ".venv\\Scripts\\python.exe",
+            "args": ["main.py", "-i", "api"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Run React Frontend",
+            "type": "shell",
+            "command": "npm",
+            "args": ["run", "dev"],
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Full Stack Dev (API + React)",
+            "dependsOn": ["Run API Backend", "Run React Frontend"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Simulation Mode",
+            "type": "shell",
+            "command": ".venv\\Scripts\\python.exe",
+            "args": ["main.py", "-i", "simulation"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": ".venv\\Scripts\\python.exe",
+            "args": ["test.py"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run NoSQL Tests",
+            "type": "shell",
+            "command": ".venv\\Scripts\\python.exe",
+            "args": ["test_nosql.py"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Build React",
+            "type": "shell",
+            "command": "npm",
+            "args": ["run", "build"],
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Install Backend Deps",
+            "type": "shell",
+            "command": ".venv\\Scripts\\pip.exe",
+            "args": ["install", "-r", "requirements.txt"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Install Frontend Deps",
+            "type": "shell",
+            "command": "npm",
+            "args": ["install"],
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean DB Files",
+            "type": "shell",
+            "command": ".venv\\Scripts\\python.exe",
+            "args": ["-c", "import os; [os.remove(f) for f in ['story_creator.db', 'test.db'] if os.path.exists(f)]; print('Cleaned')"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Open Swagger Docs",
+            "type": "shell",
+            "command": "cmd",
+            "args": ["/c", "start", "http://localhost:5000/api/docs"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Open React App",
+            "type": "shell",
+            "command": "cmd",
+            "args": ["/c", "start", "http://localhost:3000"],
+            "problemMatcher": []
+        }
+    ]
+}

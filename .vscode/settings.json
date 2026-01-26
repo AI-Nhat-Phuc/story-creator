@@ -1,0 +1,124 @@
+{
+    // VSCode Settings for Story Creator Project
+
+    // ============================================
+    // PYTHON CONFIGURATION
+    // ============================================
+    "python.defaultInterpreterPath": "python",
+    "python.terminal.activateEnvironment": true,
+
+    // ============================================
+    // FORMATTING
+    // ============================================
+    "editor.formatOnSave": false,
+    "editor.rulers": [
+        100
+    ],
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+
+    // ============================================
+    // FILES EXCLUSION
+    // ============================================
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.pytest_cache": true,
+        "**/*.egg-info": true
+    },
+    "files.watcherExclude": {
+        "**/__pycache__/**": true,
+        "**/node_modules/**": true,
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true
+    },
+
+    // ============================================
+    // SEARCH CONFIGURATION
+    // ============================================
+    "search.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/node_modules": true,
+        "**/venv": true,
+        "**/env": true,
+        "**/.venv": true
+    },
+
+    // ============================================
+    // FILE ASSOCIATIONS
+    // ============================================
+    "files.associations": {
+        "*.md": "markdown",
+        "*.json": "jsonc",
+        ".gitignore": "ignore"
+    },
+
+    // ============================================
+    // TERMINAL CONFIGURATION
+    // ============================================
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "terminal.integrated.env.windows": {},
+    "terminal.integrated.env.linux": {},
+    "terminal.integrated.env.osx": {},
+
+    // ============================================
+    // EDITOR CONFIGURATION
+    // ============================================
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": true,
+    "editor.wordWrap": "off",
+    "editor.minimap.enabled": true,
+
+    // ============================================
+    // PYTHON LINTING (Optional)
+    // ============================================
+    "python.linting.enabled": false,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": false,
+
+    // ============================================
+    // AUTO SAVE
+    // ============================================
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+
+    // ============================================
+    // GIT CONFIGURATION
+    // ============================================
+    "git.ignoreLimitWarning": true,
+    "git.autofetch": true,
+
+    // ============================================
+    // MARKDOWN PREVIEW
+    // ============================================
+    "markdown.preview.breaks": true,
+    "markdown.preview.fontSize": 14,
+
+    // ============================================
+    // CUSTOM FILE ENCODING
+    // ============================================
+    "files.encoding": "utf8",
+    "[python]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true
+    },
+    "[markdown]": {
+        "editor.wordWrap": "on",
+        "editor.quickSuggestions": {
+            "comments": "off",
+            "strings": "off",
+            "other": "off"
+        }
+    },
+    "[json]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+    },
+    "[jsonc]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+    },
+    "todo-tree.tree.showBadges": true
+}
