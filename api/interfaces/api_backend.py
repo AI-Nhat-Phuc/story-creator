@@ -35,10 +35,18 @@ class APIBackend:
         self.app = Flask(__name__)
         self.app.secret_key = os.urandom(24)
 
-        # Enable CORS for React frontend
+        # Enable CORS for React frontend (local dev + Vercel production)
+        allowed_origins = [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ]
+        # Add Vercel production URL if set
+        vercel_url = os.environ.get("VERCEL_URL")
+        if vercel_url:
+            allowed_origins.append(f"https://{vercel_url}")
         CORS(self.app, resources={
             r"/api/*": {
-                "origins": ["http://localhost:3000", "http://127.0.0.1:3000"],
+                "origins": allowed_origins,
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                 "allow_headers": ["Content-Type"]
             }

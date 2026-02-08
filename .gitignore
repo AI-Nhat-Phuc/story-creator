@@ -229,3 +229,9 @@ frontend/.env.local
 *.bak
 *.swp
 *~
+
+# Vercel
+.vercel
+
+# Database files
+*.db

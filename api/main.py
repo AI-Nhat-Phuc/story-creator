@@ -6,9 +6,13 @@ Provides API backend and character simulation mode.
 """
 
 import sys
+import os
 import io
 import logging
 import argparse
+
+# Ensure api/ is on sys.path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Fix Unicode encoding for Windows console
 if sys.platform == 'win32':
