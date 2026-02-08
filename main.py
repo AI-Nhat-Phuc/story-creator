@@ -49,10 +49,13 @@ def main():
         default="nosql",
         help="Loại storage: json (file-based) hoặc nosql (database) (mặc định: nosql)"
     )
+    # Use /tmp for db path if running on Vercel (read-only filesystem workaround)
+    vercel_db_path = os.environ.get("STORY_DB_PATH")
+    default_db_path = vercel_db_path if vercel_db_path else "/tmp/story_creator.db" if os.environ.get("VERCEL") else "story_creator.db"
     parser.add_argument(
         "--db-path",
-        default="story_creator.db",
-        help="Đường dẫn đến database (chỉ dùng cho NoSQL) (mặc định: story_creator.db)"
+        default=default_db_path,
+        help="Đường dẫn đến database (chỉ dùng cho NoSQL) (mặc định: story_creator.db, Vercel: /tmp/story_creator.db)"
     )
     parser.add_argument(
         "--debug",
