@@ -1,8 +1,6 @@
 {
+  "outputDirectory": "frontend/dist",
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/app.py"
-    }
+    { "source": "/api/(.*)", "destination": "/api/app.py" }
   ]
 }
