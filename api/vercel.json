@@ -1,3 +1,4 @@
 {
+  "runtime": "python3.9",
   "handler": "api/app.app"
 }
