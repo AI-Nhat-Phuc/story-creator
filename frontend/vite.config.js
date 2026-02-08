@@ -13,7 +13,7 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: '../static/dist',
+    outDir: 'dist', // Vercel expects build output in 'dist'
     emptyOutDir: true,
   }
 })
