@@ -1,6 +1,8 @@
 {
   "functions": {
-    "api/app.py": {}
+    "api/app.py": {
+      "runtime": "python3.14"
+    }
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/app.py" }
