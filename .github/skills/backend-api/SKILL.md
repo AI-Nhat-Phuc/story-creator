@@ -156,3 +156,93 @@ if len(items) > MAX_BATCH:
 - ❌ Gọi GPT đồng bộ trong request handler (dùng threading)
 - ❌ Quên `flush_data()` sau khi save
 - ❌ Quên `@optional_auth` cho route GET cần filter theo visibility
+
+---
+
+## Python Project Structure Best Practices
+
+> Reference: https://docs.python-guide.org/writing/structure/
+
+### Cấu trúc thư mục (Repository Layout)
+
+```
+api/                      # Python package root (added to sys.path)
+├── app.py                # Vercel serverless entrypoint
+├── main.py               # Local dev entrypoint
+├── core/
+│   └── models/           # Domain model classes
+├── generators/           # Content generation logic
+├── interfaces/           # Flask app + blueprints (I/O layer)
+│   ├── api_backend.py
+│   └── routes/           # One file per resource/feature
+├── services/             # Business logic layer (stateless)
+├── storage/              # Persistence layer
+└── ai/                   # External API integration
+```
+
+Key rule: **one responsibility per module**. Route files handle HTTP; service files handle business logic; model files define data.
+
+### Modules & Packages
+
+- Each `__init__.py` exposes a clean public API for the package:
+  ```python
+  # services/__init__.py
+  from .gpt_service import GPTService
+  from .batch_analyze_service import BatchAnalyzeService
+  __all__ = ['GPTService', 'BatchAnalyzeService']
+  ```
+- Import only what is needed — avoid `from module import *`
+- Use absolute imports within `api/` (bare module names, not relative `.`)
+
+### Separation of Concerns
+
+| Layer | Responsibility | Location |
+|-------|---------------|----------|
+| Routes | HTTP in/out, request parsing, auth decorators | `interfaces/routes/` |
+| Services | Business logic, orchestration | `services/` |
+| Models | Data structure, serialization | `core/models/` |
+| Storage | Persistence (read/write) | `storage/` |
+| AI | External GPT calls | `ai/` |
+
+Never mix layers. A route handler should call a service; the service calls storage and models.
+
+### Khi nào tách file mới?
+
+Tách module khi một file đáp ứng bất kỳ tiêu chí nào sau:
+- **> 300 dòng** và chứa nhiều khái niệm khác nhau
+- Chứa business logic bên trong route handler → chuyển sang `services/`
+- Logic được dùng lại ở nhiều nơi → tạo helper/service riêng
+- Logic có thể unit test độc lập → dấu hiệu nên tách service
+
+Ví dụ đã áp dụng: logic batch-analyze từ `gpt_routes.py` được tách thành `services/batch_analyze_service.py`.
+
+### Tránh Circular Imports
+
+- `routes/` có thể import từ `services/`, `core/models/`, `storage/`
+- `services/` có thể import từ `core/models/`, `storage/`, `ai/`
+- `core/models/` KHÔNG import từ `services/` hoặc `routes/`
+- `storage/` KHÔNG import từ `services/` hoặc `routes/`
+
+### Testing
+
+Mỗi layer nên có test file riêng:
+- `test.py` — core models, generators, JSON storage
+- `test_nosql.py` — NoSQL storage CRUD và performance
+- `test_api.py` — Flask API endpoints (sử dụng `app.test_client()`)
+
+Chạy test:
+```bash
+python api/test.py
+python api/test_nosql.py
+python api/test_api.py
+```
+
+Tạo test cho API endpoint mới:
+```python
+# Khởi tạo backend với temp database
+backend = APIBackend(db_path=temp_db_path)
+with backend.app.test_client() as client:
+    resp = client.get('/api/health')
+    assert resp.status_code == 200
+```
+
