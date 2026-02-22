@@ -7,6 +7,7 @@ from tinydb.storages import JSONStorage
 from tinydb.middlewares import CachingMiddleware
 import logging
 import json
+from services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,9 @@ class NoSQLStorage:
         self.locations = self.db.table('locations')
         self.entities = self.db.table('entities')
         self.time_cones = self.db.table('time_cones')
+        self.events = self.db.table('events')
+        self.event_analysis_cache = self.db.table('event_analysis_cache')
+        self.users = self.db.table('users')
 
         logger.info(f"NoSQLStorage initialized: {db_path}")
 
@@ -152,14 +156,24 @@ class NoSQLStorage:
             return results[0]
         return None
 
-    def list_worlds(self) -> List[Dict[str, Any]]:
+    def list_worlds(self, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        List all worlds.
+        List all worlds visible to the user.
+
+        Args:
+            user_id: Current user ID (None for anonymous users)
 
         Returns:
-            List of world data dictionaries
+            List of world data dictionaries filtered by permissions
         """
-        return self._safe_read(self.worlds, lambda: self.worlds.all())
+        all_worlds = self._safe_read(self.worlds, lambda: self.worlds.all())
+
+        # If no user_id provided, only return public worlds
+        if user_id is None:
+            return [w for w in all_worlds if w.get('visibility') == 'public']
+
+        # Filter by permissions (public + owned + shared)
+        return PermissionService.filter_viewable(user_id, all_worlds)
 
     def save_story(self, story_data: Dict[str, Any]) -> str:
         """
@@ -200,21 +214,30 @@ class NoSQLStorage:
             return results[0]
         return None
 
-    def list_stories(self, world_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def list_stories(self, world_id: Optional[str] = None, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        List all stories, optionally filtered by world.
+        List all stories visible to the user, optionally filtered by world.
 
         Args:
             world_id: Optional world ID to filter by
+            user_id: Current user ID (None for anonymous users)
 
         Returns:
-            List of story data dictionaries
+            List of story data dictionaries filtered by permissions
         """
         if world_id:
             StoryQuery = Query()
-            return self._safe_read(self.stories,
+            stories = self._safe_read(self.stories,
                                   lambda: self.stories.search(StoryQuery.world_id == world_id))
-        return self._safe_read(self.stories, lambda: self.stories.all())
+        else:
+            stories = self._safe_read(self.stories, lambda: self.stories.all())
+
+        # If no user_id provided, only return public stories
+        if user_id is None:
+            return [s for s in stories if s.get('visibility') == 'public']
+
+        # Filter by permissions
+        return PermissionService.filter_viewable(user_id, stories)
 
     def save_location(self, location_data: Dict[str, Any]) -> str:
         """
@@ -490,6 +513,8 @@ class NoSQLStorage:
         self.locations.truncate()
         self.entities.truncate()
         self.time_cones.truncate()
+        self.events.truncate()
+        self.event_analysis_cache.truncate()
 
     def get_stats(self) -> Dict[str, int]:
         """
@@ -503,5 +528,214 @@ class NoSQLStorage:
             "stories": len(self.stories),
             "locations": len(self.locations),
             "entities": len(self.entities),
-            "time_cones": len(self.time_cones)
+            "time_cones": len(self.time_cones),
+            "events": len(self.events),
+            "event_analysis_cache": len(self.event_analysis_cache)
         }
+
+    # ===== Event methods =====
+
+    def save_event(self, event_data: Dict[str, Any]) -> str:
+        """Save an event to the database.
+
+        Args:
+            event_data: Event data dictionary
+
+        Returns:
+            Event ID
+        """
+        event_id = event_data["event_id"]
+        EventQuery = Query()
+        existing = self.events.search(EventQuery.event_id == event_id)
+
+        if existing:
+            self.events.update(event_data, EventQuery.event_id == event_id)
+            logger.info(f"Updated event: {event_data.get('title', 'Unknown')}")
+        else:
+            self.events.insert(event_data)
+            logger.info(f"Created event: {event_data.get('title', 'Unknown')}")
+
+        return event_id
+
+    def load_event(self, event_id: str) -> Optional[Dict[str, Any]]:
+        """Load an event by ID."""
+        EventQuery = Query()
+        results = self._safe_read(self.events,
+                                 lambda: self.events.search(EventQuery.event_id == event_id))
+        if results:
+            return results[0]
+        return None
+
+    def list_events_by_world(self, world_id: str, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List all events for a world visible to the user."""
+        EventQuery = Query()
+        events = self._safe_read(self.events,
+                              lambda: self.events.search(EventQuery.world_id == world_id))
+
+        # If no user_id provided, only return events from public stories
+        if user_id is None:
+            return [e for e in events if e.get('visibility') == 'public']
+
+        # Filter by permissions
+        return PermissionService.filter_viewable(user_id, events)
+
+    def list_events_by_story(self, story_id: str, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List all events for a story visible to the user."""
+        EventQuery = Query()
+        events = self._safe_read(self.events,
+                              lambda: self.events.search(EventQuery.story_id == story_id))
+
+        # If no user_id provided, only return events from public story
+        if user_id is None:
+            return [e for e in events if e.get('visibility') == 'public']
+
+        # Filter by permissions
+        return PermissionService.filter_viewable(user_id, events)
+
+    def update_event(self, event_id: str, data: Dict[str, Any]) -> bool:
+        """Update an event."""
+        EventQuery = Query()
+        existing = self.events.search(EventQuery.event_id == event_id)
+        if not existing:
+            return False
+        # Merge data
+        updated = {**existing[0], **data}
+        updated['event_id'] = event_id  # Ensure ID is preserved
+        self.events.update(updated, EventQuery.event_id == event_id)
+        return True
+
+    def delete_event(self, event_id: str) -> bool:
+        """Delete an event."""
+        EventQuery = Query()
+        removed = self.events.remove(EventQuery.event_id == event_id)
+        return len(removed) > 0
+
+    def delete_events_by_story(self, story_id: str) -> int:
+        """Delete all events for a story. Returns count deleted."""
+        EventQuery = Query()
+        removed = self.events.remove(EventQuery.story_id == story_id)
+        return len(removed)
+
+    # ===== Event analysis cache methods =====
+
+    def save_analysis_cache(self, story_id: str, content_hash: str,
+                            gpt_response: Dict[str, Any], model: str) -> str:
+        """Save GPT analysis cache for a story.
+
+        Args:
+            story_id: Story ID
+            content_hash: SHA-256 hash of story content
+            gpt_response: Raw GPT JSON response (events + connections)
+            model: GPT model used
+
+        Returns:
+            Cache ID
+        """
+        import uuid as _uuid
+        from datetime import datetime as _dt
+
+        cache_id = str(_uuid.uuid4())
+        CacheQuery = Query()
+
+        # Remove old cache for this story (any hash)
+        self.event_analysis_cache.remove(CacheQuery.story_id == story_id)
+
+        cache_data = {
+            "cache_id": cache_id,
+            "story_id": story_id,
+            "story_content_hash": content_hash,
+            "raw_gpt_response": gpt_response,
+            "extracted_events_count": len(gpt_response.get('events', [])),
+            "analyzed_at": _dt.now().isoformat(),
+            "model_used": model
+        }
+
+        self.event_analysis_cache.insert(cache_data)
+        logger.info(f"Cached analysis for story {story_id} (hash: {content_hash[:12]}...)")
+        return cache_id
+
+    def get_analysis_cache(self, story_id: str, content_hash: str) -> Optional[Dict[str, Any]]:
+        """Get cached GPT analysis by story ID and content hash.
+
+        Returns None on cache miss (no cache or hash mismatch).
+        """
+        CacheQuery = Query()
+        results = self._safe_read(
+            self.event_analysis_cache,
+            lambda: self.event_analysis_cache.search(
+                (CacheQuery.story_id == story_id) &
+                (CacheQuery.story_content_hash == content_hash)
+            )
+        )
+        if results:
+            logger.info(f"Cache HIT for story {story_id}")
+            return results[0]
+        logger.info(f"Cache MISS for story {story_id}")
+        return None
+
+    def delete_analysis_cache(self, story_id: str) -> bool:
+        """Delete GPT analysis cache for a story."""
+        CacheQuery = Query()
+        removed = self.event_analysis_cache.remove(CacheQuery.story_id == story_id)
+        return len(removed) > 0
+
+    # ==================== User Management ====================
+
+    def save_user(self, user_data: Dict[str, Any]) -> bool:
+        """Save or update a user."""
+        user_id = user_data.get('user_id')
+        if not user_id:
+            logger.error("Cannot save user: missing user_id")
+            return False
+
+        UserQuery = Query()
+        existing = self._safe_read(
+            self.users,
+            lambda: self.users.search(UserQuery.user_id == user_id)
+        )
+
+        if existing:
+            self.users.update(user_data, UserQuery.user_id == user_id)
+            logger.info(f"Updated user: {user_id}")
+        else:
+            self.users.insert(user_data)
+            logger.info(f"Created new user: {user_id}")
+        return True
+
+    def load_user(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Load a user by user_id."""
+        UserQuery = Query()
+        results = self._safe_read(
+            self.users,
+            lambda: self.users.search(UserQuery.user_id == user_id)
+        )
+        return results[0] if results else None
+
+    def find_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
+        """Find a user by username."""
+        UserQuery = Query()
+        results = self._safe_read(
+            self.users,
+            lambda: self.users.search(UserQuery.username == username)
+        )
+        return results[0] if results else None
+
+    def find_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """Find a user by email."""
+        UserQuery = Query()
+        results = self._safe_read(
+            self.users,
+            lambda: self.users.search(UserQuery.email == email)
+        )
+        return results[0] if results else None
+
+    def list_users(self) -> List[Dict[str, Any]]:
+        """List all users."""
+        return self._safe_read(self.users, lambda: self.users.all())
+
+    def delete_user(self, user_id: str) -> bool:
+        """Delete a user by user_id."""
+        UserQuery = Query()
+        removed = self.users.remove(UserQuery.user_id == user_id)
+        return len(removed) > 0
+

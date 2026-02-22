@@ -1,6 +1,18 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import GptButton, { OpenAILogo } from '../GptButton'
+import {
+  GlobeAltIcon,
+  UserIcon,
+  MapPinIcon,
+  ClockIcon,
+  ClipboardDocumentListIcon,
+  PencilIcon,
+  XMarkIcon,
+  CheckCircleIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline'
+import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
 
 function StoryDetailView({
   story,
@@ -21,8 +33,67 @@ function StoryDetailView({
   onAnalyzeStory,
   onClearAnalyzedEntities,
   onLinkEntities,
-  onReanalyzeStory
+  onReanalyzeStory,
+  onDeleteStory,
+  highlightEventId,
+  highlightPosition = -1
 }) {
+  const highlightRef = useRef(null)
+
+  useEffect(() => {
+    if (highlightPosition >= 0 && highlightRef.current) {
+      setTimeout(() => {
+        highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 300)
+    }
+  }, [highlightPosition])
+
+  const renderStoryContent = () => {
+    if (!story.content) return null
+    const paragraphs = story.content.split('\n')
+
+    // Resolve highlight: if target paragraph is empty, find nearest non-empty one
+    let effectiveHighlight = highlightPosition
+    if (effectiveHighlight >= 0) {
+      if (effectiveHighlight >= paragraphs.length || !paragraphs[effectiveHighlight]?.trim()) {
+        // Find nearest non-empty paragraph
+        let closest = -1
+        let minDist = Infinity
+        paragraphs.forEach((p, i) => {
+          if (p.trim() && Math.abs(i - effectiveHighlight) < minDist) {
+            minDist = Math.abs(i - effectiveHighlight)
+            closest = i
+          }
+        })
+        effectiveHighlight = closest
+      }
+    }
+
+    if (effectiveHighlight < 0) {
+      return <p className="text-lg whitespace-pre-wrap">{story.content}</p>
+    }
+
+    return (
+      <div className="text-lg whitespace-pre-wrap">
+        {paragraphs.map((para, idx) => {
+          const isHighlighted = idx === effectiveHighlight
+          return (
+            <p
+              key={idx}
+              ref={isHighlighted ? highlightRef : undefined}
+              className={
+                isHighlighted
+                  ? 'bg-warning/20 border-l-4 border-warning pl-3 py-1 rounded-r transition-colors duration-700'
+                  : ''
+              }
+            >
+              {para || '\u00A0'}
+            </p>
+          )
+        })}
+      </div>
+    )
+  }
   return (
     <div>
       <div className="flex gap-2 mb-4">
@@ -31,7 +102,7 @@ function StoryDetailView({
         </Link>
         {world && (
           <Link to={`/worlds/${world.world_id}`} className="btn btn-ghost btn-sm">
-            🌍 Về thế giới {world.name}
+            <GlobeAltIcon className="inline w-4 h-4" /> Về thế giới {world.name}
           </Link>
         )}
       </div>
@@ -54,10 +125,10 @@ function StoryDetailView({
             />
             <div className="flex gap-2">
               <button onClick={onSaveEdit} className="btn btn-primary">
-                💾 Lưu
+                <ArrowDownTrayIcon className="inline w-4 h-4" /> Lưu
               </button>
               <button onClick={onCancelEdit} className="btn btn-ghost">
-                ❌ Hủy
+                <XMarkIcon className="inline w-4 h-4" /> Hủy
               </button>
             </div>
           </>
@@ -65,21 +136,28 @@ function StoryDetailView({
           <>
             <div className="flex justify-between items-start mb-2">
               <h1 className="font-bold text-3xl">{story.title}</h1>
-              <button onClick={onEdit} className="btn btn-sm btn-ghost">
-                ✏️ Sửa
-              </button>
+              <div className="flex gap-1">
+                <button onClick={onEdit} className="btn btn-sm btn-ghost">
+                  <PencilIcon className="inline w-4 h-4" /> Sửa
+                </button>
+                {onDeleteStory && (
+                  <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost">
+                    <TrashIcon className="inline w-4 h-4" /> Xóa
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex gap-2 mb-4">
               <span className="badge badge-neutral" title={`Time index: ${normalizedTimelineIndex ?? 0}`}>
-                ⏰ {formattedWorldTime}
+                                <ClockIcon className="inline w-3.5 h-3.5" /> {formattedWorldTime}
               </span>
               {world && (
                 <Link to={`/worlds/${world.world_id}`} className="cursor-pointer badge badge-info hover:badge-info-focus">
-                  🌍 {world.name}
+                                    <GlobeAltIcon className="inline w-3.5 h-3.5" /> {world.name}
                 </Link>
               )}
             </div>
-            <p className="text-lg whitespace-pre-wrap">{story.content}</p>
+            {renderStoryContent()}
 
             {/* Analyze Button */}
             {story.content && !analyzedEntities && (
@@ -135,7 +213,7 @@ function StoryDetailView({
                   {analyzedEntities.characters?.length > 0 && (
                     <div>
                       <p className="opacity-70 mb-2 text-sm">
-                        👤 Nhân vật <span className="opacity-50">({analyzedEntities.characters.length})</span>
+                                                <UserIcon className="inline w-3.5 h-3.5" /> Nhân vật <span className="opacity-50">({analyzedEntities.characters.length})</span>
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {analyzedEntities.characters.map((char, i) => (
@@ -150,7 +228,7 @@ function StoryDetailView({
                   {analyzedEntities.locations?.length > 0 && (
                     <div>
                       <p className="opacity-70 mb-2 text-sm">
-                        📍 Địa điểm <span className="opacity-50">({analyzedEntities.locations.length})</span>
+                                                <MapPinIcon className="inline w-3.5 h-3.5" /> Địa điểm <span className="opacity-50">({analyzedEntities.locations.length})</span>
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {analyzedEntities.locations.map((loc, i) => (
@@ -175,7 +253,7 @@ function StoryDetailView({
                       onClick={onLinkEntities}
                       className="bg-gradient-to-r from-success hover:from-success/90 to-emerald-500 hover:to-emerald-500/90 shadow-sm border-0 text-white btn btn-sm"
                     >
-                      ✅ Xác nhận liên kết
+                                            <CheckCircleIcon className="inline w-4 h-4 text-success" /> Xác nhận liên kết
                     </button>
                     <span className="opacity-50 text-xs">
                       Lưu nhân vật và địa điểm vào câu chuyện
@@ -189,7 +267,7 @@ function StoryDetailView({
       </div>
 
       <div className="bg-base-100 shadow-xl p-6 rounded-box">
-        <h2 className="mb-4 font-bold text-2xl">📋 Thông tin chi tiết</h2>
+        <h2 className="mb-4 font-bold text-2xl"><ClipboardDocumentListIcon className="inline w-6 h-6" /> Thông tin chi tiết</h2>
         <div className="overflow-x-auto">
           <table className="table table-zebra w-full">
             <tbody>
@@ -241,7 +319,7 @@ function StoryDetailView({
                     <div className="flex flex-wrap gap-1">
                       {linkedCharacters.map((char) => (
                         <span key={char.entity_id} className="badge badge-primary badge-sm">
-                          👤 {char.name}
+                          <UserIcon className="inline w-3 h-3" /> {char.name}
                         </span>
                       ))}
                     </div>
@@ -255,7 +333,7 @@ function StoryDetailView({
                     <div className="flex flex-wrap gap-1">
                       {linkedLocations.map((loc) => (
                         <span key={loc.location_id} className="badge badge-secondary badge-sm">
-                          📍 {loc.name}
+                          <MapPinIcon className="inline w-3 h-3" /> {loc.name}
                         </span>
                       ))}
                     </div>

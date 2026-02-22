@@ -1,412 +1,225 @@
 # Story Creator
 
-Hệ thống tạo thế giới và câu chuyện tương tác với **React Frontend + Flask API Backend**, database NoSQL, và tích hợp GPT-4o-mini cho mô phỏng nhân vật.
+Hệ thống tạo thế giới và câu chuyện tương tác với **React Frontend + Flask API Backend**, deployed trên **Vercel** (monorepo). Tích hợp GPT-4o-mini cho mô phỏng nhân vật và sinh nội dung tự động.
+
+🌐 **Live**: [story-creator-cyan.vercel.app](https://story-creator-cyan.vercel.app)
 
 ## Tính năng
 
-### Core Features
-- ✨ Tạo thế giới (worlds) theo các thể loại: Fantasy, Sci-Fi, Modern, Historical
-- 📖 Tạo câu chuyện (stories) với nhiều thể loại khác nhau
-- 📍 Quản lý địa điểm (locations) trong thế giới
-- 👥 Quản lý thực thể (entities) tham gia vào câu chuyện
-- ⏰ Quản lý thời gian theo nón ánh sáng (time cones)
-- 🔗 Liên kết các câu chuyện với nhau theo thực thể, địa điểm, và thời gian
-- 💾 Lưu trữ dữ liệu: **NoSQL Database (TinyDB)** hoặc JSON files
-- ⚡ **Hiệu suất cao** với NoSQL database (mặc định)
-
-### ⭐ NEW: Auto-Generate World from Story Genre
-- 🌍 **Tự động tạo thế giới** khi chọn thể loại câu chuyện
-- 🎲 **Cấu hình ngẫu nhiên** có thể chỉnh sửa:
-  - Số lượng người (3-15, ngẫu nhiên)
-  - Có rừng hay không (ngẫu nhiên 70% có)
-  - Số lượng sông (0-5, ngẫu nhiên)
-  - Số lượng hồ (0-3, ngẫu nhiên)
-  - Mức độ nguy hiểm của sông/rừng/hồ (0-10, ngẫu nhiên)
-- 👹 **Sinh vật nguy hiểm** tự động tạo dựa trên mức độ nguy hiểm
-  - Càng nguy hiểm → càng nhiều sinh vật nguy hiểm
-  - Mỗi 3 điểm danger = 1 sinh vật
-  - Thuộc tính động dựa trên mức độ nguy hiểm
-- 🎯 **Genre-based World Type Mapping**:
-  - Adventure → Fantasy World
-  - Mystery → Modern World
-  - Conflict → Historical World
-  - Discovery → Sci-Fi World
-
-### 🎮 GPT-5 Nano Interactive Simulation Mode
-- 🤖 **Tích hợp GPT-5 Nano** - Model nhỏ gọn, hiệu quả nhất
-- 💾 Lưu kết quả dịch thuật vào database và ánh xạ vào câu chuyện
-- 👤 **Giả lập là nhân vật** trong câu chuyện
-- 📚 Đọc câu chuyện của nhân vật một cách liên mạch theo thứ tự thời gian nón ánh sáng
-- ⚔️ Lựa chọn hành động của nhân vật tại các thời điểm trong nón ánh sáng
-  - 3 lựa chọn: 2 đối nghịch + 1 từ bỏ
-- 🤖 Nhân vật không được giả lập sẽ được GPT-4o Mini lựa chọn tự động
-- ⏱️ Mỗi nhân vật có tiến trình xử lý riêng và chung 1 dòng thời gian
-- 🔮 Dự đoán tình huống xảy ra từ câu chuyện và sự liên kết của các nhân vật
-- ✅ **Modal xác nhận** khi sử dụng GPT (không còn checkbox)
-- 🔗 **Sơ đồ quan hệ**: Hiển thị mối quan hệ giữa các nhân vật
-
-### User Interfaces
-
-**⚛️ React Web Application (Default)**
-- 🌟 **React 18** với TailwindCSS + DaisyUI
-- 🎨 Responsive, modern UI/UX
-- 🔄 Real-time updates với REST API
-- 📊 Dashboard với thống kê
-- 🌍 Quản lý thế giới với GPT analysis
-- 📖 Quản lý câu chuyện với auto-character detection
-- 🔗 Visualize relationships giữa nhân vật
-- 📚 **Swagger UI** - Interactive API documentation
-
-**🎮 Simulation Interface**
-- Interactive character mode với GPT decision-making
-- Terminal-based character control
-- Run: `python main.py -i simulation`
-
-**📦 Legacy (Archived in `legacy/`)**
-- Flask templates web interface
-- Tkinter GUI
-- Demo scripts
+- 🌍 Tạo và quản lý thế giới (Fantasy, Sci-Fi, Modern, Historical)
+- 📖 Tạo câu chuyện với auto-detect nhân vật và liên kết thông minh
+- 👥 Quản lý nhân vật với thuộc tính (Strength, Intelligence, Charisma)
+- 📍 Quản lý địa điểm với tọa độ
+- ⏰ Timeline theo nón ánh sáng (time cones)
+- 🔗 Tự động liên kết câu chuyện qua nhân vật/địa điểm/thời gian chung
+- 🤖 GPT-4o-mini: Sinh mô tả thế giới, phân tích nhân vật, mô phỏng quyết định
+- 📊 Swagger UI cho API documentation
+- 🚀 Deploy trên Vercel (monorepo: static frontend + serverless Python API)
 
 ## Quick Start
 
-### 🚀 React + API Mode (Recommended)
+### Yêu cầu
+- Python 3.7+ (khuyến nghị 3.10+)
+- Node.js 18+
+- (Tùy chọn) OpenAI API key cho GPT features
+
+### Cài đặt
 
 ```bash
-# 1. Cài đặt dependencies
-pip install -r requirements.txt
-npm install                        # Install concurrently
-cd frontend && npm install && cd ..
+# Clone repo
+git clone https://github.com/your-username/story-creator.git
+cd story-creator
 
-# 2. Chạy cả frontend và backend
+# Tạo virtual environment
+python -m venv .venv
+.venv\Scripts\Activate.ps1          # Windows PowerShell
+# source .venv/bin/activate          # macOS/Linux
+
+# Cài đặt tất cả dependencies
+npm run install:all
+
+# Hoặc cài riêng:
+pip install -r api/requirements.txt
+cd frontend && npm install && cd ..
+```
+
+### Cấu hình (tùy chọn)
+
+```bash
+# Tạo file .env ở root cho GPT features
+echo OPENAI_API_KEY=sk-your-key-here > .env
+```
+
+### Chạy ứng dụng
+
+```bash
+# Full stack (React + API) — KHUYẾN NGHỊ
 npm run dev
 
-# Hoặc chạy riêng từng phần:
-# Terminal 1 (activate venv trước):
-.venv\Scripts\Activate.ps1        # Windows PowerShell
-python main.py -i api
+# Hoặc chạy riêng:
+# Terminal 1 — API Backend (port 5000)
+.venv\Scripts\python.exe api/main.py -i api
 
-# Terminal 2:
+# Terminal 2 — React Frontend (port 3000)
 cd frontend && npm run dev
 ```
 
 **Truy cập:**
-- Frontend: http://localhost:3000
-- API Swagger: http://localhost:5000/api/docs
-- API Root: http://localhost:5000/ (auto-redirect to Swagger)
+- 🖥️ React UI: http://localhost:3000
+- 📚 API Swagger: http://localhost:5000/api/docs
 
-### 📚 Chi tiết
-
-Xem [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) và [docs/REACT_ARCHITECTURE.md](docs/REACT_ARCHITECTURE.md)
-
-## Sử dụng
-
-### API Backend Mode (for React)
-
-```bash
-python main.py -i api              # API server on port 5000 with Swagger UI
-python main.py -i api --debug      # With debug mode
-```
-
-### Legacy Web Interface
-
-```bash
-python main.py -i web              # Flask templates (deprecated)
-```
-
-### Simulation Mode
-
-```bash
-python main.py -i simulation       # Character simulation with GPT
-```
-
-## Cấu trúc dự án
+## Cấu trúc dự án (Monorepo)
 
 ```
 story-creator/
-├── frontend/            # ⚛️ React application
+├── api/                          # 🐍 Python backend
+│   ├── app.py                    # Vercel serverless entrypoint
+│   ├── main.py                   # Local dev entrypoint
+│   ├── requirements.txt          # Python dependencies
+│   ├── ai/                       # GPT-4o-mini integration
+│   ├── core/models/              # Domain models (World, Story, Entity, Location, TimeCone)
+│   ├── generators/               # Content generators + story linker
+│   ├── interfaces/               # Flask API + blueprint routes
+│   │   ├── api_backend.py        # Main Flask app (CORS, Swagger)
+│   │   └── routes/               # world, story, gpt, health, stats
+│   ├── services/                 # Business logic (GPTService, CharacterService)
+│   ├── storage/                  # NoSQL (TinyDB) + JSON storage
+│   └── visualization/            # Relationship diagrams
+│
+├── frontend/                     # ⚛️ React application
 │   ├── src/
-│   │   ├── components/ # UI components
-│   │   ├── pages/      # Page components
-│   │   ├── services/   # API client
-│   │   └── App.jsx
-│   ├── package.json
-│   └── vite.config.js
+│   │   ├── components/           # UI components (GptButton, Modal, Toast, ...)
+│   │   ├── containers/           # Data-fetching containers
+│   │   ├── pages/                # Dashboard, Worlds, Stories, Detail pages
+│   │   ├── services/api.js       # Centralized Axios API client
+│   │   └── App.jsx               # Root component + React Router
+│   ├── vite.config.js
+│   └── package.json
 │
-├── interfaces/         # Backend interfaces
-│   ├── api_backend.py  # ✨ Pure REST API (NEW)
-│   ├── web_interface.py # Flask templates (legacy)
-│   └── simulation_interface.py
-│
-├── services/           # Business logic layer
-│   ├── gpt_service.py
-│   └── character_service.py
-│
-├── core/
-│   └── models/        # Data models
-│       ├── world.py
-│       ├── story.py
-│       ├── location.py
-│       ├── entity.py
-│       └── time_cone.py
-│
-├── generators/        # Content generators
-│   ├── world_generator.py
-│   ├── story_generator.py
-│   └── story_linker.py
-│
-├── storage/          # Storage backends
-│   ├── nosql_storage.py  # TinyDB (default)
-│   └── json_storage.py   # File-based (legacy)
-│
-├── ai/               # AI integration
-│   ├── gpt_client.py
-│   └── prompts.py
-│
-├── main.py          # Entry point
-├── package.json     # Root npm scripts
-└── requirements.txt # Python dependencies
-```
-│   ├── __init__.py
-│   └── storage.py
-├── interfaces/         # User interfaces
-│   ├── __init__.py
-│   ├── terminal_interface.py
-│   └── gui_interface.py
-├── data/               # Data storage (auto-created)
-│   ├── worlds/
-│   ├── stories/
-│   ├── locations/
-│   ├── entities/
-│   └── time_cones/
-├── main.py            # Main entry point
-└── README.md
+├── docs/                         # 📖 Documentation
+├── vercel.json                   # Vercel monorepo deployment config
+├── package.json                  # Root npm scripts (concurrently)
+└── .env                          # Environment variables
 ```
 
-## Cấu trúc dữ liệu JSON
+> **Lưu ý**: Tất cả Python code nằm trong `api/`. Import bên trong `api/` dùng bare module names (ví dụ: `from core.models import World`), KHÔNG dùng prefix `api.*`.
 
-### World (Thế giới)
+## API Endpoints
 
-```json
-{
-  "type": "world",
-  "world_id": "uuid",
-  "name": "Tên thế giới",
-  "description": "Mô tả thế giới",
-  "created_at": "timestamp",
-  "metadata": {
-    "world_type": "fantasy",
-    "themes": ["magic", "dragons"]
-  },
-  "stories": ["story_id_1", "story_id_2"],
-  "locations": ["location_id_1", "location_id_2"],
-  "entities": ["entity_id_1", "entity_id_2"]
-}
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| GET | `/api/health` | Health check |
+| GET | `/api/worlds` | Danh sách thế giới |
+| POST | `/api/worlds` | Tạo thế giới mới |
+| GET | `/api/worlds/<id>` | Chi tiết thế giới |
+| GET | `/api/worlds/<id>/characters` | Danh sách nhân vật |
+| GET | `/api/worlds/<id>/relationships` | Biểu đồ quan hệ |
+| POST | `/api/stories` | Tạo câu chuyện |
+| GET | `/api/stories/<id>` | Chi tiết câu chuyện |
+| POST | `/api/gpt/analyze` | Phân tích GPT (async) |
+| GET | `/api/gpt/results/<task_id>` | Kết quả GPT |
+| GET | `/api/stats` | Thống kê hệ thống |
+
+📚 Chi tiết đầy đủ tại Swagger UI: http://localhost:5000/api/docs
+
+## Deploy lên Vercel
+
+```bash
+# Cài Vercel CLI
+npm i -g vercel
+
+# Deploy từ project root
+vercel
+
+# Production deploy
+vercel --prod
 ```
 
-### Story (Câu chuyện)
+**Cấu hình Vercel** (`vercel.json`):
+- `buildCommand`: Build React frontend (`cd frontend && npm install && npm run build`)
+- `outputDirectory`: `frontend/dist` (static files)
+- `rewrites`: Route `/api/*` → `api/app.py` (Python serverless function)
+- Database dùng `/tmp/story_creator.db` trên Vercel (read-only filesystem)
 
-```json
-{
-  "type": "story",
-  "story_id": "uuid",
-  "title": "Tiêu đề câu chuyện",
-  "content": "Nội dung câu chuyện",
-  "world_id": "world_id",
-  "created_at": "timestamp",
-  "metadata": {
-    "genre": "adventure"
-  },
-  "locations": ["location_id_1"],
-  "entities": ["entity_id_1"],
-  "time_cones": ["time_cone_id_1"],
-  "linked_stories": ["story_id_2", "story_id_3"]
-}
+**Environment Variables** (Vercel Dashboard → Settings → Environment Variables):
+- `OPENAI_API_KEY` — cho GPT features
+
+## Testing
+
+```bash
+.venv\Scripts\python.exe api/test.py          # Core tests
+.venv\Scripts\python.exe api/test_nosql.py    # NoSQL tests
+.venv\Scripts\python.exe api/test_api_key.py  # API key validation
 ```
 
-### Location (Địa điểm)
+## Tech Stack
 
-```json
-{
-  "type": "location",
-  "location_id": "uuid",
-  "name": "Tên địa điểm",
-  "description": "Mô tả địa điểm",
-  "world_id": "world_id",
-  "created_at": "timestamp",
-  "coordinates": {
-    "x": 100.5,
-    "y": 200.3,
-    "z": 50.0
-  },
-  "metadata": {}
-}
-```
+### Backend
+- **Flask** 3.0 — Web framework
+- **Flask-CORS** — Cross-origin support
+- **Flasgger** — Swagger UI
+- **TinyDB** — Lightweight NoSQL database
+- **OpenAI** — GPT-4o-mini integration
+- **python-dotenv** — Environment management
 
-### Entity (Thực thể)
-
-```json
-{
-  "type": "entity",
-  "entity_id": "uuid",
-  "name": "Tên thực thể",
-  "entity_type": "character",
-  "description": "Mô tả thực thể",
-  "world_id": "world_id",
-  "created_at": "timestamp",
-  "attributes": {
-    "strength": 8,
-    "intelligence": 9
-  },
-  "relationships": [
-    {
-      "entity_id": "other_entity_id",
-      "relationship_type": "friend"
-    }
-  ],
-  "metadata": {}
-}
-```
-
-### Time Cone (Nón ánh sáng thời gian)
-
-```json
-{
-  "type": "time_cone",
-  "time_cone_id": "uuid",
-  "name": "Tên time cone",
-  "description": "Mô tả ngữ cảnh thời gian",
-  "world_id": "world_id",
-  "created_at": "timestamp",
-  "start_time": "Thời điểm bắt đầu",
-  "end_time": "Thời điểm kết thúc",
-  "reference_event": "Sự kiện tham chiếu",
-  "metadata": {}
-}
-```
-
-## Ví dụ sử dụng
-
-### 1. Tạo thế giới Fantasy
-
-```
-Chọn loại thế giới: Fantasy
-Mô tả: Một thế giới ma thuật với các vương quốc và rồng
-Số địa điểm: 5
-Số thực thể: 3
-```
-
-### 2. Tạo câu chuyện
-
-```
-Chọn thể loại: Adventure
-Mô tả: Một hiệp sĩ trẻ bắt đầu cuộc hành trình tìm kiếm thanh kiếm huyền thoại
-```
-
-### 3. Liên kết câu chuyện
-
-```
-Phương thức: Theo thực thể chung
-Kết quả: Các câu chuyện có cùng nhân vật sẽ được liên kết với nhau
-```
+### Frontend
+- **React** 18 — Component UI
+- **Vite** 5 — Build tool
+- **TailwindCSS** 3.4 + **DaisyUI** 4.6 — Styling
+- **React Router** 6 — Client-side routing
+- **Axios** — HTTP client
 
 ## Thuật toán liên kết câu chuyện
 
-Hệ thống sử dụng các thuật toán logic để liên kết các câu chuyện:
+Câu chuyện được liên kết tự động khi chia sẻ:
+1. **Nhân vật** — cùng entity xuất hiện ở nhiều câu chuyện
+2. **Địa điểm** — cùng location
+3. **Thời gian** — time cone gần nhau
 
-1. **Liên kết theo thực thể**: Câu chuyện có chung nhân vật/đối tượng
-2. **Liên kết theo địa điểm**: Câu chuyện diễn ra ở cùng vị trí
-3. **Liên kết theo thời gian**: Câu chuyện có cùng ngữ cảnh thời gian (time cone)
+Sử dụng inverted indices: `{entity_id: [story_ids]}` để tìm liên kết hiệu quả.
 
-## NoSQL Database vs JSON Files
+## Auto-World Generation
 
-### ⚡ NoSQL Database (TinyDB) - Mặc định
+Khi tạo câu chuyện, thế giới tự động được chọn theo thể loại:
+- Adventure → Fantasy World
+- Mystery → Modern World
+- Conflict → Historical World
+- Discovery → Sci-Fi World
 
-**Ưu điểm:**
-- Truy vấn nhanh hơn với indexing
-- Lọc và tìm kiếm hiệu quả
-- Một file database duy nhất (dễ backup)
-- Hỗ trợ ACID transactions
-- Tốt hơn cho datasets lớn
-- Hỗ trợ concurrent access
-
-**Performance:**
-- Query speed: ~0.0008s cho filtered queries
-- Write speed: ~0.07s cho 100 records
-- Load speed: ~0.003s cho 10 records
-
-### 📄 JSON Files - Legacy
-
-**Ưu điểm:**
-- Dễ đọc và chỉnh sửa thủ công
-- Không cần dependencies
-- Phân tán theo thư mục
-- Human-readable format
-
-**Sử dụng khi:**
-- Cần xem/sửa dữ liệu trực tiếp
-- Dataset nhỏ (<100 records)
-- Không quan tâm performance
-
-## 🎮 GPT-4 Simulation Mode Features
-
-### Interactive Character Simulation
-
-Chế độ simulation cho phép bạn:
-
-1. **Tự động dịch thuật (ENG→VN)**
-   - GPT-4 tự động dịch tất cả văn bản từ Tiếng Anh sang Tiếng Việt
-   - Kết quả dịch được lưu vào database
-   - Ánh xạ vào câu chuyện đã tạo và sắp tạo
-
-2. **Giả lập nhân vật**
-   - Chọn một nhân vật để điều khiển
-   - Đọc câu chuyện theo góc nhìn của nhân vật đó
-   - Thứ tự theo nón ánh sáng thời gian (light cone chronology)
-
-3. **Lựa chọn tương tác**
-   - Tại mỗi thời điểm quan trọng, chọn hành động cho nhân vật
-   - 3 lựa chọn được tạo tự động:
-     - **A**: Hành động chính
-     - **B**: Hành động đối nghịch
-     - **C**: Từ bỏ/Rút lui
-
-4. **AI điều khiển nhân vật phụ**
-   - Nhân vật không được điều khiển sẽ có GPT-4 quyết định
-   - Dựa trên tính cách và thuộc tính của nhân vật
-
-5. **Timeline riêng biệt**
-   - Mỗi nhân vật có tiến trình xử lý riêng
-   - Tất cả chia sẻ một dòng thời gian chung
-   - Đồng bộ hóa qua global time index
-
-6. **Dự đoán tình huống**
-   - GPT-4 dự đoán tình huống tiếp theo
-   - Dựa trên câu chuyện và quyết định của các nhân vật
-   - Liên kết logic giữa các sự kiện
-
-### Ví dụ Sử dụng
+## GPT Simulation Mode
 
 ```bash
-# Story Creator
+.venv\Scripts\python.exe api/main.py -i simulation
+```
 
-Story Creator is an interactive world and story generation platform with a modern React frontend, Flask REST API backend, and GPT-4o-mini AI integration. Build, link, and simulate fictional worlds, stories, characters, and locations with high performance and a clean service architecture.
-
-## Features
-- 🌍 Create and manage worlds (fantasy, sci-fi, modern, historical)
-- 📖 Write and link stories with auto-detected characters and locations
-- 🗺️ Visualize timelines, maps, and character relationships
-- 🤖 GPT-4o-mini integration for world/story/character generation
-- 🧑‍💻 React 18 + TailwindCSS + DaisyUI frontend
-- 🚀 Fast NoSQL (TinyDB) or JSON storage
-- 🧩 Modular service layer for business logic
-
-## Quick Start
-1. Clone the repo & install Python/Node.js dependencies
-2. (Optional) Add your OpenAI API key to `.env`
-3. Run `npm run dev` for full stack, or see [docs/INSTALLATION.md](docs/INSTALLATION.md)
-4. Access UI at http://localhost:3000, API docs at http://localhost:5000/api/docs
+- Giả lập nhân vật trong câu chuyện
+- 3 lựa chọn tại mỗi thời điểm: hành động / đối nghịch / rút lui
+- Nhân vật không điều khiển do GPT quyết định
+- Auto-translate ENG → VN
 
 ## Documentation
-- See [docs/](docs/) for architecture, API, models, storage, and more
-- For Copilot/service/frontend coding rules, see [.github/copilot-instructions.md](.github/copilot-instructions.md)
-AI-Nhat-Phuc
+
+Xem thêm trong `docs/`:
+- [API Documentation](docs/API_DOCUMENTATION.md)
+- [Architecture](docs/architecture_diagram.md)
+- [Models Guide](docs/MODELS_GUIDE.md)
+- [Storage Guide](docs/STORAGE_GUIDE.md)
+- [GPT Integration](docs/GPT_INTEGRATION_GUIDE.md)
+- [React Architecture](docs/REACT_ARCHITECTURE.md)
+- [Development Guide](docs/DEVELOPMENT_GUIDE.md)
+- [Quick Start](docs/QUICK_START.md)
+- [Installation](docs/INSTALLATION.md)
+
+## VS Code Tasks
+
+Dự án cung cấp sẵn các tasks trong `.vscode/tasks.json`:
+- `Run API Backend` — Flask API (port 5000)
+- `Run React Frontend` — Vite dev server (port 3000)
+- `Full Stack Dev` — Chạy cả hai
+- `Run Tests` / `Run NoSQL Tests`
+- `Build React` — Production build
+- `Install Backend Deps` / `Install Frontend Deps`
+
+## License
+
+MIT

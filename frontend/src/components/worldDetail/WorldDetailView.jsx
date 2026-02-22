@@ -1,6 +1,18 @@
 import { Link } from 'react-router-dom'
 import WorldTimeline from './WorldTimeline'
+import UnlinkedStoriesModal from './UnlinkedStoriesModal'
 import GptButton, { OpenAILogo } from '../GptButton'
+import {
+  BookOpenIcon,
+  UserIcon,
+  MapPinIcon,
+  LinkIcon,
+  TrashIcon,
+  PencilIcon,
+  CheckCircleIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
+import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
 
 function WorldDetailView({
   world,
@@ -10,6 +22,7 @@ function WorldDetailView({
   activeTab,
   editing,
   editForm,
+  user,
   onChangeTab,
   onEdit,
   onCancelEdit,
@@ -20,9 +33,18 @@ function WorldDetailView({
   // Auto-link props
   autoLinking,
   onAutoLinkStories,
-  // Delete entity/location props
+  // Unlinked stories modal props
+  showUnlinkedModal,
+  unlinkedStories,
+  batchAnalyzing,
+  batchProgress,
+  batchResult,
+  onBatchAnalyze,
+  onCloseUnlinkedModal,
+  // Delete entity/location/story props
   onDeleteEntity,
   onDeleteLocation,
+  onDeleteStory,
   // Story creation props
   showStoryModal,
   storyForm,
@@ -63,10 +85,10 @@ function WorldDetailView({
             />
             <div className="flex gap-2">
               <button onClick={onSaveEdit} className="btn btn-primary">
-                💾 Lưu
+                <ArrowDownTrayIcon className="inline w-4 h-4" /> Lưu
               </button>
               <button onClick={onCancelEdit} className="btn btn-ghost">
-                ❌ Hủy
+                <XMarkIcon className="inline w-4 h-4" /> Hủy
               </button>
             </div>
           </>
@@ -75,7 +97,7 @@ function WorldDetailView({
             <div className="flex justify-between items-start mb-2">
               <h1 className="font-bold text-3xl">{world.name}</h1>
               <button onClick={onEdit} className="btn btn-sm btn-ghost">
-                ✏️ Sửa
+                <PencilIcon className="inline w-4 h-4" /> Sửa
               </button>
             </div>
             <p className="mb-4 badge badge-primary">{world.world_type}</p>
@@ -89,19 +111,19 @@ function WorldDetailView({
           className={`tab ${activeTab === 'stories' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('stories')}
         >
-          📖 Câu chuyện ({stories.length})
+                    <BookOpenIcon className="inline w-4 h-4" /> Câu chuyện ({stories.length})
         </a>
         <a
           className={`tab ${activeTab === 'characters' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('characters')}
         >
-          👤 Nhân vật ({characters.length})
+                    <UserIcon className="inline w-4 h-4" /> Nhân vật ({characters.length})
         </a>
         <a
           className={`tab ${activeTab === 'locations' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('locations')}
         >
-          📍 Địa điểm ({locations.length})
+                    <MapPinIcon className="inline w-4 h-4" /> Địa điểm ({locations.length})
         </a>
       </div>
 
@@ -114,11 +136,19 @@ function WorldDetailView({
               disabled={autoLinking || stories.length < 2}
               title="Tự động liên kết các câu chuyện có chung nhân vật hoặc địa điểm"
             >
-              {autoLinking ? 'Đang liên kết...' : '🔗 Liên kết tự động'}
+              {autoLinking ? 'Đang liên kết...' : <><LinkIcon className="inline w-4 h-4" /> Liên kết tự động</>}
             </button>
-            <button onClick={onOpenStoryModal} className="btn btn-primary btn-sm">
-              + Thêm câu chuyện
-            </button>
+            {user?.role === 'admin' ? (
+              <div className="tooltip-left tooltip" data-tip="Admin chỉ quản lý hệ thống, không tạo nội dung">
+                <button className="btn btn-primary btn-sm btn-disabled">
+                  + Thêm câu chuyện
+                </button>
+              </div>
+            ) : (
+              <button onClick={onOpenStoryModal} className="btn btn-primary btn-sm">
+                + Thêm câu chuyện
+              </button>
+            )}
           </div>
           <WorldTimeline
             stories={stories}
@@ -126,6 +156,7 @@ function WorldDetailView({
             locations={locations}
             getStoryWorldTime={getStoryWorldTime}
             getTimelineLabel={getTimelineLabel}
+            onDeleteStory={onDeleteStory}
           />
         </div>
       )}
@@ -136,21 +167,21 @@ function WorldDetailView({
             <div key={char.entity_id} className="bg-base-100 shadow card">
               <div className="card-body">
                 <div className="flex justify-between items-start">
-                  <h3 className="card-title">👤 {char.name}</h3>
+                  <h3 className="card-title"><UserIcon className="inline w-4 h-4" /> {char.name}</h3>
                   <button
                     onClick={() => onDeleteEntity(char.entity_id, char.name)}
                     className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
                     title="Xóa nhân vật"
                   >
-                    🗑️
+                    <TrashIcon className="w-4 h-4" />
                   </button>
                 </div>
                 <p className="badge">{char.entity_type}</p>
                 {char.attributes && (
                   <div className="text-sm">
-                    <p>💪 Sức mạnh: {char.attributes.Strength}</p>
-                    <p>🧠 Trí tuệ: {char.attributes.Intelligence}</p>
-                    <p>✨ Sức hút: {char.attributes.Charisma}</p>
+                    <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> Sức mạnh: {char.attributes.Strength}</p>
+                    <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> Trí tuệ: {char.attributes.Intelligence}</p>
+                    <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> Sức hút: {char.attributes.Charisma}</p>
                   </div>
                 )}
               </div>
@@ -166,13 +197,13 @@ function WorldDetailView({
             <div key={loc.location_id} className="bg-base-100 shadow card">
               <div className="card-body">
                 <div className="flex justify-between items-start">
-                  <h3 className="card-title">📍 {loc.name}</h3>
+                  <h3 className="card-title"><MapPinIcon className="inline w-4 h-4" /> {loc.name}</h3>
                   <button
                     onClick={() => onDeleteLocation(loc.location_id, loc.name)}
                     className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
                     title="Xóa địa điểm"
                   >
-                    🗑️
+                    <TrashIcon className="w-4 h-4" />
                   </button>
                 </div>
                 {loc.location_type && <p className="badge">{loc.location_type}</p>}
@@ -295,7 +326,7 @@ function WorldDetailView({
                     </div>
                     {analyzedEntities.characters?.length > 0 && (
                       <div className="mb-2">
-                        <span className="font-semibold">👤 Nhân vật ({analyzedEntities.characters.length}):</span>
+                        <span className="font-semibold"><UserIcon className="inline w-3.5 h-3.5" /> Nhân vật ({analyzedEntities.characters.length}):</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {analyzedEntities.characters.map((char, i) => (
                             <span key={i} className="badge badge-primary">{char.name || char}</span>
@@ -305,7 +336,7 @@ function WorldDetailView({
                     )}
                     {analyzedEntities.locations?.length > 0 && (
                       <div className="mb-2">
-                        <span className="font-semibold">📍 Địa điểm ({analyzedEntities.locations.length}):</span>
+                        <span className="font-semibold"><MapPinIcon className="inline w-3.5 h-3.5" /> Địa điểm ({analyzedEntities.locations.length}):</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {analyzedEntities.locations.map((loc, i) => (
                             <span key={i} className="badge badge-secondary">{loc.name || loc}</span>
@@ -319,7 +350,7 @@ function WorldDetailView({
                     {(analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0) && (
                       <div className="mt-2 pt-2 border-success/30 border-t">
                         <span className="text-sm">
-                          ✅ Nhấn <strong>Tạo câu chuyện</strong> để lưu và liên kết các thực thể này
+                                                    <CheckCircleIcon className="inline w-4 h-4 text-success" /> Nhấn <strong>Tạo câu chuyện</strong> để lưu và liên kết các thực thể này
                         </span>
                       </div>
                     )}
@@ -361,6 +392,18 @@ function WorldDetailView({
           </div>
         </div>
       )}
+
+      {/* Unlinked Stories Modal */}
+      <UnlinkedStoriesModal
+        open={showUnlinkedModal}
+        onClose={onCloseUnlinkedModal}
+        unlinkedStories={unlinkedStories}
+        getTimelineLabel={getTimelineLabel}
+        batchAnalyzing={batchAnalyzing}
+        batchProgress={batchProgress}
+        batchResult={batchResult}
+        onBatchAnalyze={onBatchAnalyze}
+      />
     </div>
   )
 }

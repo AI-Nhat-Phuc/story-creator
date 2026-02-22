@@ -11,7 +11,7 @@ npm run dev
 
 ### Backend/API Only
 ```bash
-python main.py -i api
+.venv\Scripts\python.exe api/main.py -i api
 # API at http://localhost:5000
 ```
 
@@ -25,7 +25,7 @@ npm run dev
 
 ### Simulation Mode (Terminal)
 ```bash
-python main.py -i simulation [--world-id <id> --character-id <id>]
+.venv\Scripts\python.exe api/main.py -i simulation [--world-id <id> --character-id <id>]
 ```
 
 ## Features
@@ -36,9 +36,9 @@ python main.py -i simulation [--world-id <id> --character-id <id>]
 
 ## Testing
 ```bash
-python test.py         # Core tests
-python test_nosql.py   # NoSQL tests
-python test_api_key.py # GPT API key check
+.venv\Scripts\python.exe api/test.py         # Core tests
+.venv\Scripts\python.exe api/test_nosql.py   # NoSQL tests
+.venv\Scripts\python.exe api/test_api_key.py # GPT API key check
 ```
 
 ## Storage

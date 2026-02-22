@@ -10,12 +10,12 @@ Sau khi chạy API backend, truy cập Swagger UI tại:
 
 1. Cài đặt dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -r api/requirements.txt
 ```
 
 2. Chạy API server:
 ```bash
-python main.py -i api
+.venv\Scripts\python.exe api/main.py -i api
 ```
 
 3. Truy cập Swagger UI:
@@ -32,21 +32,44 @@ http://localhost:5000/api/docs
 - `GET /api/worlds` - Lấy danh sách thế giới
 - `POST /api/worlds` - Tạo thế giới mới
 - `GET /api/worlds/{world_id}` - Chi tiết thế giới
+- `PUT /api/worlds/{world_id}` - Cập nhật thế giới
 - `DELETE /api/worlds/{world_id}` - Xóa thế giới
 - `GET /api/worlds/{world_id}/stories` - Câu chuyện trong thế giới
 - `GET /api/worlds/{world_id}/characters` - Nhân vật trong thế giới
 - `GET /api/worlds/{world_id}/locations` - Địa điểm trong thế giới
+- `DELETE /api/worlds/{world_id}/entities/{entity_id}` - Xóa nhân vật
+- `DELETE /api/worlds/{world_id}/locations/{location_id}` - Xóa địa điểm
+- `POST /api/worlds/{world_id}/auto-link-stories` - Tự động liên kết câu chuyện
+- `POST /api/worlds/{world_id}/share` - Chia sẻ thế giới
 - `GET /api/worlds/{world_id}/relationships` - Sơ đồ quan hệ SVG
 
 ### Stories Management
 - `GET /api/stories` - Lấy tất cả câu chuyện
 - `POST /api/stories` - Tạo câu chuyện mới
 - `GET /api/stories/{story_id}` - Chi tiết câu chuyện
+- `PUT /api/stories/{story_id}` - Cập nhật câu chuyện
 - `DELETE /api/stories/{story_id}` - Xóa câu chuyện
+- `POST /api/stories/{story_id}/link-entities` - Liên kết nhân vật/địa điểm vào câu chuyện
+- `POST /api/stories/{story_id}/clear-links` - Xóa tất cả liên kết entity/location
+
+### Auto-Link & Batch Analysis
+- `POST /api/worlds/{world_id}/auto-link-stories` - Tự động liên kết câu chuyện qua shared entities/locations. Response bao gồm `unlinked_stories` (danh sách câu chuyện chưa có entity/location)
+- `POST /api/gpt/batch-analyze-stories` - Phân tích hàng loạt với GPT (tối đa 3 câu chuyện/lần). Xử lý theo thứ tự thời gian, context nhân vật/địa điểm được truyền từ câu chuyện trước sang sau
 
 ### GPT Integration
-- `POST /api/gpt/analyze` - Phân tích mô tả với GPT
-- `GET /api/gpt/results/{task_id}` - Lấy kết quả GPT
+- `POST /api/gpt/analyze` - Phân tích mô tả với GPT (world hoặc story)
+- `POST /api/gpt/generate-description` - Tạo mô tả world/story bằng GPT
+- `POST /api/gpt/batch-analyze-stories` - Batch phân tích câu chuyện (max 3)
+- `GET /api/gpt/results/{task_id}` - Lấy kết quả GPT (polling)
+
+### Events Timeline
+- `GET /api/worlds/{world_id}/events` - Lấy timeline sự kiện của thế giới
+- `POST /api/worlds/{world_id}/events/extract` - Trích xuất sự kiện từ tất cả câu chuyện (GPT, async)
+- `POST /api/stories/{story_id}/events/extract` - Trích xuất sự kiện từ 1 câu chuyện (GPT, `?force=true` để bỏ qua cache)
+- `DELETE /api/stories/{story_id}/events/cache` - Xóa cache phân tích sự kiện
+- `PUT /api/events/{event_id}` - Cập nhật sự kiện
+- `DELETE /api/events/{event_id}` - Xóa sự kiện
+- `POST /api/events/{event_id}/connections` - Thêm kết nối giữa 2 sự kiện
 
 ### Statistics
 - `GET /api/stats` - Thống kê hệ thống
@@ -286,10 +309,19 @@ Hiện tại không có rate limiting. Trong production nên thêm rate limiting
 
 ## Authentication
 
-Hiện tại API không yêu cầu authentication. Trong production nên thêm:
-- API Keys
-- JWT tokens
-- OAuth 2.0
+API sử dụng JWT token-based authentication:
+- `POST /api/auth/register` - Đăng ký tài khoản
+- `POST /api/auth/login` - Đăng nhập, nhận JWT token
+- `GET /api/auth/verify` - Xác thực token
+- `GET /api/auth/me` - Lấy thông tin user hiện tại
+- `POST /api/auth/change-password` - Đổi mật khẩu
+
+Gửi token trong header: `Authorization: Bearer <token>`
+
+Các decorator:
+- `@token_required` - Route yêu cầu đăng nhập
+- `@optional_auth` - Route hoạt động cả khi login và không login
+- `@admin_required` - Route chỉ dành cho admin
 
 ## Testing API
 
@@ -341,7 +373,7 @@ Import Swagger JSON:
 
 ### GPT endpoints trả về 503
 - Kiểm tra file `.env` có `OPENAI_API_KEY`
-- Chạy `python test_api_key.py` để verify
+- Chạy `.venv\Scripts\python.exe api/test_api_key.py` để verify
 
 ## Next Steps
 

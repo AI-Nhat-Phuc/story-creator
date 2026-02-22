@@ -5,7 +5,7 @@
             "label": "Run API Backend",
             "type": "shell",
             "command": ".venv\\Scripts\\python.exe",
-            "args": ["main.py", "-i", "api"],
+            "args": ["api\\main.py", "-i", "api"],
             "problemMatcher": [],
             "group": {
                 "kind": "build",

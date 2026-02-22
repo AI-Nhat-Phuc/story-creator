@@ -6,20 +6,20 @@
 graph TB
     subgraph Client["🌐 Client Layer (Browser)"]
         Frontend["Frontend (Vanilla JS)<br/>---<br/>• TailwindCSS + DaisyUI<br/>• Event Handlers<br/>• DOM Manipulation<br/>• Async Fetch API<br/>• GPT Task Polling"]
-        Templates["templates/index.html<br/>static/js/app.js<br/>static/css/style.css"]
+        Templates["frontend/src/ (React components)<br/>frontend/src/services/api.js<br/>frontend/src/index.css"]
     end
 
     subgraph WebServer["⚙️ Web Server Layer (Flask)"]
-        API["interfaces/web_interface.py<br/>---<br/>API Endpoints:<br/>• GET/POST /api/worlds<br/>• GET /api/worlds/&lt;id&gt;<br/>• POST /api/stories<br/>• GET /api/worlds/&lt;id&gt;/characters<br/>• POST /api/gpt/analyze<br/>• GET /api/gpt/results/&lt;task_id&gt;<br/>• GET /api/stats<br/>---<br/>Session Management & Task Tracking"]
+        API["api/interfaces/api_backend.py<br/>---<br/>API Endpoints:<br/>• GET/POST /api/worlds<br/>• GET /api/worlds/&lt;id&gt;<br/>• POST /api/stories<br/>• GET /api/worlds/&lt;id&gt;/characters<br/>• POST /api/gpt/analyze<br/>• GET /api/gpt/results/&lt;task_id&gt;<br/>• GET /api/stats<br/>---<br/>Session Management & Task Tracking"]
     end
 
     subgraph Services["🔧 Service Layer"]
-        GPTService["services/gpt_service.py<br/>---<br/>• analyze_world_entities()<br/>• generate_world_desc()<br/>• generate_story_desc()<br/>• is_available()<br/>---<br/>Threading & Callbacks"]
-        CharService["services/character_service.py<br/>---<br/>• detect_mentioned_chars()<br/>• get_character_names()<br/>• format_char_display()<br/>• add_char_info()<br/>---<br/>Static Utilities"]
+        GPTService["api/services/gpt_service.py<br/>---<br/>• analyze_world_entities()<br/>• generate_world_desc()<br/>• generate_story_desc()<br/>• is_available()<br/>---<br/>Threading & Callbacks"]
+        CharService["api/services/character_service.py<br/>---<br/>• detect_mentioned_chars()<br/>• get_character_names()<br/>• format_char_display()<br/>• add_char_info()<br/>---<br/>Static Utilities"]
     end
 
     subgraph Infrastructure["🏗️ Infrastructure Layer"]
-        AI["ai/gpt_client.py<br/>---<br/>OpenAI API Client<br/>GPT-4o-mini"]
+        AI["api/ai/gpt_client.py<br/>---<br/>OpenAI API Client<br/>GPT-4o-mini"]
         Generators["generators/<br/>---<br/>• world_generator<br/>• story_generator<br/>• story_linker"]
         Storage["storage/<br/>---<br/>• nosql_storage<br/>• json_storage<br/>• base_storage"]
         Viz["visualization/<br/>---<br/>• relationship_diagram"]

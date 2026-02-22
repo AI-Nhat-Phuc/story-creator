@@ -1,6 +1,13 @@
 import { Link } from 'react-router-dom'
+import {
+  UserIcon,
+  MapPinIcon,
+  LinkIcon,
+  ClockIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline'
 
-function WorldTimeline({ stories, characters = [], locations = [], getStoryWorldTime, getTimelineLabel }) {
+function WorldTimeline({ stories, characters = [], locations = [], getStoryWorldTime, getTimelineLabel, onDeleteStory }) {
   if (!stories || stories.length === 0) {
     return <p className="opacity-60 py-8 text-center">Chưa có câu chuyện nào</p>
   }
@@ -66,7 +73,7 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
           <li key={group.yearKey}>
             {groupIndex === 0 && <hr className={palette.line} />}
             <div className="text-left md:text-right timeline-start">
-              <time className="opacity-70 font-mono text-sm">⏰ {group.timeLabel}</time>
+              <time className="opacity-70 font-mono text-sm"><ClockIcon className="inline w-3.5 h-3.5" /> {group.timeLabel}</time>
               {group.worldTime?.era && (
                 <p className="opacity-60 mt-1 text-xs">Kỷ nguyên: {group.worldTime.era}</p>
               )}
@@ -96,14 +103,25 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
 
                 return (
                   <div key={story.story_id} className="bg-base-100 shadow-lg p-4 timeline-box">
-                    <Link to={`/stories/${story.story_id}`} className="link link-hover">
-                      <h3 className="font-bold text-xl">{story.title}</h3>
-                    </Link>
+                    <div className="flex justify-between items-start">
+                      <Link to={`/stories/${story.story_id}`} className="link link-hover">
+                        <h3 className="font-bold text-xl">{story.title}</h3>
+                      </Link>
+                      {onDeleteStory && (
+                        <button
+                          onClick={(e) => { e.preventDefault(); onDeleteStory(story.story_id, story.title) }}
+                          className="opacity-40 hover:opacity-100 text-error btn btn-ghost btn-xs"
+                          title="Xóa câu chuyện"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-2 mt-3">
                       <span className={`badge ${storyPalette.badge}`}>{story.genre}</span>
                       {getStoryCharacters(story).slice(0, 3).map(char => (
                         <span key={char.entity_id} className="text-primary-content badge badge-primary">
-                          👤 {char.name}
+                          <UserIcon className="inline w-3 h-3" /> {char.name}
                         </span>
                       ))}
                       {getStoryCharacters(story).length > 3 && (
@@ -111,7 +129,7 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
                       )}
                       {getStoryLocations(story).slice(0, 2).map(loc => (
                         <span key={loc.location_id} className="text-secondary-content badge badge-secondary">
-                          📍 {loc.name}
+                          <MapPinIcon className="inline w-3 h-3" /> {loc.name}
                         </span>
                       ))}
                       {getStoryLocations(story).length > 2 && (
@@ -120,7 +138,7 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
                     </div>
                     {linkedStories.length > 0 && (
                       <div className="mt-3 pt-3 border-base-300 border-t">
-                        <p className="opacity-70 mb-2 text-xs">🔗 Liên kết với:</p>
+                        <p className="opacity-70 mb-2 text-xs"><LinkIcon className="inline w-3 h-3" /> Liên kết với:</p>
                         <div className="flex flex-wrap gap-1">
                           {linkedStories.map(linked => (
                             <Link

@@ -46,7 +46,7 @@ pip install python-dotenv>=0.19.0
 
 ```bash
 # Kiểm tra API key có hoạt động
-python test_api_key.py
+.venv\Scripts\python.exe api/test_api_key.py
 ```
 
 **Expected Output**:
@@ -70,7 +70,7 @@ services/
   └── gpt_service.py          # High-level service layer (RECOMMENDED)
 ```
 
-## GPT Client (`ai/gpt_client.py`)
+## GPT Client (`api/ai/gpt_client.py`)
 
 ### Initialization
 
@@ -129,7 +129,7 @@ print(decision)
 # Output: "I draw my sword and stand between the dragon and the village"
 ```
 
-**Prompt Template** (trong `ai/prompts.py`):
+**Prompt Template** (trong `api/ai/prompts.py`):
 ```python
 CHARACTER_DECISION_PROMPT = """
 You are {character_name} with these traits: {character_traits}.
@@ -168,7 +168,7 @@ analysis = gpt.generate_world_description(
 
 **⚠️ Recommended**: Dùng `GPTService` thay vì gọi trực tiếp
 
-## GPT Service (`services/gpt_service.py`)
+## GPT Service (`api/services/gpt_service.py`)
 
 ### Why Use Service Layer?
 
@@ -272,7 +272,7 @@ gpt_service.analyze_world_entities(
 
 ### Task-Based GPT Calls
 
-**Backend** (`interfaces/web_interface.py`):
+**Backend** (`api/interfaces/api_backend.py`):
 ```python
 @self.app.route('/api/gpt/analyze', methods=['POST'])
 def analyze_gpt():
@@ -310,7 +310,7 @@ def get_gpt_results(task_id):
     return jsonify(result)
 ```
 
-**Frontend** (`static/js/app.js`):
+**Frontend** (`frontend/src/services/api.js`):
 ```javascript
 async function analyzeWorldWithGPT() {
     const description = document.getElementById('worldDescription').value;
@@ -397,7 +397,7 @@ if enable_translation:
 3. **Limit Scope**: Giới hạn response length
 4. **Examples**: Cho examples trong prompt
 
-### Prompt Templates (`ai/prompts.py`)
+### Prompt Templates (`api/ai/prompts.py`)
 
 ```python
 WORLD_ANALYSIS_PROMPT = """
@@ -530,7 +530,7 @@ class TestGPT(unittest.TestCase):
 
 ```bash
 # Test với real API
-python test_api_key.py
+.venv\Scripts\python.exe api/test_api_key.py
 
 # Test simulation mode
 python demo_gpt_simulation.py
@@ -556,7 +556,7 @@ dir .env
 type .env
 
 # 3. Test API key
-python test_api_key.py
+.venv\Scripts\python.exe api/test_api_key.py
 
 # 4. Check internet connection
 ping api.openai.com
@@ -579,7 +579,80 @@ pip install --upgrade openai python-dotenv
 
 ## Next Steps
 
-1. 📖 Đọc [OpenAI API Documentation](https://platform.openai.com/docs)
-2. 🧪 Test với `test_api_key.py` và `demo_gpt_simulation.py`
-3. 🎮 Thử Simulation Mode để hiểu GPT workflow
-4. 🔧 Customize prompts trong `ai/prompts.py`
+1. Đọc [OpenAI API Documentation](https://platform.openai.com/docs)
+2. Test với `test_api_key.py` và `demo_gpt_simulation.py`
+3. Thử Simulation Mode để hiểu GPT workflow
+4. Customize prompts trong `api/ai/prompts.py`
+
+---
+
+## Batch Analyze Stories (Mới)
+
+### Tổng quan
+
+Tính năng phân tích hàng loạt câu chuyện chưa có nhân vật/địa điểm, với context carry-over giữa các câu chuyện cùng thế giới.
+
+### Giới hạn
+- **Tối đa 3 câu chuyện** mỗi lần batch analyze (enforce cả frontend + backend)
+- Xử lý tuần tự theo thời gian (time_index tăng dần)
+- Nhân vật/địa điểm tìm được ở câu chuyện trước được truyền làm context cho câu chuyện sau
+
+### Flow
+
+1. User click "Liên kết tự động" → backend trả về `unlinked_stories` nếu `linked_count === 0`
+2. Frontend hiện `UnlinkedStoriesModal` với danh sách câu chuyện chưa liên kết
+3. User chọn tối đa 3 câu chuyện hoặc phân tích từng câu chuyện
+4. `POST /api/gpt/batch-analyze-stories` xử lý tuần tự:
+   - Sắp xếp stories theo time_index
+   - Mỗi story dùng prompt `BATCH_ANALYZE_STORY_ENTITIES_TEMPLATE` với `known_characters` + `known_locations`
+   - GPT trích xuất nhân vật/địa điểm → tạo Entity/Location mới hoặc link vào existing
+   - Context tích lũy cho story tiếp theo
+5. Sau khi phân tích xong, `StoryLinker` chạy lại để tìm liên kết mới
+
+### API
+
+**POST** `/api/gpt/batch-analyze-stories`
+
+```json
+{
+  "world_id": "uuid",
+  "story_ids": ["story-1", "story-2", "story-3"]
+}
+```
+
+**Response:** `{ "task_id": "uuid" }`
+
+**Poll kết quả:** `GET /api/gpt/results/{task_id}`
+
+Processing status:
+```json
+{
+  "status": "processing",
+  "result": {
+    "progress": 1,
+    "total": 3,
+    "current_story": "Tên câu chuyện đang phân tích"
+  }
+}
+```
+
+Completed status:
+```json
+{
+  "status": "completed",
+  "result": {
+    "analyzed_stories": [...],
+    "total_characters_found": 5,
+    "total_locations_found": 3,
+    "linked_count": 2,
+    "message": "Đã phân tích 3 câu chuyện, tìm thấy 5 nhân vật và 3 địa điểm, liên kết 2 câu chuyện"
+  }
+}
+```
+
+### Prompt Template
+
+`BATCH_ANALYZE_STORY_ENTITIES_TEMPLATE` trong `api/ai/prompts.py`:
+- Nhận `{known_characters}` và `{known_locations}` từ câu chuyện trước
+- Yêu cầu GPT dùng đúng tên đã biết nếu nhân vật/địa điểm trùng
+- Chỉ trích xuất thông tin CÓ trong story, không tạo mới

@@ -230,6 +230,113 @@ MANDATORY RULES:
 ✅ Keep names exactly as they appear in the text
 ✅ Return only valid JSON, NO additional explanations"""
 
+    BATCH_ANALYZE_STORY_ENTITIES_TEMPLATE = """You are a text analysis assistant. ANALYZE the following story description and ONLY EXTRACT characters and locations that ARE MENTIONED.
+
+Title: {story_title}
+Genre: {story_genre}
+Story description: {story_description}
+
+KNOWN CHARACTERS from earlier stories in this world (use exact names if the same character appears):
+{known_characters}
+
+KNOWN LOCATIONS from earlier stories in this world (use exact names if the same location appears):
+{known_locations}
+
+TASK: ONLY identify and extract information from the story description, DO NOT create anything new.
+If a character or location from the KNOWN lists appears in this story, use the EXACT SAME NAME from the known list.
+
+ANALYSIS REQUIREMENTS:
+1. CHARACTERS:
+   - ONLY list characters that ARE MENTIONED in the story
+   - If a character matches a known character, use the known name exactly
+   - Identify their role in the story
+   - IF no characters are mentioned → return empty array []
+
+2. LOCATIONS:
+   - ONLY list locations that ARE MENTIONED in the story
+   - If a location matches a known location, use the known name exactly
+   - IF no locations are mentioned → return empty array []
+
+Return JSON with structure:
+{{
+  "characters": [
+    {{
+      "name": "Character NAME from story",
+      "role": "Role in story (protagonist/supporting character/antagonist/...)"
+    }}
+  ],
+  "locations": [
+    {{
+      "name": "Location NAME from story",
+      "description": "Brief description of location (if available in text)"
+    }}
+  ]
+}}
+
+MANDATORY RULES:
+✅ ONLY extract information that EXISTS in the story description, DO NOT create new content
+✅ IF no characters/locations found → return empty array []
+✅ If character/location matches a known one, use the EXACT known name
+✅ Keep names exactly as they appear in the text
+✅ Return only valid JSON, NO additional explanations"""
+
+    # ===== EVENT EXTRACTION PROMPTS =====
+
+    EXTRACT_EVENTS_SYSTEM = (
+        "You are a story analyst specializing in narrative event extraction. "
+        "Extract key events from story content, identify temporal placement, "
+        "involved characters and locations, and connections between events. "
+        + OUTPUT_LANGUAGE_INSTRUCTION
+    )
+
+    EXTRACT_EVENTS_TEMPLATE = """Phân tích câu chuyện sau và trích xuất các sự kiện chính.
+
+Tiêu đề: {story_title}
+Thể loại: {story_genre}
+Nội dung câu chuyện (mỗi dòng có số thứ tự ở đầu, dòng trống cũng có số):
+{story_content_numbered}
+
+Thông tin thế giới:
+- Nhân vật đã biết: {known_characters}
+- Địa điểm đã biết: {known_locations}
+- Hệ lịch: {calendar_info}
+
+Trả về JSON với format:
+{{
+    "events": [
+        {{
+            "title": "Tên sự kiện ngắn gọn (3-8 từ)",
+            "description": "Mô tả ngắn 1-2 câu về sự kiện",
+            "year": <số nguyên, năm xảy ra trong timeline thế giới, dựa vào ngữ cảnh câu chuyện>,
+            "era": "Kỷ nguyên (nếu có, lấy từ ngữ cảnh)",
+            "characters": ["tên nhân vật 1", "tên nhân vật 2"],
+            "locations": ["tên địa điểm"],
+            "story_position": <chỉ số đoạn văn trong nội dung, bắt đầu từ 0>,
+            "abstract_image_seed": "2-3 từ khóa tiếng Anh mô tả hình ảnh trừu tượng cho sự kiện"
+        }}
+    ],
+    "connections": [
+        {{
+            "from_event_index": 0,
+            "to_event_index": 1,
+            "relation_type": "character|location|causation|temporal",
+            "relation_label": "Mô tả ngắn mối liên kết"
+        }}
+    ]
+}}
+
+QUY TẮC BẮT BUỘC:
+✅ CHỈ trích xuất sự kiện THỰC SỰ CÓ trong nội dung, KHÔNG bịa thêm
+✅ Mỗi sự kiện phải có ít nhất 1 nhân vật HOẶC 1 địa điểm
+✅ year phải là số nguyên, ước lượng dựa trên ngữ cảnh câu chuyện
+✅ story_position là SỐ THỨ TỰ ĐẦU DÒNG (số trước dấu |) của dòng chứa sự kiện. Dùng đúng số này, KHÔNG tự đếm lại. CHỈ chọn dòng có nội dung (không chọn dòng trống).
+✅ abstract_image_seed: dùng từ khóa tiếng Anh ngắn gọn (fire, battle, discovery, forest...)
+✅ relation_type chỉ có 4 loại: character, location, causation, temporal
+✅ KHÔNG tạo sự kiện cho đoạn văn trống hoặc chỉ chứa khoảng trắng
+✅ KHÔNG dùng tên thế giới (world name) làm location — chỉ dùng địa điểm cụ thể bên trong thế giới
+✅ KHÔNG tạo connection loại "location" nếu lý do chỉ là chung thế giới — chỉ kết nối khi chia sẻ địa điểm cụ thể
+✅ Trả về JSON hợp lệ, KHÔNG thêm giải thích"""
+
     # User prompts
     @staticmethod
     def translation_prompt(text: str) -> str:

@@ -16,7 +16,10 @@ class Story:
         world_id: str,
         story_id: Optional[str] = None,
         created_at: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        visibility: str = 'private',
+        owner_id: Optional[str] = None,
+        shared_with: Optional[List[str]] = None
     ):
         """
         Initialize a Story.
@@ -28,6 +31,9 @@ class Story:
             story_id: Unique identifier (generated if not provided)
             created_at: Creation timestamp (current time if not provided)
             metadata: Additional metadata for the story
+            visibility: 'public' or 'private' (default: 'private')
+            owner_id: User ID of the creator
+            shared_with: List of user IDs who have access (for private stories)
         """
         self.story_id = story_id or str(uuid.uuid4())
         self.title = title
@@ -35,6 +41,9 @@ class Story:
         self.world_id = world_id
         self.created_at = created_at or datetime.now().isoformat()
         self.metadata = metadata or {}
+        self.visibility = visibility
+        self.owner_id = owner_id
+        self.shared_with = shared_with or []
         # World time: when this story happens in the world's timeline
         if 'world_time' not in self.metadata:
             self.metadata['world_time'] = {
@@ -59,6 +68,9 @@ class Story:
             "world_id": self.world_id,
             "created_at": self.created_at,
             "metadata": self.metadata,
+            "visibility": self.visibility,
+            "owner_id": self.owner_id,
+            "shared_with": self.shared_with,
             "locations": self.locations,
             "entities": self.entities,
             "time_cones": self.time_cones,
@@ -78,7 +90,10 @@ class Story:
             world_id=data["world_id"],
             story_id=data.get("story_id"),
             created_at=data.get("created_at"),
-            metadata=data.get("metadata", {})
+            metadata=data.get("metadata", {}),
+            visibility=data.get("visibility", "private"),
+            owner_id=data.get("owner_id"),
+            shared_with=data.get("shared_with", [])
         )
         story.locations = data.get("locations", [])
         story.entities = data.get("entities", [])

@@ -79,9 +79,9 @@ function StoriesContainer({ showToast }) {
     if (normalizedIndex === 0) {
       return {
         year: 0,
-        era: calendar.current_era || '',
-        description: calendar.year_zero_name || 'Thời kỳ hỗn độn',
-        year_name: calendar.year_name || 'Năm'
+        era: '',
+        description: 'Không xác định',
+        year_name: ''
       }
     }
 
@@ -108,7 +108,7 @@ function StoriesContainer({ showToast }) {
     const normalizedIndex = normalizeTimeIndex(story.time_index)
     if (worldTime) {
       if (worldTime.year === 0) {
-        return worldTime.description || 'Thời kỳ hỗn độn'
+        return worldTime.description || 'Không xác định'
       }
       return worldTime.description || `${worldTime.year_name || 'Năm'} ${worldTime.year}`
     }

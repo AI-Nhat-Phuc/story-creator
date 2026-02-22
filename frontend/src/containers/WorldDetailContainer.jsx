@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { worldsAPI, storiesAPI, gptAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import WorldDetailView from '../components/worldDetail/WorldDetailView'
+import { useAuth } from '../contexts/AuthContext'
 
 const initialStoryForm = {
   title: '',
@@ -13,6 +14,7 @@ const initialStoryForm = {
 
 function WorldDetailContainer({ showToast }) {
   const { worldId } = useParams()
+  const { user } = useAuth()
   const [world, setWorld] = useState(null)
   const [stories, setStories] = useState([])
   const [characters, setCharacters] = useState([])
@@ -29,6 +31,13 @@ function WorldDetailContainer({ showToast }) {
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [analyzedEntities, setAnalyzedEntities] = useState(null)
   const [autoLinking, setAutoLinking] = useState(false)
+
+  // Unlinked stories modal state
+  const [showUnlinkedModal, setShowUnlinkedModal] = useState(false)
+  const [unlinkedStories, setUnlinkedStories] = useState([])
+  const [batchAnalyzing, setBatchAnalyzing] = useState(false)
+  const [batchProgress, setBatchProgress] = useState(null)
+  const [batchResult, setBatchResult] = useState(null)
 
   useEffect(() => {
     loadWorldDetails()
@@ -65,9 +74,9 @@ function WorldDetailContainer({ showToast }) {
     if (timeIndex === 0) {
       return {
         year: 0,
-        era: calendar.current_era || '',
-        year_name: calendar.year_name || 'Năm',
-        description: calendar.year_zero_name || 'Thời kỳ hỗn độn'
+        era: '',
+        year_name: '',
+        description: 'Không xác định'
       }
     }
 
@@ -94,7 +103,7 @@ function WorldDetailContainer({ showToast }) {
     const worldTime = getStoryWorldTime(story)
     if (worldTime) {
       return worldTime.year === 0
-        ? worldTime.description || 'Thời kỳ hỗn độn'
+        ? worldTime.description || 'Không xác định'
         : worldTime.description || `${worldTime.year_name || 'Năm'} ${worldTime.year}`
     }
     if (story.time_index !== undefined && story.time_index !== null && story.time_index !== 0) {
@@ -107,11 +116,17 @@ function WorldDetailContainer({ showToast }) {
     try {
       setAutoLinking(true)
       const response = await worldsAPI.autoLinkStories(worldId)
-      const { message, linked_count, links } = response.data
+      const { message, linked_count, links, unlinked_stories } = response.data
 
       if (linked_count > 0) {
         showToast(`${message}. Tìm thấy ${links.length} liên kết mới!`, 'success')
         loadWorldDetails() // Reload to show updated links
+      } else if (unlinked_stories && unlinked_stories.length > 0) {
+        // Show unlinked stories modal for batch analysis
+        setUnlinkedStories(unlinked_stories)
+        setBatchResult(null)
+        setBatchProgress(null)
+        setShowUnlinkedModal(true)
       } else {
         showToast(message || 'Không tìm thấy liên kết nào', 'info')
       }
@@ -119,6 +134,68 @@ function WorldDetailContainer({ showToast }) {
       showToast('Lỗi khi liên kết câu chuyện: ' + (error.response?.data?.error || error.message), 'error')
     } finally {
       setAutoLinking(false)
+    }
+  }
+
+  const handleBatchAnalyze = async (storyIds) => {
+    try {
+      setBatchAnalyzing(true)
+      setBatchProgress({ progress: 0, total: storyIds.length, current_story: '' })
+
+      const response = await gptAPI.batchAnalyzeStories({
+        world_id: worldId,
+        story_ids: storyIds
+      })
+      const taskId = response.data.task_id
+
+      const pollResults = async () => {
+        try {
+          const result = await gptAPI.getResults(taskId)
+          const data = result.data
+
+          if (data.status === 'completed') {
+            // Merge with previous results if any
+            setBatchResult(prev => {
+              if (!prev) return data.result
+              const prevStories = prev.analyzed_stories || []
+              const newStories = data.result.analyzed_stories || []
+              return {
+                ...data.result,
+                analyzed_stories: [...prevStories, ...newStories],
+                total_characters_found: (prev.total_characters_found || 0) + (data.result.total_characters_found || 0),
+                total_locations_found: (prev.total_locations_found || 0) + (data.result.total_locations_found || 0),
+              }
+            })
+            setBatchAnalyzing(false)
+            showToast(data.result.message || 'Phân tích hoàn tất!', 'success')
+          } else if (data.status === 'error') {
+            showToast('Lỗi phân tích: ' + data.result, 'error')
+            setBatchAnalyzing(false)
+          } else {
+            // Still processing - update progress
+            if (data.result) {
+              setBatchProgress(data.result)
+            }
+            setTimeout(pollResults, 1000)
+          }
+        } catch (err) {
+          showToast('Lỗi kiểm tra kết quả', 'error')
+          setBatchAnalyzing(false)
+        }
+      }
+
+      pollResults()
+    } catch (error) {
+      showToast('Lỗi phân tích batch: ' + (error.response?.data?.error || error.message), 'error')
+      setBatchAnalyzing(false)
+    }
+  }
+
+  const handleCloseUnlinkedModal = () => {
+    setShowUnlinkedModal(false)
+    if (batchResult) {
+      // Reload data after batch analysis completed
+      loadWorldDetails()
     }
   }
 
@@ -147,6 +224,20 @@ function WorldDetailContainer({ showToast }) {
       showToast(`Đã xóa địa điểm "${locationName}"`, 'success')
     } catch (error) {
       showToast('Lỗi khi xóa địa điểm: ' + (error.response?.data?.error || error.message), 'error')
+    }
+  }
+
+  const handleDeleteStory = async (storyId, storyTitle) => {
+    if (!confirm(`Bạn có chắc muốn xóa câu chuyện "${storyTitle}"? Hành động này không thể hoàn tác.`)) {
+      return
+    }
+
+    try {
+      await storiesAPI.delete(storyId)
+      setStories(prev => prev.filter(s => s.story_id !== storyId))
+      showToast(`Đã xóa câu chuyện "${storyTitle}"`, 'success')
+    } catch (error) {
+      showToast('Lỗi khi xóa câu chuyện: ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
@@ -327,6 +418,7 @@ function WorldDetailContainer({ showToast }) {
       activeTab={activeTab}
       editing={editing}
       editForm={editForm}
+      user={user}
       onChangeTab={setActiveTab}
       onEdit={handleEdit}
       onCancelEdit={handleCancelEdit}
@@ -337,9 +429,18 @@ function WorldDetailContainer({ showToast }) {
       // Auto-link props
       autoLinking={autoLinking}
       onAutoLinkStories={handleAutoLinkStories}
-      // Delete entity/location props
+      // Unlinked stories modal props
+      showUnlinkedModal={showUnlinkedModal}
+      unlinkedStories={unlinkedStories}
+      batchAnalyzing={batchAnalyzing}
+      batchProgress={batchProgress}
+      batchResult={batchResult}
+      onBatchAnalyze={handleBatchAnalyze}
+      onCloseUnlinkedModal={handleCloseUnlinkedModal}
+      // Delete entity/location/story props
       onDeleteEntity={handleDeleteEntity}
       onDeleteLocation={handleDeleteLocation}
+      onDeleteStory={handleDeleteStory}
       // Story creation props
       showStoryModal={showStoryModal}
       storyForm={storyForm}

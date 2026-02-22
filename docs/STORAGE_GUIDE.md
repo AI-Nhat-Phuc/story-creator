@@ -316,13 +316,13 @@ world_data = storage.load_world(world_id)
 
 ```bash
 # NoSQL (default)
-python main.py -i web -s nosql
+.venv\Scripts\python.exe api/main.py -i api -s nosql
 
 # JSON
-python main.py -i web -s json
+.venv\Scripts\python.exe api/main.py -i api -s json
 
 # Simulation with NoSQL
-python main.py -i simulation -s nosql
+.venv\Scripts\python.exe api/main.py -i simulation -s nosql
 ```
 
 ### Programmatic
@@ -500,7 +500,7 @@ class TestNoSQLStorage(unittest.TestCase):
 
 ```bash
 # test_nosql.py - Benchmark NoSQL vs JSON
-python test_nosql.py
+.venv\Scripts\python.exe api/test_nosql.py
 
 # Expected output:
 # ⚡ NoSQL: 100 saves in 0.25s
@@ -607,7 +607,7 @@ copy backup_20260118_143000.db story_creator.db
 
 # Or start fresh
 del story_creator.db
-python main.py -i web
+.venv\Scripts\python.exe api/main.py -i api
 ```
 
 ## Advanced Topics

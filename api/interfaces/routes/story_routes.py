@@ -1,10 +1,12 @@
 """Story routes for the API backend."""
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from core.models.world import World
 from core.models.entity import Entity
 from core.models.location import Location
-from services.character_service import CharacterService
+from core.models.user import User
+from services import CharacterService, PermissionService
+from interfaces.auth_middleware import token_required, optional_auth
 import random
 
 
@@ -21,16 +23,44 @@ def create_story_bp(storage, story_generator, flush_data):
     """
     story_bp = Blueprint('stories', __name__)
 
-    @story_bp.route('/api/stories', methods=['GET', 'POST'])
-    def stories_endpoint():
-        """List all stories or create new story.
+    @story_bp.route('/api/stories', methods=['GET'])
+    @optional_auth
+    def list_stories():
+        """List all stories visible to current user.
         ---
         tags:
           - Stories
         parameters:
+          - in: header
+            name: Authorization
+            type: string
+            required: false
+            description: "Bearer {token} (optional)"
+        responses:
+          200:
+            description: List of stories (public + owned + shared)
+        """
+        user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
+
+        # Get all stories across all worlds (filtered by permissions)
+        all_stories = storage.list_stories(user_id=user_id)
+        return jsonify(all_stories)
+
+    @story_bp.route('/api/stories', methods=['POST'])
+    @token_required
+    def create_story():
+        """Create new story (requires authentication).
+        ---
+        tags:
+          - Stories
+        parameters:
+          - in: header
+            name: Authorization
+            type: string
+            required: true
           - in: body
             name: body
-            required: false
+            required: true
             schema:
               type: object
               properties:
@@ -47,176 +77,332 @@ def create_story_bp(storage, story_generator, flush_data):
                   type: string
                   enum: [adventure, mystery, conflict, discovery]
                   example: adventure
+                visibility:
+                  type: string
+                  enum: [public, private]
+                  default: private
                 time_index:
                   type: integer
                   minimum: 0
                   maximum: 100
                   example: 10
+                selected_characters:
+                  type: array
+                  items:
+                    type: string
         responses:
-          200:
-            description: List of all stories
           201:
             description: Story created successfully
           400:
-            description: Invalid input
+            description: Invalid input or quota exceeded
+          403:
+            description: Permission denied (cannot create story in this world)
           404:
             description: World not found
         """
-        if request.method == 'GET':
-            # Get all stories across all worlds
-            all_stories = []
-            worlds = storage.list_worlds()
-            for world in worlds:
-                stories = storage.list_stories(world['world_id'])
-                all_stories.extend(stories)
-            return jsonify(all_stories)
+        data = request.json
+        world_id = data.get('world_id')
+        visibility = data.get('visibility', 'private')
 
-        elif request.method == 'POST':
-            data = request.json
-            world_id = data.get('world_id')
-            title = data.get('title', 'Untitled Story')
-            description = data.get('description', '')
-            genre = data.get('genre', 'adventure')
-            time_index = data.get('time_index', 0)
-            selected_characters = data.get('selected_characters', None)
+        # Load world to check ownership
+        world_data = storage.load_world(world_id)
+        if not world_data:
+            return jsonify({'error': 'World not found'}), 404
 
-            world_data = storage.load_world(world_id)
-            if not world_data:
-                return jsonify({'error': 'World not found'}), 404
+        # Check if user can create stories in this world (must view world)
+        if not PermissionService.can_view(g.current_user.user_id, world_data):
+            return jsonify({'error': 'Bạn không có quyền tạo câu chuyện trong thế giới này'}), 403
 
-            world = World.from_dict(world_data)
+        # Check quota for public stories
+        if visibility == 'public':
+            user_data = storage.load_user(g.current_user.user_id)
+            user = User.from_dict(user_data)
 
-            # Use selected_characters if provided, else auto-detect
-            linked_entities = []
-            if selected_characters:
-              # Remove duplicates
-              selected_ids = set(selected_characters)
-              # Handle new character creation
-              if '__new__' in selected_ids:
-                # Create a new character entity with a placeholder name (GPT will name in description)
-                new_entity = Entity(
-                  name='(GPT đặt tên)',
-                  entity_type='character',
-                  description='Nhân vật mới được tạo bởi GPT',
-                  world_id=world_id
-                )
-                storage.save_entity(new_entity.to_dict())
-                linked_entities.append(new_entity.entity_id)
-                # Add to world
-                if new_entity.entity_id not in world.entities:
-                  world.entities.append(new_entity.entity_id)
-                selected_ids.remove('__new__')
-              # Add existing character IDs
-              for ent_id in selected_ids:
-                if ent_id in world.entities:
-                  linked_entities.append(ent_id)
+            if not user.can_create_public_story():
+                return jsonify({
+                    'error': 'Bạn đã đạt giới hạn số câu chuyện công khai',
+                    'current_count': user.metadata.get('public_stories_count', 0),
+                    'limit': user.metadata.get('public_stories_limit', 20)
+                }), 400
+
+        title = data.get('title', 'Untitled Story')
+        description = data.get('description', '')
+        genre = data.get('genre', 'adventure')
+        time_index = data.get('time_index', 0)
+        selected_characters = data.get('selected_characters', None)
+
+        world = World.from_dict(world_data)
+
+        # Use selected_characters if provided, else auto-detect
+        linked_entities = []
+        if selected_characters:
+          # Remove duplicates
+          selected_ids = set(selected_characters)
+          # Handle new character creation
+          if '__new__' in selected_ids:
+            # Create a new character entity with a placeholder name (GPT will name in description)
+            new_entity = Entity(
+              name='(GPT đặt tên)',
+              entity_type='character',
+              description='Nhân vật mới được tạo bởi GPT',
+              world_id=world_id
+            )
+            storage.save_entity(new_entity.to_dict())
+            linked_entities.append(new_entity.entity_id)
+            # Add to world
+            if new_entity.entity_id not in world.entities:
+              world.entities.append(new_entity.entity_id)
+            selected_ids.remove('__new__')
+          # Add existing character IDs
+          for ent_id in selected_ids:
+            if ent_id in world.entities:
+              linked_entities.append(ent_id)
+        else:
+          # Auto-detect mentioned characters (do NOT fallback to random entity)
+          entity_data_list = []
+          for ent_id in world.entities:
+            ent_data = storage.load_entity(ent_id)
+            if ent_data:
+              entity_data_list.append(ent_data)
+          _, mentioned_entity_ids = CharacterService.detect_mentioned_characters(
+            description, entity_data_list
+          )
+          linked_entities = mentioned_entity_ids or []
+
+        # Generate story (don't auto-assign locations, let user/GPT decide)
+        story = story_generator.generate(
+            title,
+            description,
+            world.world_id,
+            genre,
+            locations=None,
+            entities=linked_entities if linked_entities else None
+        )
+
+        # Set ownership and visibility
+        story.owner_id = g.current_user.user_id
+        story.visibility = visibility
+
+        # Set world time based on time_index
+        calendar = world.metadata.get('calendar', {})
+        if calendar:
+            # Map time_index (0-100) to world's timeline
+            # time_index None or 0 = unknown time
+            # time_index 50 = current_year
+            # time_index 100 = current_year + 50
+            if time_index is None or time_index == 0:
+                # Unknown time
+                story.metadata['world_time'] = {
+                    'era': '',
+                    'year': 0,
+                    'month': 0,
+                    'day': 0,
+                    'description': 'Không xác định'
+                }
             else:
-              # Auto-detect mentioned characters
-              entity_data_list = []
-              for ent_id in world.entities:
-                ent_data = storage.load_entity(ent_id)
-                if ent_data:
-                  entity_data_list.append(ent_data)
-              _, mentioned_entity_ids = CharacterService.detect_mentioned_characters(
-                description, entity_data_list
-              )
-              linked_entities = mentioned_entity_ids or (
-                [world.entities[0]] if world.entities else []
-              )
+                # Calculate year from time_index
+                current_year = calendar.get('current_year', 1)
+                year_range = 100  # 100 years span
+                calculated_year = max(1, current_year + int((time_index / 100) * year_range) - (year_range // 2))
 
-            # Generate story
-            story = story_generator.generate(
-                title,
-                description,
-                world.world_id,
-                genre,
-                locations=world.locations[:1] if world.locations else None,
-                entities=linked_entities
-            )
+                story.metadata['world_time'] = {
+                    'era': calendar.get('current_era', 'Kỷ nguyên mới'),
+                    'year': calculated_year,
+                    'month': 0,  # Can be set by user later
+                    'day': 0,    # Can be set by user later
+                    'description': f"{calendar.get('year_name', 'Năm')} {calculated_year}, {calendar.get('current_era', 'Kỷ nguyên mới')}"
+                }
 
-            # Set world time based on time_index
-            calendar = world.metadata.get('calendar', {})
-            if calendar:
-                # Map time_index (0-100) to world's timeline
-                # time_index None or 0 = year 0 (special "unknown time")
-                # time_index 50 = current_year
-                # time_index 100 = current_year + 50
-                if time_index is None or time_index == 0:
-                    # Year 0 - use special name
-                    year_zero_name = calendar.get('year_zero_name', 'Thời kỳ hỗn độn')
-                    story.metadata['world_time'] = {
-                        'era': calendar.get('current_era', 'Kỷ nguyên mới'),
-                        'year': 0,
-                        'month': 0,
-                        'day': 0,
-                        'description': year_zero_name
-                    }
-                else:
-                    # Calculate year from time_index
-                    current_year = calendar.get('current_year', 1)
-                    year_range = 100  # 100 years span
-                    calculated_year = max(1, current_year + int((time_index / 100) * year_range) - (year_range // 2))
+        # Generate time cone
+        time_cone = story_generator.generate_time_cone(
+            story,
+            world.world_id,
+            time_index=time_index
+        )
 
-                    story.metadata['world_time'] = {
-                        'era': calendar.get('current_era', 'Kỷ nguyên mới'),
-                        'year': calculated_year,
-                        'month': 0,  # Can be set by user later
-                        'day': 0,    # Can be set by user later
-                        'description': f"{calendar.get('year_name', 'Năm')} {calculated_year}, {calendar.get('current_era', 'Kỷ nguyên mới')}"
-                    }
+        # Save
+        storage.save_story(story.to_dict())
+        storage.save_time_cone(time_cone.to_dict())
+        world.add_story(story.story_id)
+        storage.save_world(world.to_dict())
 
-            # Generate time cone
-            time_cone = story_generator.generate_time_cone(
-                story,
-                world.world_id,
-                time_index=time_index
-            )
+        # Update user quota if public
+        if visibility == 'public':
+            user_data = storage.load_user(g.current_user.user_id)
+            user = User.from_dict(user_data)
+            user.increment_public_stories()
+            storage.save_user(user.to_dict())
 
-            # Save
-            storage.save_story(story.to_dict())
-            storage.save_time_cone(time_cone.to_dict())
-            world.add_story(story.story_id)
-            storage.save_world(world.to_dict())
-            flush_data()
+        flush_data()
 
-            return jsonify({
-              'story': story.to_dict(),
-              'time_cone': time_cone.to_dict()
-            }), 201
+        return jsonify({
+          'story': story.to_dict(),
+          'time_cone': time_cone.to_dict()
+        }), 201
 
-    @story_bp.route('/api/stories/<story_id>', methods=['GET', 'PUT', 'DELETE'])
-    def story_detail(story_id):
-        """Get, update or delete a specific story."""
-        if request.method == 'GET':
-            story_data = storage.load_story(story_id)
-            if not story_data:
-                return jsonify({'error': 'Story not found'}), 404
-            return jsonify(story_data)
+    @story_bp.route('/api/stories/<story_id>', methods=['GET'])
+    @optional_auth
+    def get_story_detail(story_id):
+        """Get a specific story.
+        ---
+        tags:
+          - Stories
+        parameters:
+          - name: story_id
+            in: path
+            type: string
+            required: true
+          - in: header
+            name: Authorization
+            type: string
+            required: false
+        responses:
+          200:
+            description: Story details
+          403:
+            description: Permission denied
+          404:
+            description: Story not found
+        """
+        story_data = storage.load_story(story_id)
+        if not story_data:
+            return jsonify({'error': 'Story not found'}), 404
 
-        elif request.method == 'PUT':
-            story_data = storage.load_story(story_id)
-            if not story_data:
-                return jsonify({'error': 'Story not found'}), 404
+        # Check view permission
+        user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
+        if not PermissionService.can_view(user_id, story_data):
+            return jsonify({'error': 'Bạn không có quyền xem câu chuyện này'}), 403
 
-            data = request.json
-            # Update allowed fields
-            if 'title' in data:
-                story_data['title'] = data['title']
-            if 'content' in data:
-                story_data['content'] = data['content']
-            # Support both 'content' and 'description' for backwards compatibility
-            if 'description' in data and 'content' not in data:
-                story_data['content'] = data['description']
+        return jsonify(story_data)
 
-            # Save updated story
-            storage.save_story(story_data)
-            flush_data()
+    @story_bp.route('/api/stories/<story_id>', methods=['PUT'])
+    @token_required
+    def update_story(story_id):
+        """Update a specific story (owner only).
+        ---
+        tags:
+          - Stories
+        parameters:
+          - name: story_id
+            in: path
+            type: string
+            required: true
+          - in: header
+            name: Authorization
+            type: string
+            required: true
+          - in: body
+            name: body
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                visibility:
+                  type: string
+                  enum: [public, private]
+        responses:
+          200:
+            description: Story updated
+          400:
+            description: Quota exceeded
+          403:
+            description: Permission denied
+          404:
+            description: Story not found
+        """
+        story_data = storage.load_story(story_id)
+        if not story_data:
+            return jsonify({'error': 'Story not found'}), 404
 
-            return jsonify(story_data), 200
+        # Check edit permission
+        if not PermissionService.can_edit(g.current_user.user_id, story_data):
+            return jsonify({'error': 'Chỉ chủ sở hữu mới có thể chỉnh sửa'}), 403
 
-        elif request.method == 'DELETE':
-            # TODO: Implement delete
-            return jsonify({'message': 'Delete not implemented'}), 501
+        data = request.json
+        old_visibility = story_data.get('visibility', 'private')
+        new_visibility = data.get('visibility', old_visibility)
+
+        # Handle visibility change
+        if old_visibility != new_visibility:
+            user_data = storage.load_user(g.current_user.user_id)
+            user = User.from_dict(user_data)
+
+            if old_visibility == 'private' and new_visibility == 'public':
+                if not user.can_create_public_story():
+                    return jsonify({
+                        'error': 'Bạn đã đạt giới hạn số câu chuyện công khai',
+                        'current_count': user.metadata.get('public_stories_count', 0),
+                        'limit': user.metadata.get('public_stories_limit', 20)
+                    }), 400
+                user.increment_public_stories()
+                storage.save_user(user.to_dict())
+
+            elif old_visibility == 'public' and new_visibility == 'private':
+                user.decrement_public_stories()
+                storage.save_user(user.to_dict())
+
+            story_data['visibility'] = new_visibility
+
+        # Update other fields
+        if 'title' in data:
+            story_data['title'] = data['title']
+        if 'content' in data:
+            story_data['content'] = data['content']
+
+        storage.save_story(story_data)
+        flush_data()
+
+        return jsonify(story_data), 200
+
+    @story_bp.route('/api/stories/<story_id>', methods=['DELETE'])
+    @token_required
+    def delete_story(story_id):
+        """Delete a story (owner only).
+        ---
+        tags:
+          - Stories
+        parameters:
+          - name: story_id
+            in: path
+            type: string
+            required: true
+          - in: header
+            name: Authorization
+            type: string
+            required: true
+        responses:
+          200:
+            description: Story deleted
+          403:
+            description: Permission denied
+          404:
+            description: Story not found
+        """
+        story_data = storage.load_story(story_id)
+        if not story_data:
+            return jsonify({'error': 'Story not found'}), 404
+
+        # Check delete permission
+        if not PermissionService.can_delete(g.current_user.user_id, story_data):
+            return jsonify({'error': 'Chỉ chủ sở hữu mới có thể xóa'}), 403
+
+        # Update quota if deleting public story
+        if story_data.get('visibility') == 'public':
+            user_data = storage.load_user(g.current_user.user_id)
+            user = User.from_dict(user_data)
+            user.decrement_public_stories()
+            storage.save_user(user.to_dict())
+
+        # Delete associated events
+        storage.delete_events_by_story(story_id)
+
+        storage.delete_story(story_id)
+        flush_data()
+
+        return jsonify({'message': 'Story deleted successfully'}), 200
 
     @story_bp.route('/api/stories/<story_id>/link-entities', methods=['POST'])
     def story_link_entities(story_id):
@@ -284,6 +470,8 @@ def create_story_bp(storage, story_generator, flush_data):
         linked_locations = []
         created_entities = []
         created_locations = []
+        unmatched_characters = []
+        unmatched_locations = []
 
         # Link or create entities from analyzed characters
         for char in characters:
@@ -302,24 +490,8 @@ def create_story_bp(storage, story_generator, flush_data):
                     if entity_id not in linked_entities:
                         linked_entities.append(entity_id)
                 else:
-                    # Create new entity
-                    entity = Entity(
-                        name=char_name,
-                        entity_type='character',
-                        description=f"{char_role} trong câu chuyện",
-                        world_id=world_id
-                    )
-                    storage.save_entity(entity.to_dict())
-                    created_entities.append(entity.entity_id)
-                    linked_entities.append(entity.entity_id)
-                    # Add to existing list to prevent duplicates in same request
-                    existing_entities.append(entity.to_dict())
-
-                    # Add to world if available
-                    if world_data and entity.entity_id not in world_data.get('entities', []):
-                        if 'entities' not in world_data:
-                            world_data['entities'] = []
-                        world_data['entities'].append(entity.entity_id)
+                    # Not found - mark as unmatched (don't auto-create)
+                    unmatched_characters.append({'name': char_name, 'role': char_role})
 
         # Link or create locations from analyzed locations
         for loc in locations:
@@ -338,24 +510,8 @@ def create_story_bp(storage, story_generator, flush_data):
                     if location_id not in linked_locations:
                         linked_locations.append(location_id)
                 else:
-                    # Create new location
-                    location = Location(
-                        name=loc_name,
-                        description=loc_desc,
-                        world_id=world_id,
-                        coordinates={'x': random.randint(0, 100), 'y': random.randint(0, 100)}
-                    )
-                    storage.save_location(location.to_dict())
-                    created_locations.append(location.location_id)
-                    linked_locations.append(location.location_id)
-                    # Add to existing list to prevent duplicates in same request
-                    existing_locations.append(location.to_dict())
-
-                    # Add to world if available
-                    if world_data and location.location_id not in world_data.get('locations', []):
-                        if 'locations' not in world_data:
-                            world_data['locations'] = []
-                        world_data['locations'].append(location.location_id)
+                    # Not found - mark as unmatched (don't auto-create)
+                    unmatched_locations.append({'name': loc_name, 'description': loc_desc})
 
         # Update story with entity and location IDs (avoid duplicates)
         if 'entities' not in story_data:
@@ -382,6 +538,8 @@ def create_story_bp(storage, story_generator, flush_data):
             'linked_locations': linked_locations,
             'created_entities': created_entities,
             'created_locations': created_locations,
+            'unmatched_characters': unmatched_characters,
+            'unmatched_locations': unmatched_locations,
             'story': story_data
         }), 200
 

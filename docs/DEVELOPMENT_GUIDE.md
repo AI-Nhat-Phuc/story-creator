@@ -26,14 +26,14 @@ python -m venv .venv
 .venv\Scripts\activate.bat
 
 # 4. Install dependencies
-pip install -r requirements.txt
+pip install -r api/requirements.txt
 
 # 5. Create .env file for GPT
 # Copy .env.example nếu có, hoặc tạo mới:
 echo OPENAI_API_KEY=your-key-here > .env
 
 # 6. Test installation
-python test.py
+.venv\Scripts\python.exe api/test.py
 ```
 
 ## Project Structure
@@ -78,7 +78,7 @@ story-creator/
 │   └── character_service.py   # Character utilities
 │
 ├── interfaces/                 # User interfaces
-│   ├── web_interface.py       # Flask web app
+│   ├── api/interfaces/api_backend.py       # Flask web app
 │   └── simulation_interface.py # Terminal simulation
 │
 ├── templates/                  # HTML templates
@@ -122,11 +122,11 @@ Follow coding standards (see below)
 
 ```bash
 # Run all tests
-python test.py
-python test_nosql.py
+.venv\Scripts\python.exe api/test.py
+.venv\Scripts\python.exe api/test_nosql.py
 
 # Test specific feature
-python main.py -i web --debug
+.venv\Scripts\python.exe api/main.py -i api --debug
 ```
 
 ### 4. Commit & Push
@@ -232,7 +232,7 @@ WORLD_TYPES = {
 }
 ```
 
-2. **Update templates/index.html**:
+2. **Update frontend/src/ (React components)**:
 ```html
 <select id="worldType" class="select select-bordered">
     <option value="fantasy">Fantasy</option>
@@ -255,7 +255,7 @@ world = world_generator.generate(
 
 **Example**: Add endpoint to get random world
 
-1. **Update web_interface.py** trong `_register_routes()`:
+1. **Update api/interfaces/api_backend.py** trong `_register_routes()`:
 ```python
 @self.app.route('/api/worlds/random', methods=['GET'])
 def get_random_world():
@@ -270,7 +270,7 @@ def get_random_world():
     return jsonify(random_world)
 ```
 
-2. **Add frontend function** trong `static/js/app.js`:
+2. **Add frontend function** trong `frontend/src/services/api.js`:
 ```javascript
 async function loadRandomWorld() {
     const response = await fetch('/api/worlds/random');
@@ -285,7 +285,7 @@ async function loadRandomWorld() {
 }
 ```
 
-3. **Add UI button** trong `templates/index.html`:
+3. **Add UI button** trong `frontend/src/ (React components)`:
 ```html
 <button class="btn btn-primary" onclick="loadRandomWorld()">
     🎲 Random World
@@ -296,7 +296,7 @@ async function loadRandomWorld() {
 
 **Example**: Add "difficulty" field to Story
 
-1. **Update core/models/story.py**:
+1. **Update api/core/models/story.py**:
 ```python
 class Story:
     def __init__(
@@ -364,7 +364,7 @@ const response = await fetch('/api/stories', {
 
 **Example**: Add "generate location description" prompt
 
-1. **Update ai/prompts.py**:
+1. **Update api/ai/prompts.py**:
 ```python
 LOCATION_DESCRIPTION_PROMPT = """
 Generate a vivid description for this {world_type} location.
@@ -569,14 +569,14 @@ logger.error(f"Failed to save world: {error}")
 .venv\Scripts\activate
 
 # Reinstall dependencies
-pip install -r requirements.txt
+pip install -r api/requirements.txt
 ```
 
 #### Port Already in Use
 ```bash
 # Problem: Port 5000 already in use
 # Solution: Kill process or use different port
-python main.py -i web --port 8080
+.venv\Scripts\python.exe api/main.py -i api --port 8080
 ```
 
 #### Database Locked

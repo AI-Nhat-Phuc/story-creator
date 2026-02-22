@@ -6,14 +6,20 @@ from flasgger import Swagger
 from generators import WorldGenerator, StoryGenerator, StoryLinker
 from storage import NoSQLStorage, JSONStorage
 from ai.gpt_client import GPTIntegration
-from services import GPTService
+from services import GPTService, AuthService
+from services import EventService
 from visualization import RelationshipDiagram
+from interfaces.auth_middleware import init_auth_middleware
 from interfaces.routes import (
     create_health_bp,
     create_world_bp,
     create_story_bp,
     create_gpt_bp,
-    create_stats_bp
+    create_stats_bp,
+    create_event_bp,
+    create_admin_bp,
+    auth_bp,
+    init_auth_routes
 )
 import os
 import signal
@@ -48,7 +54,7 @@ class APIBackend:
             r"/api/*": {
                 "origins": allowed_origins,
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-                "allow_headers": ["Content-Type"]
+                "allow_headers": ["Content-Type", "Authorization"]
             }
         })
 
@@ -84,8 +90,10 @@ class APIBackend:
             "schemes": ["http"],
             "tags": [
                 {"name": "Health", "description": "Health check endpoints"},
+                {"name": "Authentication", "description": "User authentication and authorization"},
                 {"name": "Worlds", "description": "World management"},
                 {"name": "Stories", "description": "Story management"},
+                {"name": "Events", "description": "Event timeline management"},
                 {"name": "GPT", "description": "GPT integration"},
                 {"name": "Stats", "description": "Statistics"}
             ]
@@ -111,12 +119,23 @@ class APIBackend:
         try:
             self.gpt = GPTIntegration()
             self.gpt_service = GPTService(self.gpt)
+            self.event_service = EventService(self.gpt, self.storage)
             self.has_gpt = True
         except (ImportError, ValueError) as e:
             self.gpt = None
             self.gpt_service = None
+            self.event_service = EventService(None, self.storage)
             self.has_gpt = False
             print(f"⚠️  GPT not available: {e}")
+
+        # Initialize Auth service
+        self.auth_service = AuthService(self.storage)
+
+        # Initialize auth middleware
+        init_auth_middleware(self.auth_service)
+
+        # Ensure default admin account exists
+        self._ensure_default_admin()
 
         # Store for async GPT results
         self.gpt_results = {}
@@ -139,6 +158,50 @@ class APIBackend:
         """Flush data to disk."""
         if hasattr(self.storage, 'flush'):
             self.storage.flush()
+
+    def _ensure_default_admin(self):
+        """
+        Ensure a default admin account exists in the database.
+        This admin account will be created automatically if no admin exists,
+        even after database truncation.
+
+        Default credentials:
+        - Username: admin
+        - Email: admin@storycreator.com
+        - Password: Admin@123
+        - Role: admin
+        """
+        # Check if any admin user exists
+        all_users = self.storage.list_users()
+        admin_users = [u for u in all_users if u.get('role') == 'admin']
+
+        if not admin_users:
+            # No admin found, create default admin
+            from core.models import User
+
+            admin_password = "Admin@123"
+            password_hash = self.auth_service.hash_password(admin_password)
+
+            admin_user = User(
+                username="admin",
+                email="admin@storycreator.com",
+                password_hash=password_hash,
+                role="admin"
+            )
+
+            # Save admin to database
+            self.storage.save_user(admin_user.to_dict())
+
+            print("🔐 Tạo tài khoản admin mặc định:")
+            print("   Username: admin")
+            print("   Email: admin@storycreator.com")
+            print("   Password: Admin@123")
+            print("   ⚠️  VUI LÒNG ĐỔI MẬT KHẨU SAU KHI ĐĂNG NHẬP!")
+        else:
+            # Admin exists
+            admin_count = len(admin_users)
+            print(f"✅ Đã tìm thấy {admin_count} tài khoản admin trong hệ thống")
+
 
     def _register_blueprints(self):
         """Register all API route blueprints."""
@@ -171,7 +234,9 @@ class APIBackend:
             gpt=self.gpt,
             gpt_service=self.gpt_service,
             gpt_results=self.gpt_results,
-            has_gpt=self.has_gpt
+            has_gpt=self.has_gpt,
+            storage=self.storage,
+            flush_data=self._flush_data
         )
         self.app.register_blueprint(gpt_bp)
 
@@ -181,6 +246,26 @@ class APIBackend:
             has_gpt=self.has_gpt
         )
         self.app.register_blueprint(stats_bp)
+
+        # Event routes
+        event_bp = create_event_bp(
+            storage=self.storage,
+            event_service=self.event_service,
+            gpt_results=self.gpt_results,
+            has_gpt=self.has_gpt
+        )
+        self.app.register_blueprint(event_bp)
+
+        # Auth routes
+        init_auth_routes(self.storage, self.auth_service)
+        self.app.register_blueprint(auth_bp)
+
+        # Admin routes
+        admin_bp = create_admin_bp(
+            storage=self.storage,
+            auth_service=self.auth_service
+        )
+        self.app.register_blueprint(admin_bp)
 
     def _kill_existing_server(self, port=5000):
         """Kill any existing process using the specified port."""

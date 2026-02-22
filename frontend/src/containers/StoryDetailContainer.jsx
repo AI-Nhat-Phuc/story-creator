@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { storiesAPI, worldsAPI, gptAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StoryDetailView from '../components/storyDetail/StoryDetailView'
 
 function StoryDetailContainer({ showToast }) {
   const { storyId } = useParams()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const highlightEventId = searchParams.get('event')
+  const highlightPosition = parseInt(searchParams.get('position') || '-1', 10)
   const [story, setStory] = useState(null)
   const [world, setWorld] = useState(null)
   const [linkedCharacters, setLinkedCharacters] = useState([])
@@ -79,9 +83,9 @@ function StoryDetailContainer({ showToast }) {
     if (normalizedIndex === 0) {
       return {
         year: 0,
-        era: calendar.current_era || '',
-        year_name: calendar.year_name || 'Năm',
-        description: calendar.year_zero_name || 'Thời kỳ hỗn độn'
+        era: '',
+        year_name: '',
+        description: 'Không xác định'
       }
     }
 
@@ -109,7 +113,7 @@ function StoryDetailContainer({ showToast }) {
     const normalizedIndex = normalizeTimeIndex(currentStory.time_index)
     if (worldTime) {
       if (worldTime.year === 0) {
-        return worldTime.description || 'Thời kỳ hỗn độn'
+        return worldTime.description || 'Không xác định'
       }
       return worldTime.description || `Năm ${worldTime.year}`
     }
@@ -253,6 +257,25 @@ function StoryDetailContainer({ showToast }) {
     }
   }
 
+  const handleDeleteStory = async () => {
+    if (!confirm(`Bạn có chắc muốn xóa câu chuyện "${story.title}"? Hành động này không thể hoàn tác.`)) {
+      return
+    }
+
+    try {
+      await storiesAPI.delete(storyId)
+      showToast(`Đã xóa câu chuyện "${story.title}"`, 'success')
+      // Navigate back to world or stories list
+      if (story.world_id) {
+        navigate(`/worlds/${story.world_id}`)
+      } else {
+        navigate('/stories')
+      }
+    } catch (error) {
+      showToast('Lỗi khi xóa câu chuyện: ' + (error.response?.data?.error || error.message), 'error')
+    }
+  }
+
   if (loading) return <LoadingSpinner />
   if (!story) return <div>Không tìm thấy câu chuyện</div>
 
@@ -281,6 +304,9 @@ function StoryDetailContainer({ showToast }) {
       onClearAnalyzedEntities={handleClearAnalyzedEntities}
       onLinkEntities={handleLinkEntities}
       onReanalyzeStory={handleReanalyzeStory}
+      onDeleteStory={handleDeleteStory}
+      highlightEventId={highlightEventId}
+      highlightPosition={highlightPosition}
     />
   )
 }

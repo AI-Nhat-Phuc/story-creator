@@ -108,12 +108,12 @@ os.remove('story_creator.db')  # Manual deletion
 To verify database safety:
 ```bash
 # 1. Create some data
-python main.py -i api
+.venv\Scripts\python.exe api/main.py -i api
 
 # 2. Stop server (Ctrl+C)
 
 # 3. Restart server
-python main.py -i api
+.venv\Scripts\python.exe api/main.py -i api
 
 # 4. Check data is still there
 # Visit http://localhost:5000/api/worlds

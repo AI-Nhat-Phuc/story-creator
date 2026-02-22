@@ -127,7 +127,8 @@ def test_generators():
     # Test StoryGenerator
     story_gen = StoryGenerator()
     story = story_gen.generate(
-        prompt="A hero's journey",
+        title="A Hero's Journey",
+        description="A story about a hero's journey",
         world_id=world.world_id,
         genre="adventure"
     )

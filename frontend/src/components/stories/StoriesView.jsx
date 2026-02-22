@@ -3,6 +3,16 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import GptButton, { OpenAILogo } from '../GptButton'
 import { STORY_TEMPLATES } from '../storyTemplates'
+import {
+  BookOpenIcon,
+  GlobeAltIcon,
+  UserIcon,
+  PlusIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  MapPinIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline'
 
 function StoriesView({
   stories,
@@ -74,7 +84,7 @@ function StoriesView({
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="font-bold text-3xl">📖 Câu chuyện</h1>
+        <h1 className="font-bold text-3xl"><BookOpenIcon className="inline w-8 h-8" /> Câu chuyện</h1>
         {worlds.length > 0 ? (
           <button onClick={onOpenModal} className="btn btn-primary">
             + Tạo câu chuyện mới
@@ -136,7 +146,7 @@ function StoriesView({
                     </h2>
                     <div className="flex flex-wrap gap-1 mb-2">
                       <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-700 text-xs">
-                        ⏰ {formatWorldTime(story)}
+                                                <ClockIcon className="inline w-3.5 h-3.5" /> {formatWorldTime(story)}
                       </span>
                     </div>
                     <div className="flex-1 overflow-hidden">
@@ -151,7 +161,7 @@ function StoriesView({
                       )}
                     </div>
                     <div className="mt-2 pt-2 border-gray-300 border-t border-dashed">
-                      <span className="text-gray-400 text-xs">📜 Click để đọc thêm</span>
+                      <span className="text-gray-400 text-xs"><DocumentTextIcon className="inline w-3.5 h-3.5" /> Click để đọc thêm</span>
                     </div>
                   </div>
                 </div>
@@ -176,7 +186,7 @@ function StoriesView({
             <p className="opacity-60 mt-4 text-xl">Chưa có thế giới nào!</p>
             <p className="opacity-50 mt-2">Bạn cần tạo thế giới trước khi tạo câu chuyện.</p>
             <Link to="/worlds" className="mt-4 btn btn-primary">
-              🌍 Tạo thế giới mới
+                            <GlobeAltIcon className="inline w-4 h-4" /> Tạo thế giới mới
             </Link>
           </div>
         </div>
@@ -202,7 +212,7 @@ function StoriesView({
                         onChange={handleCharacterCheckbox}
                         className="checkbox checkbox-sm"
                       />
-                      <span>👤 {char.name}</span>
+                      <span><UserIcon className="inline w-3.5 h-3.5" /> {char.name}</span>
                     </label>
                   ))}
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -213,7 +223,7 @@ function StoriesView({
                       onChange={handleCharacterCheckbox}
                       className="checkbox checkbox-sm"
                     />
-                    <span>➕ Tạo nhân vật mới (GPT sẽ đặt tên)</span>
+                    <span><PlusIcon className="inline w-3.5 h-3.5" /> Tạo nhân vật mới (GPT sẽ đặt tên)</span>
                   </label>
                 </div>
               {/* END character selection group */}
@@ -338,7 +348,7 @@ function StoriesView({
                     </div>
                     {analyzedEntities.characters?.length > 0 && (
                       <div className="mb-3">
-                        <span className="opacity-70 text-sm">👤 Nhân vật ({analyzedEntities.characters.length}):</span>
+                        <span className="opacity-70 text-sm"><UserIcon className="inline w-3.5 h-3.5" /> Nhân vật ({analyzedEntities.characters.length}):</span>
                         <div className="flex flex-wrap gap-2 mt-1">
                           {analyzedEntities.characters.map((char, i) => (
                             <span key={i} className="bg-primary/10 px-2 py-1 border border-primary/30 rounded-lg font-medium text-primary text-sm">{char.name || char}</span>
@@ -348,7 +358,7 @@ function StoriesView({
                     )}
                     {analyzedEntities.locations?.length > 0 && (
                       <div className="mb-3">
-                        <span className="opacity-70 text-sm">📍 Địa điểm ({analyzedEntities.locations.length}):</span>
+                        <span className="opacity-70 text-sm"><MapPinIcon className="inline w-3.5 h-3.5" /> Địa điểm ({analyzedEntities.locations.length}):</span>
                         <div className="flex flex-wrap gap-2 mt-1">
                           {analyzedEntities.locations.map((loc, i) => (
                             <span key={i} className="bg-secondary/10 px-2 py-1 border border-secondary/30 rounded-lg font-medium text-secondary text-sm">{loc.name || loc}</span>
@@ -363,7 +373,7 @@ function StoriesView({
                     {(analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0) && (
                       <div className="mt-2 pt-2 border-success/30 border-t">
                         <span className="text-sm">
-                          ✅ Nhấn <strong>Tạo câu chuyện</strong> để lưu và liên kết các thực thể này
+                                                    <CheckCircleIcon className="inline w-4 h-4 text-success" /> Nhấn <strong>Tạo câu chuyện</strong> để lưu và liên kết các thực thể này
                         </span>
                       </div>
                     )}
@@ -391,8 +401,7 @@ function StoriesView({
                       <div className="flex flex-wrap gap-2 mt-2">
                         {detectedCharacters.map(char => (
                           <span key={char.entity_id} className="badge badge-primary">
-                            👤 {char.name}
-                          </span>
+                                                        <UserIcon className="inline w-3.5 h-3.5" /> {char.name}                          </span>
                         ))}
                       </div>
                     </div>

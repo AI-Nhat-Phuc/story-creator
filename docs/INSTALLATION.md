@@ -18,7 +18,7 @@ python -m venv .venv
 .venv/Scripts/activate  # Windows
 # or
 source .venv/bin/activate  # macOS/Linux
-pip install -r requirements.txt
+pip install -r api/requirements.txt
 ```
 
 ## 3. Node.js Frontend Setup
@@ -42,7 +42,7 @@ npm run dev
 ```
 - **Or, run backend and frontend separately:**
 ```bash
-python main.py -i api
+.venv\Scripts\python.exe api/main.py -i api
 cd frontend && npm run dev
 ```
 

@@ -41,7 +41,7 @@ Flask Templates (Port 5000) → Storage
 
 ```bash
 # Backend (Python)
-pip install -r requirements.txt
+pip install -r api/requirements.txt
 
 # Frontend (Node.js)
 cd frontend
@@ -63,7 +63,7 @@ npm run dev
 
 Terminal 1 - Backend:
 ```bash
-python main.py -i api
+.venv\Scripts\python.exe api/main.py -i api
 ```
 
 Terminal 2 - Frontend:
@@ -87,7 +87,18 @@ story-creator/
 │   │   ├── components/        # UI components
 │   │   │   ├── Navbar.jsx
 │   │   │   ├── Toast.jsx
-│   │   │   └── LoadingSpinner.jsx
+│   │   │   ├── LoadingSpinner.jsx
+│   │   │   └── timeline/      # ⚡ Event Timeline (React Flow)
+│   │   │       ├── EventTimelineSection.jsx  # Lazy-loaded section
+│   │   │       ├── TimelineCanvas.jsx        # React Flow canvas
+│   │   │       ├── EventNode.jsx             # Custom event node
+│   │   │       ├── YearCluster.jsx           # Year label node
+│   │   │       ├── ConnectionLine.jsx        # Custom edge
+│   │   │       └── TimelineControls.jsx      # Zoom/direction controls
+│   │   ├── containers/        # Data fetching containers
+│   │   │   ├── EventTimelineContainer.jsx  # Timeline data + GPT extraction
+│   │   │   ├── StoryDetailContainer.jsx
+│   │   │   └── WorldDetailContainer.jsx
 │   │   ├── pages/             # Page components
 │   │   │   ├── Dashboard.jsx
 │   │   │   ├── WorldsPage.jsx
@@ -105,7 +116,7 @@ story-creator/
 │
 ├── interfaces/
 │   ├── api_backend.py         # ✨ NEW: Pure REST API
-│   ├── web_interface.py       # LEGACY: Template-based
+│   ├── api/interfaces/api_backend.py       # LEGACY: Template-based
 │   └── simulation_interface.py
 │
 ├── services/                  # Business logic layer
@@ -196,26 +207,42 @@ npm run preview
 **File structure:**
 - `src/pages/` - Add new pages here
 - `src/components/` - Add reusable components
+- `src/components/timeline/` - Event Timeline components (React Flow)
+- `src/containers/` - Data fetching containers
 - `src/services/api.js` - Add new API endpoints
+
+### Event Timeline Feature
+
+Dashboard có một section "Timeline Sự kiện" sử dụng React Flow (`@xyflow/react`) để hiển thị các sự kiện được trích xuất từ câu chuyện bằng GPT.
+
+**Luồng dữ liệu:**
+1. User chọn World từ dropdown → `EventTimelineContainer` gọi `GET /api/worlds/:id/events`
+2. User nhấn "Trích xuất sự kiện" → `POST /api/worlds/:id/events/extract` (async GPT)
+3. Container polls `GET /api/gpt/results/:taskId` mỗi 2 giây
+4. Timeline data → `TimelineCanvas` → React Flow nodes/edges
+
+**Caching:** GPT analysis được cache bằng SHA-256 hash của story content. `?force=true` để bỏ qua cache.
+
+**Event click:** Navigate tới `/stories/:storyId?event=:eventId&position=:pos` → StoryDetailView scroll & highlight đoạn văn liên quan.
 
 ### Backend Development
 
 ```bash
 # Run API server
-python main.py -i api
+.venv\Scripts\python.exe api/main.py -i api
 
 # Run with debug mode
-python main.py -i api --debug
+.venv\Scripts\python.exe api/main.py -i api --debug
 
 # Run legacy template mode
-python main.py -i web
+.venv\Scripts\python.exe api/main.py -i api
 
 # Run simulation mode
-python main.py -i simulation
+.venv\Scripts\python.exe api/main.py -i simulation
 ```
 
 **Adding new endpoints:**
-Edit `interfaces/api_backend.py` and add routes in `_register_routes()` method.
+Edit `api/interfaces/api_backend.py` and add routes in `_register_routes()` method.
 
 ### Service Layer
 
@@ -240,7 +267,7 @@ names, ids = CharacterService.detect_mentioned_characters(
 )
 ```
 
-## 🎨 Frontend Tech Stack
+## Frontend Tech Stack
 
 - **React** 18.2 - UI library
 - **React Router** 6.20 - Client-side routing
@@ -248,15 +275,19 @@ names, ids = CharacterService.detect_mentioned_characters(
 - **TailwindCSS** 3.4 - Utility-first CSS framework
 - **DaisyUI** 4.6 - Pre-built components
 - **Vite** 5.0 - Fast build tool & dev server
+- **@heroicons/react** 2.2 - SVG icon components (thay thế text/emoji icons)
+- **@xyflow/react** 12.10 - React Flow cho Event Timeline
 
 ### Key Features
 
 1. **Component-based UI**: Modular, reusable components
 2. **Client-side routing**: Fast navigation without page reloads
-3. **Real-time updates**: Toast notifications for user feedback
-4. **Responsive design**: Mobile-friendly with TailwindCSS
-5. **Async GPT integration**: Non-blocking UI during AI processing
-6. **Type-safe API calls**: Axios with proper error handling
+3. **Code-splitting & Lazy loading**: Route-level `React.lazy()` + `Suspense`
+4. **Vendor chunk splitting**: `manualChunks` trong `vite.config.js` (react, xyflow, ui)
+5. **Real-time updates**: Toast notifications for user feedback
+6. **Responsive design**: Mobile-friendly with TailwindCSS
+7. **Async GPT integration**: Non-blocking UI during AI processing
+8. **Heroicons**: Tất cả icon dùng `@heroicons/react/24/outline` (không dùng text/emoji)
 
 ## 🔧 Backend Tech Stack
 
@@ -270,7 +301,7 @@ names, ids = CharacterService.detect_mentioned_characters(
 
 **Before (tightly coupled):**
 ```python
-# In web_interface.py
+# In api/interfaces/api_backend.py
 description = self.gpt.generate_world_description(world_type)
 ```
 
@@ -328,7 +359,7 @@ VITE_API_URL=http://localhost:5000/api
 **Problem:** GPT analysis không trả về kết quả
 
 **Solution:**
-1. Kiểm tra API key: `python test_api_key.py`
+1. Kiểm tra API key: `.venv\Scripts\python.exe api/test_api_key.py`
 2. Tạo file `.env` với `OPENAI_API_KEY`
 3. Kiểm tra quota OpenAI
 4. Xem backend logs cho errors
@@ -352,7 +383,7 @@ Nếu bạn đang sử dụng web interface cũ:
 
 1. **Legacy mode vẫn hoạt động:**
    ```bash
-   python main.py -i web
+   .venv\Scripts\python.exe api/main.py -i api
    ```
 
 2. **Migrate sang API mode:**
