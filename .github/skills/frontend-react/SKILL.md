@@ -5,19 +5,19 @@ description: React frontend development patterns for Container/View architecture
 
 # Skill: React Frontend Development
 
-## Khi nào áp dụng
-Khi tạo hoặc chỉnh sửa components, containers, hoặc pages trong `frontend/src/`.
+## When to Apply
+When creating or editing components, containers, or pages in `frontend/src/`.
 
 ## Architecture: Container → View Pattern
 
 ```
-pages/           → Route components (nhận showToast prop)
+pages/           → Route components (receive showToast prop)
 containers/      → Data fetching + state + handlers
 components/      → Presentation UI (props only, no API calls)
-services/api.js  → Tất cả HTTP calls (KHÔNG fetch/axios trực tiếp trong component)
+services/api.js  → All HTTP calls (do NOT use fetch/axios directly in components)
 ```
 
-### Pattern: Tạo Feature Mới
+### Pattern: Creating a New Feature
 
 #### 1. API Client (`services/api.js`)
 ```javascript
@@ -50,20 +50,20 @@ function MyFeatureContainer({ showToast }) {
       const res = await myAPI.getAll()
       setData(res.data)
     } catch (error) {
-      showToast('Lỗi tải dữ liệu', 'error')
+      showToast('Failed to load data', 'error')
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async (id, name) => {
-    if (!confirm(`Bạn có chắc muốn xóa "${name}"?`)) return
+    if (!confirm(`Are you sure you want to delete "${name}"?`)) return
     try {
       await myAPI.delete(id)
       setData(prev => prev.filter(item => item.id !== id))
-      showToast(`Đã xóa "${name}"`, 'success')
+      showToast(`Deleted "${name}"`, 'success')
     } catch (error) {
-      showToast('Lỗi: ' + (error.response?.data?.error || error.message), 'error')
+      showToast('Error: ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
@@ -91,7 +91,7 @@ function MyFeatureView({ data, user, onDelete }) {
               onClick={() => onDelete(item.id, item.name)}
               className="btn btn-ghost btn-sm text-error"
             >
-              <TrashIcon className="inline w-4 h-4" /> Xóa
+              <TrashIcon className="inline w-4 h-4" /> Delete
             </button>
           </div>
         </div>
@@ -115,33 +115,33 @@ export default function MyFeaturePage({ showToast }) {
 #### 5. Route (App.jsx — lazy loaded)
 ```jsx
 const MyFeaturePage = lazy(() => import('./pages/MyFeaturePage'))
-// Trong <Routes>:
+// Inside <Routes>:
 <Route path="/my-feature" element={<MyFeaturePage showToast={showToast} />} />
 ```
 
-## Icons: Heroicons (BẮT BUỘC)
+## Icons: Heroicons (REQUIRED)
 
-Tất cả icon phải dùng `@heroicons/react`. KHÔNG dùng emoji hoặc text icon.
+All icons must use `@heroicons/react`. Do NOT use emoji or text icons.
 
 ```jsx
-// ✅ ĐÚNG
+// ✅ CORRECT
 import { TrashIcon, PencilIcon, PlusIcon } from '@heroicons/react/24/outline'
 <TrashIcon className="inline w-4 h-4" />
 
-// ❌ SAI
+// ❌ WRONG
 <span>🗑️</span>
 <span>✏️</span>
 ```
 
-Các icon thường dùng:
+Commonly used icons:
 | Action | Icon |
 |--------|------|
-| Xóa | `TrashIcon` |
-| Sửa | `PencilIcon` |
-| Thêm | `PlusIcon` |
-| Lưu | `ArrowDownTrayIcon` (solid) |
-| Hủy | `XMarkIcon` |
-| Tìm kiếm | `MagnifyingGlassIcon` |
+| Delete | `TrashIcon` |
+| Edit | `PencilIcon` |
+| Add | `PlusIcon` |
+| Save | `ArrowDownTrayIcon` (solid) |
+| Cancel | `XMarkIcon` |
+| Search | `MagnifyingGlassIcon` |
 | Link | `LinkIcon` |
 | User | `UserIcon` |
 | Location | `MapPinIcon` |
@@ -150,7 +150,7 @@ Các icon thường dùng:
 | Check | `CheckCircleIcon` |
 | Warning | `ExclamationTriangleIcon` |
 
-**Lưu ý:** `<option>` HTML elements KHÔNG hỗ trợ JSX children → dùng text thuần.
+**Note:** `<option>` HTML elements do NOT support JSX children → use plain text.
 
 ## Styling: TailwindCSS + DaisyUI
 
@@ -170,12 +170,12 @@ Các icon thường dùng:
 <span className="badge badge-primary">tag</span>
 <span className="badge badge-sm badge-outline">small</span>
 
-// Toast (qua showToast prop)
-showToast('Thành công!', 'success')  // success | error | info | warning
+// Toast (via showToast prop)
+showToast('Success!', 'success')  // success | error | info | warning
 
-// Modal (dùng component Modal.jsx)
-<Modal open={showModal} onClose={() => setShowModal(false)} title="Tiêu đề">
-  <p>Nội dung modal</p>
+// Modal (use Modal.jsx component)
+<Modal open={showModal} onClose={() => setShowModal(false)} title="Title">
+  <p>Modal content</p>
 </Modal>
 ```
 
@@ -193,17 +193,17 @@ const handleGptAnalyze = async () => {
       if (result.data.status === 'completed') {
         setResult(result.data.result)
         setAnalyzing(false)
-        showToast('Phân tích hoàn tất!', 'success')
+        showToast('Analysis complete!', 'success')
       } else if (result.data.status === 'error') {
         showToast(result.data.result, 'error')
         setAnalyzing(false)
       } else {
-        setTimeout(pollResults, 1000) // Poll mỗi 1 giây
+        setTimeout(pollResults, 1000) // Poll every 1 second
       }
     }
     pollResults()
   } catch (error) {
-    showToast('Lỗi GPT', 'error')
+    showToast('GPT error', 'error')
     setAnalyzing(false)
   }
 }
@@ -212,7 +212,7 @@ const handleGptAnalyze = async () => {
 ## Code-Splitting
 
 ### Route-level Lazy Loading
-Tất cả page components phải được lazy load trong `App.jsx`:
+All page components must be lazy-loaded in `App.jsx`:
 ```jsx
 const MyPage = lazy(() => import('./pages/MyPage'))
 ```
@@ -232,12 +232,13 @@ build: {
 }
 ```
 
-## Anti-patterns (TRÁNH)
+## Anti-patterns
 
-- ❌ API calls trực tiếp trong component → dùng `services/api.js`
-- ❌ Business logic trong view component → chuyển vào container
-- ❌ Inline styles (trừ dynamic layout/animation) → dùng Tailwind classes
-- ❌ Emoji/text icons → dùng Heroicons
-- ❌ Eager import page components → dùng `React.lazy()`
-- ❌ State management phức tạp → dùng React hooks + Context
-- ❌ `fetch()` hoặc `axios` trực tiếp → dùng api instance đã config sẵn
+- ❌ Direct API calls in component → use `services/api.js`
+- ❌ Business logic in view component → move to container
+- ❌ Inline styles (except dynamic layout/animation) → use Tailwind classes
+- ❌ Emoji/text icons → use Heroicons
+- ❌ Eager import page components → use `React.lazy()`
+- ❌ Complex state management → use React hooks + Context
+- ❌ `fetch()` or `axios` directly → use the pre-configured api instance
+

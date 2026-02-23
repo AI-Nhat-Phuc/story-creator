@@ -1,135 +1,135 @@
-# Database Safety Guarantees
+# Đảm Bảo An Toàn Cơ Sở Dữ Liệu
 
-## ✅ Absolute Data Protection
+## ✅ Bảo Vệ Dữ Liệu Tuyệt Đối
 
-**The Story Creator database is NEVER truncated, cleared, or deleted during normal operations.**
+**Cơ sở dữ liệu Story Creator KHÔNG BAO GIỜ bị xóa, làm trống hoặc xóa sạch trong quá trình vận hành bình thường.**
 
-### Safety Mechanisms
+### Cơ Chế Bảo Vệ
 
-#### 1. **No Truncation on Server Start**
-- `NoSQLStorage.__init__()` only opens existing database, never clears it
-- If database file exists, all data is preserved
-- Corrupted databases are backed up, NOT deleted
+#### 1. **Không Làm Trống Khi Khởi Động Server**
+- `NoSQLStorage.__init__()` chỉ mở cơ sở dữ liệu hiện có, không bao giờ xóa sạch
+- Nếu file database đã tồn tại, toàn bộ dữ liệu được giữ nguyên
+- Cơ sở dữ liệu bị lỗi sẽ được sao lưu, KHÔNG bị xóa
 
-#### 2. **Protected clear_all() Method**
+#### 2. **Phương Thức clear_all() Được Bảo Vệ**
 ```python
 def clear_all(self):
     """
-    SAFETY: Can only be called in test environment.
-    Production code CANNOT clear the database.
+    AN TOÀN: Chỉ được gọi trong môi trường kiểm thử.
+    Code production KHÔNG THỂ xóa sạch cơ sở dữ liệu.
     """
     if 'PYTEST_CURRENT_TEST' not in os.environ and 'TEST_MODE' not in os.environ:
-        raise RuntimeError("clear_all() can only be called in test environment")
+        raise RuntimeError("clear_all() chỉ được gọi trong môi trường kiểm thử")
 ```
 
-- Only works when `PYTEST_CURRENT_TEST` or `TEST_MODE` environment variable is set
-- Raises `RuntimeError` in production
-- Used ONLY in test files (test_nosql.py)
+- Chỉ hoạt động khi biến môi trường `PYTEST_CURRENT_TEST` hoặc `TEST_MODE` được thiết lập
+- Ném lỗi `RuntimeError` trong môi trường production
+- Chỉ sử dụng trong các file kiểm thử (test_nosql.py)
 
-#### 3. **Non-Destructive Backup**
+#### 3. **Sao Lưu Không Phá Hủy**
 ```python
 def _backup_corrupt_database(self, db_path: Path):
-    """Creates a backup copy. NEVER deletes the original."""
+    """Tạo bản sao lưu. KHÔNG BAO GIỜ xóa file gốc."""
     backup_path = db_path.with_suffix('.db.backup')
-    shutil.copy2(db_path, backup_path)  # Copy, not move
+    shutil.copy2(db_path, backup_path)  # Sao chép, không di chuyển
 ```
 
-- Uses `shutil.copy2()` to create backups
-- Original file remains untouched
-- No deletion operations
+- Sử dụng `shutil.copy2()` để tạo bản sao lưu
+- File gốc không bị thay đổi
+- Không có thao tác xóa file
 
-#### 4. **Append-Only Operations**
-All database modifications:
-- `save_world()` → Insert or update existing record
-- `save_story()` → Insert or update existing record
-- `save_entity()` → Insert or update existing record
-- `save_location()` → Insert or update existing record
-- `delete_world()` → Only deletes ONE specific record by ID
+#### 4. **Các Thao Tác Chỉ Thêm/Cập Nhật**
+Tất cả các thay đổi cơ sở dữ liệu:
+- `save_world()` → Thêm mới hoặc cập nhật bản ghi hiện có
+- `save_story()` → Thêm mới hoặc cập nhật bản ghi hiện có
+- `save_entity()` → Thêm mới hoặc cập nhật bản ghi hiện có
+- `save_location()` → Thêm mới hoặc cập nhật bản ghi hiện có
+- `delete_world()` → Chỉ xóa MỘT bản ghi cụ thể theo ID
 
-### Code Audit Results
+### Kết Quả Kiểm Tra Code
 
-✅ **api_backend.py**: No clear/truncate calls
-✅ **main.py**: No clear/truncate calls
-✅ **NoSQLStorage**: clear_all() protected with environment check
-✅ **JSONStorage**: No truncation in initialization
-✅ **Backup Method**: Copy-only, never deletes
+✅ **api_backend.py**: Không có lệnh xóa sạch/làm trống
+✅ **main.py**: Không có lệnh xóa sạch/làm trống
+✅ **NoSQLStorage**: clear_all() được bảo vệ bằng kiểm tra môi trường
+✅ **JSONStorage**: Không có thao tác làm trống khi khởi tạo
+✅ **Phương Thức Sao Lưu**: Chỉ sao chép, không xóa
 
-### Test Environment Only
+### Chỉ Dành Cho Môi Trường Kiểm Thử
 
-The following operations ONLY work in tests:
+Các thao tác sau CHỈ hoạt động trong kiểm thử:
 ```python
 # test_nosql.py
 def test_example(self):
-    self.storage.clear_all()  # ✅ Works (TEST_MODE set)
+    self.storage.clear_all()  # ✅ Hoạt động (TEST_MODE được thiết lập)
 
-# api_backend.py or production code
-storage.clear_all()  # ❌ Raises RuntimeError
+# api_backend.py hoặc code production
+storage.clear_all()  # ❌ Ném RuntimeError
 ```
 
-### Error Handling
+### Xử Lý Lỗi
 
-Even during errors:
-- Database corruption → Creates backup, original preserved
-- TinyDB errors → Caught and logged, no data deletion
-- Server crash → Database file remains unchanged
-- Power failure → TinyDB's write-ahead logging protects data
+Ngay cả khi xảy ra lỗi:
+- Cơ sở dữ liệu bị lỗi → Tạo bản sao lưu, file gốc được giữ nguyên
+- Lỗi TinyDB → Bắt và ghi log, không xóa dữ liệu
+- Server bị crash → File cơ sở dữ liệu không thay đổi
+- Mất điện đột ngột → Cơ chế ghi trước của TinyDB bảo vệ dữ liệu
 
-### Production Guarantee
+### Đảm Bảo Cho Production
 
-**In production, your data is safe from:**
-- Accidental truncation
-- Clear operations
-- Initialization errors
-- Server restarts
-- Code bugs calling clear_all()
+**Trong production, dữ liệu của bạn an toàn trước:**
+- Xóa sạch do vô tình
+- Thao tác xóa toàn bộ
+- Lỗi khởi tạo
+- Khởi động lại server
+- Lỗi code gọi clear_all()
 
-**The ONLY way to lose data is:**
-- Manually deleting the `.db` file from filesystem
-- Calling `delete_world()` with a specific ID (intentional deletion)
+**Cách DUY NHẤT để mất dữ liệu là:**
+- Xóa thủ công file `.db` khỏi hệ thống file
+- Gọi `delete_world()` với ID cụ thể (xóa có chủ đích)
 
-### Developer Guidelines
+### Hướng Dẫn Cho Nhà Phát Triển
 
-#### ✅ Safe Operations
+#### ✅ Các Thao Tác An Toàn
 ```python
-storage = NoSQLStorage()  # Opens existing DB
-storage.save_world(world)  # Adds or updates
-storage.get_world(world_id)  # Read-only
+storage = NoSQLStorage()          # Mở database hiện có
+storage.save_world(world)         # Thêm hoặc cập nhật
+storage.get_world(world_id)       # Chỉ đọc
 ```
 
-#### ❌ Dangerous Operations (Blocked)
+#### ❌ Các Thao Tác Nguy Hiểm (Bị Chặn)
 ```python
-storage.clear_all()  # Raises error in production
-storage.db.purge()  # Don't use directly
-os.remove('story_creator.db')  # Manual deletion
+storage.clear_all()               # Ném lỗi trong production
+storage.db.purge()                # Không dùng trực tiếp
+os.remove('story_creator.db')    # Xóa thủ công
 ```
 
-### Testing Locally
+### Kiểm Tra Cục Bộ
 
-To verify database safety:
+Để xác minh tính an toàn của cơ sở dữ liệu:
 ```bash
-# 1. Create some data
+# 1. Tạo một số dữ liệu
 .venv\Scripts\python.exe api/main.py -i api
 
-# 2. Stop server (Ctrl+C)
+# 2. Dừng server (Ctrl+C)
 
-# 3. Restart server
+# 3. Khởi động lại server
 .venv\Scripts\python.exe api/main.py -i api
 
-# 4. Check data is still there
-# Visit http://localhost:5000/api/worlds
+# 4. Kiểm tra dữ liệu vẫn còn
+# Truy cập http://localhost:5000/api/worlds
 ```
 
-Data should persist across all restarts.
+Dữ liệu phải được giữ nguyên qua tất cả các lần khởi động lại.
 
-## Summary
+## Tóm Tắt
 
-🛡️ **Database Safety Score: 100%**
+🛡️ **Điểm An Toàn Cơ Sở Dữ Liệu: 100%**
 
-- ✅ No truncation on initialization
-- ✅ Protected clear operations
-- ✅ Non-destructive backups
-- ✅ Append-only writes
-- ✅ Error-safe handling
-- ✅ Production-tested
+- ✅ Không làm trống khi khởi tạo
+- ✅ Bảo vệ thao tác xóa sạch
+- ✅ Sao lưu không phá hủy
+- ✅ Chỉ ghi thêm/cập nhật
+- ✅ Xử lý lỗi an toàn
+- ✅ Đã kiểm thử trong production
 
-Your story data is safe. Period.
+Dữ liệu câu chuyện của bạn hoàn toàn an toàn.

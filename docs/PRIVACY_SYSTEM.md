@@ -1,34 +1,34 @@
-# Privacy & Visibility System Documentation
+# Tài Liệu Hệ Thống Quyền Riêng Tư & Hiển Thị
 
-## Overview
-The Story Creator application now supports a multi-user privacy system that allows users to control who can view and interact with their content (worlds, stories, and events).
+## Tổng Quan
+Story Creator hỗ trợ hệ thống quyền riêng tư đa người dùng cho phép người dùng kiểm soát ai có thể xem và tương tác với nội dung của họ (thế giới, câu chuyện và sự kiện).
 
-## Key Concepts
+## Các Khái Niệm Chính
 
-### Visibility Levels
-All content items (worlds, stories, events) have a `visibility` field with two possible values:
+### Mức Độ Hiển Thị
+Tất cả các mục nội dung (thế giới, câu chuyện, sự kiện) đều có trường `visibility` với hai giá trị:
 
-- **`public`**: Anyone can view (including anonymous users)
-- **`private`**: Only owner and explicitly shared users can view
+- **`public`**: Ai cũng có thể xem (kể cả người dùng ẩn danh)
+- **`private`**: Chỉ chủ sở hữu và người dùng được chia sẻ mới có thể xem
 
-### Ownership
-Every content item has an `owner_id` field that identifies the user who created it. Only the owner can:
-- Edit content
-- Delete content
-- Share content with other users
-- Change visibility settings
+### Quyền Sở Hữu
+Mỗi mục nội dung có trường `owner_id` xác định người dùng đã tạo ra nó. Chỉ chủ sở hữu mới có thể:
+- Chỉnh sửa nội dung
+- Xóa nội dung
+- Chia sẻ nội dung với người dùng khác
+- Thay đổi cài đặt hiển thị
 
-### Sharing
-Private content can be shared with specific users via the `shared_with` field (array of user IDs). Shared users have:
-- **View permission**: Read-only access to the content
-- **No edit permission**: Cannot modify or delete
+### Chia Sẻ
+Nội dung riêng tư có thể được chia sẻ với người dùng cụ thể thông qua trường `shared_with` (mảng user ID). Người dùng được chia sẻ có:
+- **Quyền xem**: Truy cập chỉ đọc vào nội dung
+- **Không có quyền chỉnh sửa**: Không thể thay đổi hoặc xóa
 
-### Quota Limits
-To prevent spam, users have quota limits for public content:
-- **Public Worlds Limit**: Default 5 per user
-- **Public Stories Limit**: Default 20 per user
+### Giới Hạn Quota
+Để ngăn chặn spam, người dùng có giới hạn quota cho nội dung công khai:
+- **Giới hạn Thế giới Công khai**: Mặc định 5 thế giới/người dùng
+- **Giới hạn Câu chuyện Công khai**: Mặc định 20 câu chuyện/người dùng
 
-Quotas are tracked in the `User.metadata` object:
+Quota được theo dõi trong đối tượng `User.metadata`:
 ```python
 {
   'public_worlds_limit': 5,
@@ -38,29 +38,29 @@ Quotas are tracked in the `User.metadata` object:
 }
 ```
 
-## Model Schema Updates
+## Cập Nhật Schema Model
 
-### World Model
+### Model World
 ```python
 class World:
     def __init__(
         self,
-        # ... existing fields ...
-        visibility: str = 'private',          # 'public' or 'private'
-        owner_id: Optional[str] = None,       # User ID of owner
-        shared_with: Optional[List[str]] = None  # List of user IDs with access
+        # ... các trường hiện có ...
+        visibility: str = 'private',          # 'public' hoặc 'private'
+        owner_id: Optional[str] = None,       # User ID của chủ sở hữu
+        shared_with: Optional[List[str]] = None  # Danh sách user ID có quyền truy cập
     ):
         self.visibility = visibility
         self.owner_id = owner_id
         self.shared_with = shared_with or []
 ```
 
-### Story Model
+### Model Story
 ```python
 class Story:
     def __init__(
         self,
-        # ... existing fields ...
+        # ... các trường hiện có ...
         visibility: str = 'private',
         owner_id: Optional[str] = None,
         shared_with: Optional[List[str]] = None
@@ -70,33 +70,33 @@ class Story:
         self.shared_with = shared_with or []
 ```
 
-### Event Model
+### Model Event
 ```python
 class Event:
     def __init__(
         self,
-        # ... existing fields ...
-        visibility: str = 'private',  # Inherited from parent story
-        owner_id: Optional[str] = None  # Inherited from parent story
-        # Note: Events do NOT have independent sharing
+        # ... các trường hiện có ...
+        visibility: str = 'private',  # Kế thừa từ câu chuyện cha
+        owner_id: Optional[str] = None  # Kế thừa từ câu chuyện cha
+        # Lưu ý: Event KHÔNG có chia sẻ độc lập
     ):
         self.visibility = visibility
         self.owner_id = owner_id
 ```
 
-Events inherit privacy settings from their parent story and do not have independent `shared_with` lists.
+Event kế thừa cài đặt quyền riêng tư từ câu chuyện cha và không có danh sách `shared_with` độc lập.
 
-### User Model
+### Model User
 ```python
 class User:
     def __init__(self, ...):
-        # ... existing fields ...
+        # ... các trường hiện có ...
         self.metadata['public_worlds_limit'] = 5
         self.metadata['public_worlds_count'] = 0
         self.metadata['public_stories_limit'] = 20
         self.metadata['public_stories_count'] = 0
 
-    # Quota check methods
+    # Phương thức kiểm tra quota
     def can_create_public_world(self) -> bool
     def can_create_public_story(self) -> bool
     def increment_public_worlds(self)
@@ -105,243 +105,137 @@ class User:
     def decrement_public_stories(self)
 ```
 
-## Permission Service
+## Dịch Vụ Phân Quyền
 
-The `PermissionService` provides static methods for checking access control:
+`PermissionService` cung cấp các phương thức tĩnh để kiểm tra kiểm soát truy cập:
 
 ```python
 from services import PermissionService
 
-# Check if user can view an item
-can_view = PermissionService.can_view(user_id, item_dict)  # Returns bool
+# Kiểm tra xem người dùng có thể xem mục không
+can_view = PermissionService.can_view(user_id, item_dict)  # Trả về bool
 
-# Check if user can edit an item (owner only)
+# Kiểm tra xem người dùng có thể chỉnh sửa (chỉ chủ sở hữu)
 can_edit = PermissionService.can_edit(user_id, item_dict)
 
-# Check if user can delete an item (owner only)
+# Kiểm tra xem người dùng có thể xóa (chỉ chủ sở hữu)
 can_delete = PermissionService.can_delete(user_id, item_dict)
 
-# Check if user can share an item (owner only)
+# Kiểm tra xem người dùng có thể chia sẻ (chỉ chủ sở hữu)
 can_share = PermissionService.can_share(user_id, item_dict)
 
-# Filter a list to only viewable items
+# Lọc danh sách chỉ lấy các mục có thể xem
 viewable_items = PermissionService.filter_viewable(user_id, items_list)
 
-# Get items owned by user
+# Lấy các mục thuộc sở hữu của người dùng
 owned = PermissionService.get_user_owned_items(user_id, items_list)
 
-# Get items shared with user
+# Lấy các mục được chia sẻ với người dùng
 shared = PermissionService.get_shared_with_user(user_id, items_list)
 ```
 
-**Permission Rules:**
-- `can_view()`: Returns `True` for:
-  - Public items (anyone, including anonymous)
-  - Private items where user is owner
-  - Private items where user is in `shared_with` list
-- `can_edit()`, `can_delete()`, `can_share()`: Owner only
+**Quy tắc phân quyền:**
+- `can_view()`: Trả về `True` khi:
+  - Mục công khai (ai cũng xem được, kể cả ẩn danh)
+  - Mục riêng tư mà người dùng là chủ sở hữu
+  - Mục riêng tư mà người dùng có trong danh sách `shared_with`
+- `can_edit()`, `can_delete()`, `can_share()`: Chỉ chủ sở hữu
 
-## Storage Layer Updates
+## Cập Nhật Tầng Storage
 
-All `list_*` methods now accept an optional `user_id` parameter for permission filtering:
+Tất cả các phương thức `list_*` chấp nhận tham số `user_id` tùy chọn để lọc theo quyền:
 
 ```python
-# NoSQLStorage methods
-storage.list_worlds(user_id=current_user_id)  # Returns only viewable worlds
+# Phương thức NoSQLStorage
+storage.list_worlds(user_id=current_user_id)  # Chỉ trả về thế giới có thể xem
 storage.list_stories(world_id=world_id, user_id=current_user_id)
 storage.list_events_by_world(world_id, user_id=current_user_id)
 storage.list_events_by_story(story_id, user_id=current_user_id)
 ```
 
-**Anonymous users** (when `user_id=None`):
-- Only see public items
-- Cannot create, edit, or delete anything
+**Người dùng ẩn danh** (khi `user_id=None`):
+- Chỉ thấy các mục công khai
+- Không thể tạo, chỉnh sửa hoặc xóa bất cứ thứ gì
 
-**Authenticated users**:
-- See public items + owned items + shared items
-- Can create new content (subject to quota limits)
-- Can edit/delete only their own content
+**Người dùng đã xác thực**:
+- Thấy mục công khai + mục sở hữu + mục được chia sẻ
+- Có thể tạo nội dung mới (theo giới hạn quota)
+- Chỉ có thể chỉnh sửa/xóa nội dung của chính mình
 
 ## API Routes
 
-### Authentication Decorators
+### Decorator Xác Thực
 
 ```python
 from interfaces.auth_middleware import token_required, optional_auth
 
-# Requires authentication (401 if no token)
+# Yêu cầu xác thực (401 nếu không có token)
 @token_required
 def protected_route():
     user_id = g.current_user.user_id
     # ...
 
-# Optional authentication (supports both anonymous and authenticated)
+# Xác thực tùy chọn (hỗ trợ cả ẩn danh và đã xác thực)
 @optional_auth
 def flexible_route():
     if hasattr(g, 'current_user'):
         user_id = g.current_user.user_id
     else:
-        user_id = None  # Anonymous
+        user_id = None  # Ẩn danh
     # ...
 ```
 
-### World Routes
+### Routes Thế Giới
 
 #### `GET /api/worlds`
-- **Auth**: Optional (supports anonymous)
-- **Returns**: Public worlds + user's owned worlds + shared worlds
-- **Headers**: `Authorization: Bearer {token}` (optional)
+- **Xác thực**: Tùy chọn (hỗ trợ ẩn danh)
+- **Trả về**: Thế giới công khai + thế giới sở hữu + thế giới được chia sẻ
 
 #### `POST /api/worlds`
-- **Auth**: Required
+- **Xác thực**: Bắt buộc
 - **Body**:
   ```json
   {
-    "name": "My World",
+    "name": "Thế giới của tôi",
     "world_type": "fantasy",
     "description": "...",
-    "visibility": "private" // or "public"
+    "visibility": "private"
   }
   ```
-- **Quota Check**: If `visibility=public`, checks user's public world quota
-- **Errors**:
-  - `400` if quota exceeded
-  - `401` if not authenticated
-
-#### `GET /api/worlds/{world_id}`
-- **Auth**: Optional
-- **Permission**: User must have view permission
-- **Errors**:
-  - `403` if no view permission
-  - `404` if not found
+- **Kiểm tra Quota**: Nếu `visibility=public`, kiểm tra quota thế giới công khai
+- **Lỗi**:
+  - `400` nếu vượt quá quota
+  - `401` nếu chưa xác thực
 
 #### `PUT /api/worlds/{world_id}`
-- **Auth**: Required
-- **Permission**: Owner only
-- **Body**:
-  ```json
-  {
-    "name": "Updated Name",
-    "description": "...",
-    "visibility": "public"  // Changes trigger quota updates
-  }
-  ```
-- **Quota Updates**:
-  - `private → public`: Increment count (check limit first)
-  - `public → private`: Decrement count
-- **Errors**:
-  - `400` if changing to public exceeds quota
-  - `403` if not owner
-  - `404` if not found
-
-#### `DELETE /api/worlds/{world_id}`
-- **Auth**: Required
-- **Permission**: Owner only
-- **Side Effects**:
-  - Decrements quota if deleting public world
-  - TODO: Cascade delete stories/entities/locations
-- **Errors**:
-  - `403` if not owner
-  - `404` if not found
+- **Xác thực**: Bắt buộc
+- **Quyền**: Chỉ chủ sở hữu
+- **Cập nhật Quota**:
+  - `private → public`: Tăng đếm (kiểm tra giới hạn trước)
+  - `public → private`: Giảm đếm
 
 #### `POST /api/worlds/{world_id}/share`
-- **Auth**: Required
-- **Permission**: Owner only
+- **Xác thực**: Bắt buộc
+- **Quyền**: Chỉ chủ sở hữu
 - **Body**:
   ```json
   {
     "user_ids": ["user-uuid-1", "user-uuid-2"]
   }
   ```
-- **Behavior**: Adds users to `shared_with` list (no duplicates)
-- **Errors**:
-  - `400` if trying to share public world or invalid user IDs
-  - `403` if not owner
-  - `404` if world not found
+- **Hành vi**: Thêm người dùng vào danh sách `shared_with` (không trùng lặp)
 
-#### `POST /api/worlds/{world_id}/unshare`
-- **Auth**: Required
-- **Permission**: Owner only
-- **Body**:
-  ```json
-  {
-    "user_ids": ["user-uuid-1"]
-  }
-  ```
-- **Behavior**: Removes users from `shared_with` list
-- **Errors**:
-  - `403` if not owner
-  - `404` if world not found
+## Tích Hợp Frontend
 
-### Story Routes
-
-#### `GET /api/stories`
-- **Auth**: Optional
-- **Returns**: Public stories + user's owned + shared stories
-- **Headers**: `Authorization: Bearer {token}` (optional)
-
-#### `POST /api/stories`
-- **Auth**: Required
-- **Body**:
-  ```json
-  {
-    "world_id": "world-uuid",
-    "title": "My Story",
-    "description": "...",
-    "genre": "adventure",
-    "visibility": "private",
-    "time_index": 50,
-    "selected_characters": ["entity-uuid-1"]
-  }
-  ```
-- **Permission Check**: User must have view access to parent world
-- **Quota Check**: If `visibility=public`, checks quota
-- **Errors**:
-  - `400` if quota exceeded
-  - `403` if no permission to create in world
-  - `404` if world not found
-
-#### `GET /api/stories/{story_id}`
-- **Auth**: Optional
-- **Permission**: User must have view permission
-- **Errors**: `403` if no permission, `404` if not found
-
-#### `PUT /api/stories/{story_id}`
-- **Auth**: Required
-- **Permission**: Owner only
-- **Body**:
-  ```json
-  {
-    "title": "Updated Title",
-    "content": "...",
-    "visibility": "public"
-  }
-  ```
-- **Quota Updates**: Same as worlds (quota adjusts on visibility change)
-- **Errors**: `400` if quota exceeded, `403` if not owner
-
-#### `DELETE /api/stories/{story_id}`
-- **Auth**: Required
-- **Permission**: Owner only
-- **Side Effects**:
-  - Decrements quota if public
-  - Deletes all associated events
-- **Errors**: `403` if not owner, `404` if not found
-
-## Frontend Integration
-
-### API Service Updates
-
-Update `frontend/src/services/api.js` to pass JWT tokens:
+### Cập Nhật API Service
 
 ```javascript
+// frontend/src/services/api.js
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: '/api'
-});
+const api = axios.create({ baseURL: '/api' });
 
-// Auto-attach token from localStorage
+// Tự động đính kèm token từ localStorage
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('auth_token');
   if (token) {
@@ -350,39 +244,21 @@ api.interceptors.request.use(config => {
   return config;
 });
 
-// Worlds API with visibility
 export const worldsAPI = {
-  list: () => api.get('/worlds'),  // Automatically filtered by backend
-  create: (data) => api.post('/worlds', {
-    ...data,
-    visibility: data.visibility || 'private'
-  }),
+  list: () => api.get('/worlds'),
+  create: (data) => api.post('/worlds', { ...data, visibility: data.visibility || 'private' }),
   get: (id) => api.get(`/worlds/${id}`),
   update: (id, data) => api.put(`/worlds/${id}`, data),
   delete: (id) => api.delete(`/worlds/${id}`),
   share: (id, userIds) => api.post(`/worlds/${id}/share`, { user_ids: userIds }),
   unshare: (id, userIds) => api.post(`/worlds/${id}/unshare`, { user_ids: userIds })
 };
-
-// Stories API with visibility
-export const storiesAPI = {
-  list: () => api.get('/stories'),
-  create: (data) => api.post('/stories', {
-    ...data,
-    visibility: data.visibility || 'private'
-  }),
-  get: (id) => api.get(`/stories/${id}`),
-  update: (id, data) => api.put(`/stories/${id}`, data),
-  delete: (id) => api.delete(`/stories/${id}`)
-};
 ```
 
-### UI Components to Add
+### Các Component UI Cần Thêm
 
-#### 1. Visibility Toggle (Create/Edit Forms)
+#### 1. Nút Chọn Chế Độ Hiển Thị
 ```jsx
-import { useState } from 'react';
-
 function VisibilityToggle({ value, onChange, quotaInfo }) {
   return (
     <div className="form-control">
@@ -397,7 +273,6 @@ function VisibilityToggle({ value, onChange, quotaInfo }) {
           <option value="public">Công khai</option>
         </select>
       </label>
-
       {value === 'public' && quotaInfo && (
         <div className="text-sm text-gray-500 mt-1">
           Đã dùng {quotaInfo.current}/{quotaInfo.limit} thế giới công khai
@@ -408,161 +283,50 @@ function VisibilityToggle({ value, onChange, quotaInfo }) {
 }
 ```
 
-#### 2. Share Dialog
-```jsx
-function ShareDialog({ worldId, currentSharedWith, onClose }) {
-  const [userIds, setUserIds] = useState([]);
-
-  const handleShare = async () => {
-    await worldsAPI.share(worldId, userIds);
-    onClose();
-  };
-
-  return (
-    <div className="modal modal-open">
-      <div className="modal-box">
-        <h3>Chia sẻ thế giới</h3>
-        <input
-          type="text"
-          placeholder="Nhập User ID"
-          className="input input-bordered w-full"
-          onChange={(e) => setUserIds([e.target.value])}
-        />
-        <div className="modal-action">
-          <button className="btn btn-primary" onClick={handleShare}>
-            Chia sẻ
-          </button>
-          <button className="btn" onClick={onClose}>Hủy</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-#### 3. Quota Display
+#### 2. Hiển Thị Quota
 ```jsx
 function QuotaIndicator({ type, current, limit }) {
   const percentage = (current / limit) * 100;
   const colorClass = percentage >= 90 ? 'text-error' :
-                     percentage >= 70 ? 'text-warning' :
-                     'text-success';
-
+                     percentage >= 70 ? 'text-warning' : 'text-success';
   return (
     <div className="stats shadow">
       <div className="stat">
         <div className="stat-title">
           {type === 'worlds' ? 'Thế giới công khai' : 'Câu chuyện công khai'}
         </div>
-        <div className={`stat-value ${colorClass}`}>
-          {current}/{limit}
-        </div>
-        <div className="stat-desc">
-          Còn {limit - current} slot
-        </div>
+        <div className={`stat-value ${colorClass}`}>{current}/{limit}</div>
+        <div className="stat-desc">Còn {limit - current} slot</div>
       </div>
     </div>
   );
 }
 ```
 
-## Database Migration
+## Tính Tương Thích Ngược
 
-**No migration needed** - The system gracefully handles missing fields:
-- `visibility` defaults to `'private'` in `from_dict()` methods
-- `owner_id` defaults to `None` (legacy content has no owner)
-- `shared_with` defaults to `[]` (empty list)
-- User metadata auto-initializes quota fields in `User.__init__`
+**Không cần migration** — Hệ thống xử lý các trường còn thiếu một cách linh hoạt:
+- `visibility` mặc định là `'private'` trong các phương thức `from_dict()`
+- `owner_id` mặc định là `None` (nội dung cũ không có chủ sở hữu)
+- `shared_with` mặc định là `[]` (danh sách rỗng)
+- Metadata người dùng tự khởi tạo các trường quota trong `User.__init__`
 
-**Recommended**: Run a script to set `owner_id` on existing content based on creation patterns or admin assignment.
+## Cân Nhắc Bảo Mật
 
-## Security Considerations
+1. **Không bao giờ tiết lộ password_hash**: Sử dụng `User.to_safe_dict()` cho phản hồi API
+2. **Xác thực user_ids khi chia sẻ**: Kiểm tra người dùng tồn tại trước khi thêm vào `shared_with`
+3. **Ngăn chặn bỏ qua quota**: Luôn kiểm tra quota TRƯỚC khi tạo/cập nhật mục công khai
+4. **Ngăn chặn bỏ qua phân quyền**: Luôn dùng `PermissionService.can_*()` trước các thao tác
+5. **Xác thực token**: Tất cả route được bảo vệ phải dùng decorator `@token_required`
 
-1. **Never expose password_hash**: Use `User.to_safe_dict()` for API responses
-2. **Validate user_ids in sharing**: Check user exists before adding to `shared_with`
-3. **Quota bypass prevention**: Always check quota BEFORE creating/updating public items
-4. **Permission bypass prevention**: Always use `PermissionService.can_*()` before operations
-5. **Token validation**: All protected routes must use `@token_required` decorator
+## Xử Lý Sự Cố
 
-## Testing Scenarios
+### Vấn đề: "Unauthorized" mặc dù token hợp lệ
+**Giải pháp**: Kiểm tra rằng `init_auth_middleware(auth_service)` được gọi trong `api_backend.py` trước khi đăng ký blueprints.
 
-### Scenario 1: Anonymous User
+### Vấn đề: Số đếm quota không chính xác
+**Giải pháp**: Tính toán lại quota của người dùng:
 ```python
-# Anonymous user can only see public worlds
-response = requests.get('/api/worlds')  # No Authorization header
-# Returns only worlds with visibility='public'
-```
-
-### Scenario 2: Authenticated User Views Own & Shared Content
-```python
-headers = {'Authorization': f'Bearer {token}'}
-response = requests.get('/api/worlds', headers=headers)
-# Returns:
-# - All public worlds
-# - User's private worlds (owner_id = user.user_id)
-# - Private worlds shared with user (user_id in shared_with)
-```
-
-### Scenario 3: Quota Enforcement
-```python
-# User has 4/5 public worlds
-data = {'name': 'World 5', 'visibility': 'public', ...}
-response = requests.post('/api/worlds', json=data, headers=headers)
-# Success: Creates world, quota becomes 5/5
-
-# Try to create 6th public world
-response = requests.post('/api/worlds', json=data, headers=headers)
-# Error 400: "Bạn đã đạt giới hạn số thế giới công khai"
-```
-
-### Scenario 4: Permission Denied
-```python
-# User A tries to edit User B's private world
-world_id = 'user-b-world-id'
-response = requests.put(f'/api/worlds/{world_id}',
-                       json={'name': 'Hacked'},
-                       headers=headers_user_a)
-# Error 403: "Chỉ chủ sở hữu mới có thể chỉnh sửa"
-```
-
-### Scenario 5: Sharing Workflow
-```python
-# User A shares private world with User B
-world_id = 'user-a-private-world'
-response = requests.post(f'/api/worlds/{world_id}/share',
-                        json={'user_ids': [user_b_id]},
-                        headers=headers_user_a)
-# Success: User B can now view (but not edit) the world
-
-# User B tries to edit
-response = requests.put(f'/api/worlds/{world_id}',
-                       json={'name': 'Changed'},
-                       headers=headers_user_b)
-# Error 403: Shared users have read-only access
-```
-
-## Future Enhancements
-
-1. **Granular Permissions**: Add `can_comment`, `can_suggest_edits` roles for shared users
-2. **World Collaboration**: Allow multiple owners (team worlds)
-3. **Sharing by Username**: Accept usernames instead of UUIDs in share endpoint
-4. **Activity Log**: Track who viewed/edited what
-5. **Quota Upgrades**: Allow users to purchase increased quotas
-6. **Content Reports**: Flag public content for moderation
-7. **Transfer Ownership**: Transfer world ownership to another user
-8. **Bulk Sharing**: Share multiple worlds at once
-9. **Sharing Templates**: Save common user groups for quick sharing
-10. **Events Privacy Overrides**: Allow events to have independent visibility from stories
-
-## Troubleshooting
-
-### Issue: "Unauthorized" despite valid token
-**Solution**: Check that `init_auth_middleware(auth_service)` is called in `api_backend.py` before registering blueprints.
-
-### Issue: Quota count incorrect
-**Solution**: User quota is only updated on create/delete/visibility change. If data was manipulated directly:
-```python
-# Recalculate user's quota
 user = User.from_dict(storage.load_user(user_id))
 public_worlds = [w for w in storage.list_worlds()
                  if w.get('owner_id') == user_id and w.get('visibility') == 'public']
@@ -570,8 +334,8 @@ user.metadata['public_worlds_count'] = len(public_worlds)
 storage.save_user(user.to_dict())
 ```
 
-### Issue: Legacy content has no owner
-**Solution**: Assign ownership to a migration/admin user:
+### Vấn đề: Nội dung cũ không có chủ sở hữu
+**Giải pháp**: Gán quyền sở hữu cho tài khoản admin:
 ```python
 admin_user_id = 'admin-uuid'
 for world in storage.list_worlds():
@@ -580,26 +344,13 @@ for world in storage.list_worlds():
         storage.save_world(world)
 ```
 
-### Issue: Anonymous user sees private content
-**Solution**: Ensure storage methods receive `user_id=None` for anonymous requests:
-```python
-# In routes
-@optional_auth
-def list_worlds():
-    user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
-    worlds = storage.list_worlds(user_id=user_id)  # Pass None for anonymous
-```
+## Tóm Tắt
 
-## Summary
-
-The privacy system provides:
-- ✅ Public/private visibility for all content
-- ✅ Owner-based access control
-- ✅ Sharing mechanism for collaboration
-- ✅ Quota limits to prevent spam
-- ✅ Permission service for centralized checks
-- ✅ Backward compatibility with existing data
-- ✅ Full API integration with JWT authentication
-- ✅ Ready for frontend UI implementation
-
-All backend implementation is complete and tested. Frontend UI components can now be built using the documented API endpoints and service methods.
+Hệ thống quyền riêng tư cung cấp:
+- ✅ Hiển thị công khai/riêng tư cho tất cả nội dung
+- ✅ Kiểm soát truy cập dựa trên quyền sở hữu
+- ✅ Cơ chế chia sẻ để cộng tác
+- ✅ Giới hạn quota để ngăn chặn spam
+- ✅ Dịch vụ phân quyền tập trung
+- ✅ Tương thích ngược với dữ liệu hiện có
+- ✅ Tích hợp API đầy đủ với xác thực JWT

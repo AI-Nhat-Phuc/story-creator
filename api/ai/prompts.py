@@ -289,6 +289,54 @@ MANDATORY RULES:
         + OUTPUT_LANGUAGE_INSTRUCTION
     )
 
+    EXTRACT_WORLD_EVENTS_SYSTEM = (
+        "Bạn là trợ lý phân tích sự kiện chuyên nghiệp. Luôn trả về JSON hợp lệ."
+    )
+
+    EXTRACT_WORLD_EVENTS_TEMPLATE = """Bạn là một nhà phân tích văn học chuyên nghiệp. Nhiệm vụ: trích xuất các SỰ KIỆN quan trọng từ TẤT CẢ các câu chuyện sau đây trong cùng một thế giới.
+
+DANH SÁCH CÁC CÂU CHUYỆN:
+{story_list}
+
+NỘI DUNG CÁC CÂU CHUYỆN (có đánh số dòng):
+{combined_content}
+
+NGUYÊN TẮC:
+1. Mỗi sự kiện PHẢI gắn với STORY_INDEX (0, 1, 2, ...) của câu chuyện chứa nó
+2. story_position là SỐ THỨ TỰ ĐẦU DÒNG (số trước dấu |) trong câu chuyện đó
+3. Chỉ trích xuất sự kiện từ đoạn văn CÓ NỘI DUNG (không phải dòng trống)
+4. Tạo connections giữa các sự kiện TRONG và GIỮA các câu chuyện
+5. Không tạo sự kiện với vị trí đoạn văn trống
+
+NHÂN VẬT BIẾT: {known_characters}
+ĐỊA ĐIỂM BIẾT: {known_locations}
+LỊCH: {calendar_info}
+
+Trả về JSON với format:
+{{
+  "events": [
+    {{
+      "story_index": 0,
+      "title": "Tên sự kiện",
+      "description": "Mô tả",
+      "year": 1200,
+      "era": "Kỷ nguyên ABC",
+      "characters": ["Tên nhân vật"],
+      "locations": ["Tên địa điểm"],
+      "story_position": 5,
+      "abstract_image_seed": "mô tả hình ảnh trừu tượng"
+    }}
+  ],
+  "connections": [
+    {{
+      "from_event_index": 0,
+      "to_event_index": 1,
+      "relation_type": "causal",
+      "relation_label": "Dẫn đến"
+    }}
+  ]
+}}"""
+
     EXTRACT_EVENTS_TEMPLATE = """Phân tích câu chuyện sau và trích xuất các sự kiện chính.
 
 Tiêu đề: {story_title}
