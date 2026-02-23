@@ -273,54 +273,18 @@ class EventService:
                     for m in story_metadata_list
                 ])
 
-                prompt = f"""Bạn là một nhà phân tích văn học chuyên nghiệp. Nhiệm vụ: trích xuất các SỰ KIỆN quan trọng từ TẤT CẢ các câu chuyện sau đây trong cùng một thế giới.
-
-DANH SÁCH CÁC CÂU CHUYỆN:
-{story_list}
-
-NỘI DUNG CÁC CÂU CHUYỆN (có đánh số dòng):
-{combined_content}
-
-NGUYÊN TẮC:
-1. Mỗi sự kiện PHẢI gắn với STORY_INDEX (0, 1, 2, ...) của câu chuyện chứa nó
-2. story_position là SỐ THỨ TỰ ĐẦU DÒNG (số trước dấu |) trong câu chuyện đó
-3. Chỉ trích xuất sự kiện từ đoạn văn CÓ NỘI DUNG (không phải dòng trống)
-4. Tạo connections giữa các sự kiện TRONG và GIỮA các câu chuyện
-5. Không tạo sự kiện với vị trí đoạn văn trống
-
-NHÂN VẬT BIẾT: {', '.join(known_characters) if known_characters else 'Không có'}
-ĐỊA ĐIỂM BIẾT: {', '.join(known_locations) if known_locations else 'Không có'}
-LỊCH: {calendar_info}
-
-Trả về JSON với format:
-{{
-  "events": [
-    {{
-      "story_index": 0,
-      "title": "Tên sự kiện",
-      "description": "Mô tả",
-      "year": 1200,
-      "era": "Kỷ nguyên ABC",
-      "characters": ["Tên nhân vật"],
-      "locations": ["Tên địa điểm"],
-      "story_position": 5,
-      "abstract_image_seed": "mô tả hình ảnh trừu tượng"
-    }}
-  ],
-  "connections": [
-    {{
-      "from_event_index": 0,
-      "to_event_index": 1,
-      "relation_type": "causal",
-      "relation_label": "Dẫn đến"
-    }}
-  ]
-}}"""
+                prompt = PromptTemplates.EXTRACT_WORLD_EVENTS_TEMPLATE.format(
+                    story_list=story_list,
+                    combined_content=combined_content,
+                    known_characters=', '.join(known_characters) if known_characters else 'Không có',
+                    known_locations=', '.join(known_locations) if known_locations else 'Không có',
+                    calendar_info=calendar_info
+                )
 
                 response = self.gpt.client.chat.completions.create(
                     model=self.gpt.model,
                     messages=[
-                        {"role": "system", "content": "Bạn là trợ lý phân tích sự kiện chuyên nghiệp. Luôn trả về JSON hợp lệ."},
+                        {"role": "system", "content": PromptTemplates.EXTRACT_WORLD_EVENTS_SYSTEM},
                         {"role": "user", "content": prompt}
                     ],
                     max_completion_tokens=4000,  # Increased for multiple stories

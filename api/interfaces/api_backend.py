@@ -17,9 +17,8 @@ from interfaces.routes import (
     create_gpt_bp,
     create_stats_bp,
     create_event_bp,
-    create_admin_bp,
-    auth_bp,
-    init_auth_routes
+    create_auth_bp,
+    create_admin_bp
 )
 import os
 import signal
@@ -257,7 +256,10 @@ class APIBackend:
         self.app.register_blueprint(event_bp)
 
         # Auth routes
-        init_auth_routes(self.storage, self.auth_service)
+        auth_bp = create_auth_bp(
+            storage=self.storage,
+            auth_service=self.auth_service
+        )
         self.app.register_blueprint(auth_bp)
 
         # Admin routes

@@ -5,12 +5,12 @@ description: Domain model and storage patterns for TinyDB/NoSQL, model serializa
 
 # Skill: Domain Models & Storage
 
-## Khi nào áp dụng
-Khi tạo hoặc chỉnh sửa domain models trong `api/core/models/` hoặc storage operations.
+## When to Apply
+When creating or editing domain models in `api/core/models/` or storage operations.
 
 ## Pattern: Domain Model
 
-### Tạo Model Mới
+### Creating a New Model
 
 ```python
 # api/core/models/my_model.py
@@ -83,7 +83,7 @@ class MyModel:
         return cls.from_dict(json.loads(json_str))
 ```
 
-### Đăng ký Model
+### Registering a Model
 
 ```python
 # api/core/models/__init__.py
@@ -92,8 +92,8 @@ from .my_model import MyModel
 
 ## Existing Models
 
-| Model | ID Field | Thuộc World | Key Fields |
-|-------|----------|-------------|------------|
+| Model | ID Field | Belongs to World | Key Fields |
+|-------|----------|-----------------|------------|
 | `World` | `world_id` | — | `name`, `world_type`, `description`, `entities[]`, `locations[]`, `stories[]` |
 | `Story` | `story_id` | `world_id` | `title`, `content`, `entities[]`, `locations[]`, `linked_stories[]`, `time_cones[]` |
 | `Entity` | `entity_id` | `world_id` | `name`, `entity_type`, `description`, `attributes{}` |
@@ -104,7 +104,7 @@ from .my_model import MyModel
 
 ## Storage Layer
 
-### NoSQLStorage (TinyDB — mặc định)
+### NoSQLStorage (TinyDB — default)
 
 ```python
 from storage import NoSQLStorage
@@ -114,11 +114,11 @@ storage = NoSQLStorage('story_creator.db')
 
 # CRUD
 storage.save_world(world_dict)
-storage.load_world(world_id)        # → dict hoặc None
+storage.load_world(world_id)        # → dict or None
 storage.list_worlds()               # → List[dict]
 storage.delete_world(world_id)
 
-# Với user context (filter visibility)
+# With user context (filter by visibility)
 storage.list_stories(world_id, user_id=user_id)
 storage.list_worlds(user_id=user_id)
 
@@ -128,22 +128,21 @@ storage.list_entities(world_id)
 storage.save_location(loc_dict)
 storage.list_locations(world_id)
 
-# Flush (BẮT BUỘC sau khi write)
+# Flush (REQUIRED after writes)
 storage.flush()
 ```
 
 ### Vercel Deployment
 - Database path: `/tmp/story_creator.db` (read-only filesystem)
-- Data KHÔNG persist giữa các invocations
-- Set qua env var `STORY_DB_PATH`
+- Data does NOT persist between invocations
+- Set via env var `STORY_DB_PATH`
 
 ## Visibility & Permissions
 
 ```python
 # Visibility levels
-'public'   # Ai cũng xem được
-'private'  # Chỉ owner
-'shared'   # Owner + shared_with list
+'public'   # Anyone can view (including anonymous users)
+'private'  # Owner only, or explicitly shared users
 
 # Permission check
 from services import PermissionService
@@ -152,10 +151,11 @@ can_edit = PermissionService.can_edit(resource, user_id)
 can_delete = PermissionService.can_delete(resource, user_id)
 ```
 
-## Anti-patterns (TRÁNH)
+## Anti-patterns
 
-- ❌ Thêm field mà quên cập nhật `to_dict()` và `from_dict()`
-- ❌ Dùng storage trực tiếp trong route handler cho logic phức tạp → tạo service
-- ❌ Quên `flush_data()` sau khi write vào storage
-- ❌ Import model với prefix `api.core.models` → dùng `from core.models import ...`
-- ❌ Hardcode database path → dùng env var hoặc parameter
+- ❌ Add a field without updating `to_dict()` and `from_dict()`
+- ❌ Use storage directly in route handler for complex logic → create a service
+- ❌ Forget `flush_data()` after writing to storage
+- ❌ Import model with `api.core.models` prefix → use `from core.models import ...`
+- ❌ Hardcode database path → use env var or constructor parameter
+

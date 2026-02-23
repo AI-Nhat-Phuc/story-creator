@@ -5,10 +5,10 @@ description: Color palette, DaisyUI theme configuration, and styling guidelines 
 
 # Skill: Color Palette & DaisyUI Theme
 
-## Bảng màu chính (LaFlo Records inspired)
+## Main Color Palette (LaFlo Records inspired)
 
-| Tên | Hex | DaisyUI Class | Dùng cho |
-|-----|-----|---------------|----------|
+| Name | Hex | DaisyUI Class | Used for |
+|------|-----|---------------|----------|
 | **Gold** | `#D79922` | `primary` | Main action buttons, highlights, brand |
 | **Cream** | `#EFE2BA` | `secondary`, `base-200` | Card backgrounds, section backgrounds |
 | **Coral** | `#F13C20` | `accent` | GPT features, call-to-action, emphasis |
@@ -18,7 +18,7 @@ description: Color palette, DaisyUI theme configuration, and styling guidelines 
 ## Custom Tailwind Colors
 
 ```jsx
-// Dùng khi cần color ngoài DaisyUI semantic classes
+// Use when you need colors outside DaisyUI semantic classes
 className="text-laflo-gold"
 className="bg-laflo-cream"
 className="border-laflo-navy"
@@ -76,8 +76,8 @@ Theme defined in `frontend/tailwind.config.js` under `daisyui.themes`.
 
 ## Anti-patterns
 
-- ❌ Hardcode hex colors in className → dùng DaisyUI semantic classes
-- ❌ Inline `style={{ color: '...' }}` → dùng Tailwind classes
-- ❌ Quên `text-white` trên dark backgrounds (primary, info, accent)
+- ❌ Hardcode hex colors in className → use DaisyUI semantic classes
+- ❌ Inline `style={{ color: '...' }}` → use Tailwind classes
+- ❌ Forget `text-white` on dark backgrounds (primary, info, accent)
 
-Chi tiết đầy đủ: xem `docs/COLOR_PALETTE.md`
+Full details: see `docs/COLOR_PALETTE.md`
