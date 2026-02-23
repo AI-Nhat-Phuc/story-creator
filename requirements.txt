@@ -27,6 +27,10 @@ pyjwt>=2.8.0
 authlib>=1.3.0
 requests>=2.31.0
 
+# MongoDB Atlas for persistent cloud storage (Vercel)
+pymongo>=4.6.0
+dnspython>=2.4.0
+
 # For GUI interface (usually comes with Python)
 # tkinter - included in most Python installations
 

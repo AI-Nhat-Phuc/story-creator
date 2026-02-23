@@ -4,7 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 from flasgger import Swagger
 from generators import WorldGenerator, StoryGenerator, StoryLinker
-from storage import NoSQLStorage, JSONStorage
+from storage import NoSQLStorage, JSONStorage, MongoStorage
 from ai.gpt_client import GPTIntegration
 from services import GPTService, AuthService
 from services import EventService
@@ -101,7 +101,19 @@ class APIBackend:
         self.swagger = Swagger(self.app, config=swagger_config, template=swagger_template)
 
         # Initialize storage
-        if storage_type == "nosql":
+        # Priority: MongoDB (if MONGODB_URI set) → NoSQL (TinyDB) → JSON files
+        mongodb_uri = os.environ.get('MONGODB_URI')
+        if mongodb_uri and MongoStorage:
+            try:
+                self.storage = MongoStorage(mongodb_uri)
+                self.storage_label = "MongoDB Atlas"
+                print("✅ Using MongoDB Atlas for persistent storage")
+            except Exception as e:
+                print(f"⚠️  MongoDB connection failed: {e}")
+                print("   Falling back to TinyDB...")
+                self.storage = NoSQLStorage(db_path)
+                self.storage_label = "NoSQL Database (fallback)"
+        elif storage_type == "nosql":
             self.storage = NoSQLStorage(db_path)
             self.storage_label = "NoSQL Database"
         else:

@@ -57,9 +57,30 @@ def token_required(f):
                 'message': 'Server configuration error'
             }), 500
 
-        user = _auth_service.get_user_from_token(token)
+        try:
+            user = _auth_service.get_user_from_token(token)
 
-        if not user:
+            if not user:
+                # Token might be valid but user not in DB (Vercel ephemeral /tmp/)
+                # Fall back to token payload for basic identity
+                payload = _auth_service.verify_token(token)
+                if payload and payload.get('user_id'):
+                    from core.models import User
+                    user = User(
+                        username=payload.get('username', 'unknown'),
+                        email=payload.get('email', ''),
+                        password_hash='',
+                        role=payload.get('role', 'user'),
+                        user_id=payload.get('user_id')
+                    )
+                    logger.info(f"Using token payload fallback for user: {payload.get('username')}")
+                else:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Token không hợp lệ hoặc đã hết hạn'
+                    }), 401
+        except Exception as e:
+            logger.error(f"Error during token verification: {e}")
             return jsonify({
                 'success': False,
                 'message': 'Token không hợp lệ hoặc đã hết hạn'
@@ -115,6 +136,7 @@ def optional_auth(f):
 
     If token is present and valid, sets g.current_user.
     If token is missing or invalid, continues without authentication.
+    On Vercel (ephemeral DB), falls back to token payload for user identity.
 
     Usage:
         @app.route('/api/public-or-private')
@@ -136,10 +158,28 @@ def optional_auth(f):
 
         if auth_header.startswith('Bearer ') and _auth_service:
             token = auth_header[7:]
-            user = _auth_service.get_user_from_token(token)
+            try:
+                user = _auth_service.get_user_from_token(token)
 
-            if user:
-                g.current_user = user
+                if user:
+                    g.current_user = user
+                else:
+                    # Token is valid but user not in DB (e.g. Vercel ephemeral /tmp/)
+                    # Fall back to token payload for basic identity
+                    payload = _auth_service.verify_token(token)
+                    if payload and payload.get('user_id'):
+                        from core.models import User
+                        g.current_user = User(
+                            username=payload.get('username', 'unknown'),
+                            email=payload.get('email', ''),
+                            password_hash='',
+                            role=payload.get('role', 'user'),
+                            user_id=payload.get('user_id')
+                        )
+                        logger.info(f"Using token payload fallback for user: {payload.get('username')}")
+            except Exception as e:
+                logger.warning(f"Error during optional auth: {e}")
+                # Continue without authentication
 
         return f(*args, **kwargs)
 
