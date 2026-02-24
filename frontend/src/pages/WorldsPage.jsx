@@ -59,6 +59,10 @@ function WorldsPage({ showToast }) {
   }
 
   const generateDescriptionWithGPT = async () => {
+    if (!isAuthenticated) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng GPT', 'warning')
+      return
+    }
     if (!formData.name) {
       showToast('Vui lòng nhập tên thế giới trước', 'warning')
       return
@@ -105,6 +109,10 @@ function WorldsPage({ showToast }) {
   }
 
   const analyzeWithGPT = async () => {
+    if (!isAuthenticated) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      return
+    }
     if (!formData.description) {
       showToast('Vui lòng nhập mô tả thế giới', 'warning')
       return
@@ -150,6 +158,11 @@ function WorldsPage({ showToast }) {
 
     if (!formData.name || !formData.description) {
       showToast('Vui lòng điền đầy đủ thông tin', 'warning')
+      return
+    }
+
+    if (!isAuthenticated) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng GPT', 'warning')
       return
     }
 

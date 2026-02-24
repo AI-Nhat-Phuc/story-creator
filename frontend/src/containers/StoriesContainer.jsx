@@ -3,6 +3,7 @@ import { worldsAPI, storiesAPI, gptAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StoriesView from '../components/stories/StoriesView'
 import { useGptTasks } from '../contexts/GptTaskContext'
+import { useAuth } from '../contexts/AuthContext'
 
 const initialFormState = {
   world_id: '',
@@ -15,6 +16,7 @@ const initialFormState = {
 
 function StoriesContainer({ showToast }) {
   const { registerTask } = useGptTasks()
+  const { user } = useAuth()
   const [worlds, setWorlds] = useState([])
   const [stories, setStories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -150,6 +152,10 @@ function StoriesContainer({ showToast }) {
   }
 
   const handleGenerateDescription = async () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng GPT', 'warning')
+      return
+    }
     if (!formData.title || !formData.world_id) {
       showToast('Vui lòng chọn thế giới và nhập tiêu đề trước', 'warning')
       return
@@ -198,6 +204,10 @@ function StoriesContainer({ showToast }) {
   }
 
   const handleAnalyzeStory = async () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      return
+    }
     if (!formData.description) {
       showToast('Vui lòng nhập mô tả câu chuyện', 'warning')
       return

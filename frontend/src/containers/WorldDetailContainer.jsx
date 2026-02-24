@@ -142,6 +142,10 @@ function WorldDetailContainer({ showToast }) {
   }
 
   const handleBatchAnalyze = async (storyIds) => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      return
+    }
     try {
       setBatchAnalyzing(true)
       setBatchProgress({ progress: 0, total: storyIds.length, current_story: '' })
@@ -274,6 +278,10 @@ function WorldDetailContainer({ showToast }) {
   }
 
   const handleGenerateStoryDescription = async () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng GPT', 'warning')
+      return
+    }
     if (!storyForm.title) {
       showToast('Vui lòng nhập tiêu đề trước', 'warning')
       return
@@ -312,6 +320,10 @@ function WorldDetailContainer({ showToast }) {
   }
 
   const handleAnalyzeStory = async () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      return
+    }
     if (!storyForm.description) {
       showToast('Vui lòng nhập mô tả câu chuyện', 'warning')
       return

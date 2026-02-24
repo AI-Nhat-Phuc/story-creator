@@ -153,6 +153,10 @@ function StoryDetailContainer({ showToast }) {
   }
 
   const handleAnalyzeStory = async () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      return
+    }
     if (!story?.content) {
       showToast('Không có mô tả câu chuyện để phân tích', 'warning')
       return
@@ -233,6 +237,10 @@ function StoryDetailContainer({ showToast }) {
   }
 
   const handleReanalyzeStory = async () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      return
+    }
     if (!story?.content) {
       showToast('Không có mô tả câu chuyện để phân tích', 'warning')
       return

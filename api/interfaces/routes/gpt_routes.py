@@ -1,6 +1,7 @@
 """GPT routes for the API backend."""
 
 from flask import Blueprint, request, jsonify
+from interfaces.auth_middleware import token_required
 from services import BatchAnalyzeService
 import uuid
 import threading
@@ -23,6 +24,7 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
     gpt_bp = Blueprint('gpt', __name__)
 
     @gpt_bp.route('/api/gpt/generate-description', methods=['POST'])
+    @token_required
     def gpt_generate_description():
         """Generate world or story description with GPT.
         ---
@@ -188,6 +190,7 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         return jsonify({'task_id': task_id})
 
     @gpt_bp.route('/api/gpt/analyze', methods=['POST'])
+    @token_required
     def gpt_analyze():
         """Analyze world or story description with GPT to extract entities and locations.
         ---
@@ -324,6 +327,7 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         return jsonify(result)
 
     @gpt_bp.route('/api/gpt/batch-analyze-stories', methods=['POST'])
+    @token_required
     def gpt_batch_analyze_stories():
         """Batch analyze stories with GPT, creating entities and linking them.
         Processes stories in time order, carrying character/location context forward.
