@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/solid'
 
 function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth()
   const navigate = useNavigate()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
@@ -75,7 +75,11 @@ function Navbar() {
         </ul>
 
         {/* User menu */}
-        {isAuthenticated ? (
+        {authLoading ? (
+          <div className="ml-2 btn btn-ghost btn-circle">
+            <span className="loading loading-spinner loading-sm"></span>
+          </div>
+        ) : isAuthenticated ? (
           <div className="ml-2 dropdown dropdown-end">
             <label tabIndex={0} className="btn btn-ghost btn-circle avatar placeholder">
               <div className="bg-neutral-focus rounded-full w-10 text-neutral-content">

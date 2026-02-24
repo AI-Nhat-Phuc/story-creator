@@ -16,7 +16,7 @@ const initialFormState = {
 
 function StoriesContainer({ showToast }) {
   const { registerTask } = useGptTasks()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [worlds, setWorlds] = useState([])
   const [stories, setStories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -337,6 +337,7 @@ function StoriesContainer({ showToast }) {
       stories={stories}
       worlds={worlds}
       user={user}
+      authLoading={authLoading}
       showCreateModal={showCreateModal}
       formData={formData}
       detectedCharacters={detectedCharacters}

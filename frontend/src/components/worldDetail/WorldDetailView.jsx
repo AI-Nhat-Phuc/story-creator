@@ -25,6 +25,7 @@ function WorldDetailView({
   editing,
   editForm,
   user,
+  authLoading,
   onChangeTab,
   onEdit,
   onCancelEdit,
@@ -167,16 +168,26 @@ function WorldDetailView({
             >
               {autoLinking ? 'Đang liên kết...' : <><LinkIcon className="inline w-4 h-4" /> Liên kết tự động</>}
             </button>
-            {user?.role === 'admin' ? (
+            {authLoading ? (
+              <button className="btn btn-primary btn-sm" disabled>
+                <span className="loading loading-spinner loading-xs"></span>
+              </button>
+            ) : user?.role === 'admin' ? (
               <div className="tooltip-left tooltip" data-tip="Admin chỉ quản lý hệ thống, không tạo nội dung">
                 <button className="btn btn-primary btn-sm btn-disabled">
                   + Thêm câu chuyện
                 </button>
               </div>
-            ) : (
+            ) : user ? (
               <button onClick={onOpenStoryModal} className="btn btn-primary btn-sm">
                 + Thêm câu chuyện
               </button>
+            ) : (
+              <div className="tooltip-left tooltip" data-tip="Vui lòng đăng nhập để tạo câu chuyện">
+                <button className="btn btn-primary btn-sm btn-disabled" disabled>
+                  + Thêm câu chuyện
+                </button>
+              </div>
             )}
           </div>
           <WorldTimeline

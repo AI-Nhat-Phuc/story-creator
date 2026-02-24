@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 function WorldsPage({ showToast }) {
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, loading: authLoading } = useAuth()
   const [worlds, setWorlds] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -233,7 +233,11 @@ function WorldsPage({ showToast }) {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="font-bold text-3xl"><GlobeAltIcon className="inline w-8 h-8" /> Thế giới</h1>
-        {isAuthenticated ? (
+        {authLoading ? (
+          <button className="btn btn-primary" disabled>
+            <span className="loading loading-spinner loading-xs"></span>
+          </button>
+        ) : isAuthenticated ? (
           user?.role === 'admin' ? (
             <div className="tooltip-left tooltip" data-tip="Admin chỉ quản lý hệ thống, không tạo nội dung">
               <button className="btn btn-primary btn-disabled">

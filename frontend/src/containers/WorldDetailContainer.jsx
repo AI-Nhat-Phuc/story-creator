@@ -16,7 +16,7 @@ const initialStoryForm = {
 
 function WorldDetailContainer({ showToast }) {
   const { worldId } = useParams()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { registerTask } = useGptTasks()
   const [world, setWorld] = useState(null)
   const [stories, setStories] = useState([])
@@ -453,6 +453,7 @@ function WorldDetailContainer({ showToast }) {
       // Auto-link props
       autoLinking={autoLinking}
       onAutoLinkStories={handleAutoLinkStories}
+      authLoading={authLoading}
       // Unlinked stories modal props
       showUnlinkedModal={showUnlinkedModal}
       unlinkedStories={unlinkedStories}

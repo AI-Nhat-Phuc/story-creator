@@ -19,6 +19,7 @@ function StoriesView({
   stories,
   worlds,
   user,
+  authLoading,
   showCreateModal,
   formData,
   detectedCharacters,
@@ -92,7 +93,11 @@ function StoriesView({
       <div className="flex justify-between items-center mb-6">
         <h1 className="font-bold text-3xl"><BookOpenIcon className="inline w-8 h-8" /> Câu chuyện</h1>
         {worlds.length > 0 ? (
-          user ? (
+          authLoading ? (
+            <button className="btn btn-primary" disabled>
+              <span className="loading loading-spinner loading-xs"></span>
+            </button>
+          ) : user ? (
             <button onClick={onOpenModal} className="btn btn-primary">
               + Tạo câu chuyện mới
             </button>
