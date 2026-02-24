@@ -260,6 +260,11 @@ function StoriesContainer({ showToast }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (!user) {
+      showToast('Vui lòng đăng nhập để tạo câu chuyện', 'warning')
+      return
+    }
+
     if (!formData.world_id || !formData.title || !formData.description) {
       showToast('Vui lòng điền đầy đủ thông tin (có thể dùng GPT để tạo mô tả)', 'warning')
       return
@@ -305,6 +310,10 @@ function StoriesContainer({ showToast }) {
   }
 
   const handleOpenModal = () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để tạo câu chuyện', 'warning')
+      return
+    }
     setShowCreateModal(true);
     setSelectedCharacters([]);
   }
@@ -327,6 +336,7 @@ function StoriesContainer({ showToast }) {
     <StoriesView
       stories={stories}
       worlds={worlds}
+      user={user}
       showCreateModal={showCreateModal}
       formData={formData}
       detectedCharacters={detectedCharacters}

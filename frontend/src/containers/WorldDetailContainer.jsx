@@ -258,7 +258,13 @@ function WorldDetailContainer({ showToast }) {
   }
 
   // Story creation handlers
-  const handleOpenStoryModal = () => setShowStoryModal(true)
+  const handleOpenStoryModal = () => {
+    if (!user) {
+      showToast('Vui lòng đăng nhập để tạo câu chuyện', 'warning')
+      return
+    }
+    setShowStoryModal(true)
+  }
 
   const handleCloseStoryModal = () => {
     setShowStoryModal(false)
@@ -375,6 +381,11 @@ function WorldDetailContainer({ showToast }) {
 
   const handleCreateStory = async (e) => {
     e.preventDefault()
+
+    if (!user) {
+      showToast('Vui lòng đăng nhập để tạo câu chuyện', 'warning')
+      return
+    }
 
     if (!storyForm.title || !storyForm.description) {
       showToast('Vui lòng điền đầy đủ thông tin', 'warning')

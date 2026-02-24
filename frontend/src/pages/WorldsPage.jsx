@@ -162,7 +162,7 @@ function WorldsPage({ showToast }) {
     }
 
     if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập để sử dụng tính năng GPT', 'warning')
+      showToast('Vui lòng đăng nhập để tạo thế giới', 'warning')
       return
     }
 

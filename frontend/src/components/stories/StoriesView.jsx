@@ -18,6 +18,7 @@ import {
 function StoriesView({
   stories,
   worlds,
+  user,
   showCreateModal,
   formData,
   detectedCharacters,
@@ -91,9 +92,17 @@ function StoriesView({
       <div className="flex justify-between items-center mb-6">
         <h1 className="font-bold text-3xl"><BookOpenIcon className="inline w-8 h-8" /> Câu chuyện</h1>
         {worlds.length > 0 ? (
-          <button onClick={onOpenModal} className="btn btn-primary">
-            + Tạo câu chuyện mới
-          </button>
+          user ? (
+            <button onClick={onOpenModal} className="btn btn-primary">
+              + Tạo câu chuyện mới
+            </button>
+          ) : (
+            <div className="tooltip-left tooltip" data-tip="Vui lòng đăng nhập để tạo câu chuyện">
+              <button className="btn btn-disabled" disabled>
+                + Tạo câu chuyện mới
+              </button>
+            </div>
+          )
         ) : (
           <div className="tooltip-left tooltip" data-tip="Tạo thế giới trước để bắt đầu">
             <button className="btn btn-disabled" disabled>
