@@ -90,8 +90,12 @@ class MongoStorage:
         """Create indexes for efficient queries."""
         try:
             self.worlds.create_index('world_id', unique=True)
+            self.worlds.create_index([('visibility', 1), ('owner_id', 1)])
+            self.worlds.create_index('shared_with')
             self.stories.create_index('story_id', unique=True)
             self.stories.create_index('world_id')
+            self.stories.create_index([('visibility', 1), ('owner_id', 1)])
+            self.stories.create_index('shared_with')
             self.locations.create_index('location_id', unique=True)
             self.locations.create_index('world_id')
             self.entities.create_index('entity_id', unique=True)
@@ -481,15 +485,88 @@ class MongoStorage:
     # ==================== Utility Methods ====================
 
     def get_stats(self) -> Dict[str, int]:
-        """Get database statistics."""
+        """Get database statistics using estimated counts (fast, no collection scan)."""
         return {
-            "worlds": self.worlds.count_documents({}),
-            "stories": self.stories.count_documents({}),
-            "locations": self.locations.count_documents({}),
-            "entities": self.entities.count_documents({}),
-            "time_cones": self.time_cones.count_documents({}),
-            "events": self.events.count_documents({}),
-            "event_analysis_cache": self.event_analysis_cache.count_documents({})
+            "worlds": self.worlds.estimated_document_count(),
+            "stories": self.stories.estimated_document_count(),
+            "locations": self.locations.estimated_document_count(),
+            "entities": self.entities.estimated_document_count(),
+            "time_cones": self.time_cones.estimated_document_count(),
+            "events": self.events.estimated_document_count(),
+            "event_analysis_cache": self.event_analysis_cache.estimated_document_count()
+        }
+
+    def get_dashboard_stats(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+        """Get all dashboard stats in minimal round-trips using aggregation.
+
+        Replaces multiple count_visible() + get_stats() + list_worlds_summary()
+        calls with 2 aggregation pipelines + 1 find (3 total round-trips).
+
+        Args:
+            user_id: Current user ID (None for anonymous)
+
+        Returns:
+            dict with worlds_counts, stories_counts, entity_count,
+            location_count, worlds_summary
+        """
+        # --- Pipeline to count by visibility category ---
+        def _build_faceted_count_pipeline(user_id):
+            """Build a $facet pipeline that counts public/private/shared in 1 query."""
+            facets = {
+                'public': [{'$match': {'visibility': 'public'}}, {'$count': 'n'}]
+            }
+            if user_id:
+                facets['private'] = [
+                    {'$match': {'visibility': 'private', 'owner_id': user_id}},
+                    {'$count': 'n'}
+                ]
+                facets['shared'] = [
+                    {'$match': {
+                        'visibility': 'private',
+                        'owner_id': {'$ne': user_id},
+                        'shared_with': user_id
+                    }},
+                    {'$count': 'n'}
+                ]
+            return [{'$facet': facets}]
+
+        def _parse_facet_result(result):
+            """Parse $facet result into {public, private?, shared?, total} dict."""
+            row = result[0] if result else {}
+            public = row.get('public', [{}])[0].get('n', 0) if row.get('public') else 0
+            private = row.get('private', [{}])[0].get('n', 0) if row.get('private') else 0
+            shared = row.get('shared', [{}])[0].get('n', 0) if row.get('shared') else 0
+            counts = {'total': public + private + shared, 'public': public}
+            if 'private' in row:
+                counts['private'] = private
+                counts['shared'] = shared
+            return counts
+
+        pipeline = _build_faceted_count_pipeline(user_id)
+
+        # 2 aggregation calls (worlds + stories) — each is 1 round-trip
+        worlds_counts = _parse_facet_result(
+            list(self.worlds.aggregate(pipeline))
+        )
+        stories_counts = _parse_facet_result(
+            list(self.stories.aggregate(pipeline))
+        )
+
+        # 1 find call for worlds summary (with projection)
+        perm_query = self._build_permission_query(user_id)
+        projection = {
+            '_id': 0, 'world_id': 1, 'name': 1, 'created_at': 1,
+            'visibility': 1, 'owner_id': 1, 'shared_with': 1, 'world_type': 1
+        }
+        worlds_summary = list(self.worlds.find(perm_query, projection))
+
+        # Use estimated counts for non-filtered collections (instant, no scan)
+        return {
+            'worlds_counts': worlds_counts,
+            'stories_counts': stories_counts,
+            'entity_count': self.entities.estimated_document_count(),
+            'location_count': self.locations.estimated_document_count(),
+            'worlds_summary': worlds_summary
         }
 
     def close(self) -> None:

@@ -62,27 +62,34 @@ def create_stats_bp(storage, has_gpt):
         """
         user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
 
-        # Use efficient count methods instead of loading full documents
-        worlds_counts = storage.count_visible('worlds', user_id=user_id)
-        stories_counts = storage.count_visible('stories', user_id=user_id)
-
-        # Get entity/location counts (lightweight)
-        stats_data = storage.get_stats()
-
-        # Get minimal worlds list for dashboard dropdown (avoids extra API call)
-        worlds_summary = storage.list_worlds_summary(user_id=user_id)
+        # Use optimized single-call method if available (MongoDB),
+        # otherwise fall back to individual calls (TinyDB)
+        if hasattr(storage, 'get_dashboard_stats'):
+            dash = storage.get_dashboard_stats(user_id=user_id)
+            worlds_counts = dash['worlds_counts']
+            stories_counts = dash['stories_counts']
+            entity_count = dash['entity_count']
+            location_count = dash['location_count']
+            worlds_summary = dash['worlds_summary']
+        else:
+            worlds_counts = storage.count_visible('worlds', user_id=user_id)
+            stories_counts = storage.count_visible('stories', user_id=user_id)
+            stats_data = storage.get_stats()
+            entity_count = stats_data.get('entities', 0)
+            location_count = stats_data.get('locations', 0)
+            worlds_summary = storage.list_worlds_summary(user_id=user_id)
 
         result = {
             'total_worlds': worlds_counts['total'],
             'total_stories': stories_counts['total'],
-            'total_entities': stats_data.get('entities', 0),
-            'total_locations': stats_data.get('locations', 0),
+            'total_entities': entity_count,
+            'total_locations': location_count,
             'has_gpt': has_gpt,
             'storage_type': type(storage).__name__,
             'worlds_summary': worlds_summary
         }
 
-        # Add breakdown for authenticated users
+        # Add breakdown
         if user_id:
             user_data = storage.load_user(user_id)
 
