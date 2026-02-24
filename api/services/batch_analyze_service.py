@@ -47,6 +47,10 @@ class BatchAnalyzeService:
         """
         from ai.prompts import PromptTemplates
 
+        # Load world data to update entity/location lists
+        world_data = self.storage.load_world(world_id)
+        self._world_data = world_data  # Share with _resolve helpers
+
         # Load stories to process
         stories_data = self.storage.list_stories(world_id)
         if story_ids:
@@ -158,6 +162,10 @@ class BatchAnalyzeService:
                 linked_count += 1
                 self.storage.save_story(story.to_dict())
 
+        # Save world with updated entity/location lists
+        if world_data:
+            self.storage.save_world(world_data)
+
         return {
             'analyzed_stories': analyzed_results,
             'total_characters_found': total_chars_found,
@@ -207,6 +215,11 @@ class BatchAnalyzeService:
                 entity_id = new_entity.entity_id
                 if char_name not in known_chars:
                     known_chars.append(char_name)
+                # Add to world's entity list
+                if self._world_data is not None:
+                    self._world_data.setdefault('entities', [])
+                    if entity_id not in self._world_data['entities']:
+                        self._world_data['entities'].append(entity_id)
 
             if entity_id not in linked_ids:
                 linked_ids.append(entity_id)
@@ -246,6 +259,11 @@ class BatchAnalyzeService:
                 location_id = new_location.location_id
                 if loc_name not in known_locs:
                     known_locs.append(loc_name)
+                # Add to world's location list
+                if self._world_data is not None:
+                    self._world_data.setdefault('locations', [])
+                    if location_id not in self._world_data['locations']:
+                        self._world_data['locations'].append(location_id)
 
             if location_id not in linked_ids:
                 linked_ids.append(location_id)

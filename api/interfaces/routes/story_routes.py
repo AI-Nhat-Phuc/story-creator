@@ -507,6 +507,11 @@ def create_story_bp(storage, story_generator, flush_data):
                     linked_entities.append(new_entity.entity_id)
                     # Add to existing list so subsequent lookups find it
                     existing_entities.append(entity_data)
+                    # Add to world's entity list so it appears in character listings
+                    if world_data is not None:
+                        world_data.setdefault('entities', [])
+                        if new_entity.entity_id not in world_data['entities']:
+                            world_data['entities'].append(new_entity.entity_id)
                 else:
                     # Not found - mark as unmatched
                     unmatched_characters.append({'name': char_name, 'role': char_role})
@@ -542,6 +547,11 @@ def create_story_bp(storage, story_generator, flush_data):
                     linked_locations.append(new_location.location_id)
                     # Add to existing list so subsequent lookups find it
                     existing_locations.append(location_data)
+                    # Add to world's location list so it appears in location listings
+                    if world_data is not None:
+                        world_data.setdefault('locations', [])
+                        if new_location.location_id not in world_data['locations']:
+                            world_data['locations'].append(new_location.location_id)
                 else:
                     # Not found - mark as unmatched
                     unmatched_locations.append({'name': loc_name, 'description': loc_desc})
