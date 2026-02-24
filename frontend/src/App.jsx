@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from 'react'
+import React, { useState, useCallback, lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from './contexts/AuthContext'
@@ -22,10 +22,10 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 function App() {
   const [toast, setToast] = useState(null)
 
-  const showToast = (message, type = 'info') => {
+  const showToast = useCallback((message, type = 'info') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
-  }
+  }, [])
 
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>

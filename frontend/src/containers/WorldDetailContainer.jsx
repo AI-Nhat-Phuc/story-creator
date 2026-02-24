@@ -407,6 +407,8 @@ function WorldDetailContainer({ showToast }) {
   if (loading) return <LoadingSpinner />
   if (!world) return <div>Không tìm thấy thế giới</div>
 
+  const canEdit = !!(user && world && user.user_id === world.owner_id)
+
   return (
     <WorldDetailView
       world={world}
@@ -414,6 +416,7 @@ function WorldDetailContainer({ showToast }) {
       characters={characters}
       locations={locations}
       activeTab={activeTab}
+      canEdit={canEdit}
       editing={editing}
       editForm={editForm}
       user={user}

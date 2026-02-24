@@ -252,9 +252,11 @@ function WorldsPage({ showToast }) {
                 <Link to={`/worlds/${world.world_id}`} className="btn btn-primary btn-sm">
                   Xem chi tiết
                 </Link>
-                <button onClick={() => deleteWorld(world.world_id)} className="btn btn-error btn-sm">
-                  Xóa
-                </button>
+                {isAuthenticated && user?.user_id === world.owner_id && (
+                  <button onClick={() => deleteWorld(world.world_id)} className="btn btn-error btn-sm">
+                    Xóa
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -21,6 +21,7 @@ function WorldDetailView({
   characters,
   locations,
   activeTab,
+  canEdit = false,
   editing,
   editForm,
   user,
@@ -115,9 +116,11 @@ function WorldDetailView({
           <>
             <div className="flex justify-between items-start mb-2">
               <h1 className="font-bold text-3xl">{world.name}</h1>
-              <button onClick={onEdit} className="btn btn-sm btn-ghost">
-                <PencilIcon className="inline w-4 h-4" /> Sửa
-              </button>
+              {canEdit && (
+                <button onClick={onEdit} className="btn btn-sm btn-ghost">
+                  <PencilIcon className="inline w-4 h-4" /> Sửa
+                </button>
+              )}
             </div>
             <p className="flex gap-2 mb-4">
               <span className="badge badge-primary">{world.world_type}</span>
@@ -182,7 +185,7 @@ function WorldDetailView({
             locations={locations}
             getStoryWorldTime={getStoryWorldTime}
             getTimelineLabel={getTimelineLabel}
-            onDeleteStory={onDeleteStory}
+            onDeleteStory={canEdit ? onDeleteStory : null}
           />
         </div>
       )}
@@ -194,13 +197,15 @@ function WorldDetailView({
               <div className="card-body">
                 <div className="flex justify-between items-start">
                   <h3 className="card-title"><UserIcon className="inline w-4 h-4" /> {char.name}</h3>
-                  <button
-                    onClick={() => onDeleteEntity(char.entity_id, char.name)}
-                    className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
-                    title="Xóa nhân vật"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={() => onDeleteEntity(char.entity_id, char.name)}
+                      className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
+                      title="Xóa nhân vật"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
                 <p className="badge">{char.entity_type}</p>
                 {char.attributes && (
@@ -224,13 +229,15 @@ function WorldDetailView({
               <div className="card-body">
                 <div className="flex justify-between items-start">
                   <h3 className="card-title"><MapPinIcon className="inline w-4 h-4" /> {loc.name}</h3>
-                  <button
-                    onClick={() => onDeleteLocation(loc.location_id, loc.name)}
-                    className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
-                    title="Xóa địa điểm"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={() => onDeleteLocation(loc.location_id, loc.name)}
+                      className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
+                      title="Xóa địa điểm"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
                 {loc.location_type && <p className="badge">{loc.location_type}</p>}
                 {loc.description && <p className="opacity-70 text-sm">{loc.description}</p>}

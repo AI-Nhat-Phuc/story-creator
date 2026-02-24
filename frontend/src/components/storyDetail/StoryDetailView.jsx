@@ -37,6 +37,7 @@ function StoryDetailView({
   showAnalyzedModal,
   onCloseAnalyzedModal,
   onReanalyzeStory,
+  canEdit = false,
   onDeleteStory,
   highlightEventId,
   highlightPosition = -1
@@ -153,16 +154,18 @@ function StoryDetailView({
           <>
             <div className="flex justify-between items-start mb-2">
               <h1 className="font-bold text-3xl">{story.title}</h1>
-              <div className="flex gap-1">
-                <button onClick={onEdit} className="btn btn-sm btn-ghost">
-                  <PencilIcon className="inline w-4 h-4" /> Sửa
-                </button>
-                {onDeleteStory && (
-                  <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost">
-                    <TrashIcon className="inline w-4 h-4" /> Xóa
+              {canEdit && (
+                <div className="flex gap-1">
+                  <button onClick={onEdit} className="btn btn-sm btn-ghost">
+                    <PencilIcon className="inline w-4 h-4" /> Sửa
                   </button>
-                )}
-              </div>
+                  {onDeleteStory && (
+                    <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost">
+                      <TrashIcon className="inline w-4 h-4" /> Xóa
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex gap-2 mb-4">
               <span className="badge badge-neutral" title={`Time index: ${normalizedTimelineIndex ?? 0}`}>

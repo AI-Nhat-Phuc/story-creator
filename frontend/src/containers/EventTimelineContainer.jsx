@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ReactFlowProvider } from '@xyflow/react'
 import { eventsAPI, gptAPI } from '../services/api'
@@ -20,8 +20,13 @@ function EventTimelineContainer({ worldId, direction, showToast }) {
   const [extracting, setExtracting] = useState(false)
   const [extractProgress, setExtractProgress] = useState('')
 
-  // Fetch timeline data
-  const loadTimeline = useCallback(async () => {
+  // Use ref for showToast to avoid re-creating callbacks on every render
+  const showToastRef = useRef(showToast)
+  useEffect(() => { showToastRef.current = showToast }, [showToast])
+
+  // Fetch timeline data — only depends on worldId
+  // silent=true suppresses error toast (used for initial auto-load)
+  const loadTimeline = useCallback(async (silent = false) => {
     if (!worldId) return
     try {
       setLoading(true)
@@ -29,14 +34,19 @@ function EventTimelineContainer({ worldId, direction, showToast }) {
       setTimeline(response.data?.timeline || null)
     } catch (error) {
       console.error('Error loading timeline:', error)
-      showToast?.('Không thể tải timeline sự kiện', 'error')
+      // Don't show error toast on initial load — world may not have events yet
+      if (!silent) {
+        showToastRef.current?.('Không thể tải timeline sự kiện', 'error')
+      }
+      setTimeline(null)
     } finally {
       setLoading(false)
     }
-  }, [worldId, showToast])
+  }, [worldId])
 
+  // Initial load — silent (no error toast)
   useEffect(() => {
-    loadTimeline()
+    loadTimeline(true)
   }, [loadTimeline])
 
   // Extract events using GPT
@@ -63,7 +73,7 @@ function EventTimelineContainer({ worldId, direction, showToast }) {
           setExtractProgress('')
           if (taskData.status === 'completed') {
             const totalEvents = taskData.result?.total_events || 0
-            showToast?.(`Đã trích xuất ${totalEvents} sự kiện`, 'success')
+            showToastRef.current?.(`Đã trích xuất ${totalEvents} sự kiện`, 'success')
             loadTimeline()
           }
         }
@@ -73,12 +83,12 @@ function EventTimelineContainer({ worldId, direction, showToast }) {
       setExtractProgress('')
       console.error('Error extracting events:', error)
       if (error.response?.status === 503) {
-        showToast?.('GPT không khả dụng. Vui lòng kiểm tra API key.', 'error')
+        showToastRef.current?.('GPT không khả dụng. Vui lòng kiểm tra API key.', 'error')
       } else {
-        showToast?.('Lỗi khi trích xuất sự kiện', 'error')
+        showToastRef.current?.('Lỗi khi trích xuất sự kiện', 'error')
       }
     }
-  }, [worldId, showToast, loadTimeline, registerTask])
+  }, [worldId, loadTimeline, registerTask])
 
   // Navigate to story when event is clicked
   const handleEventClick = useCallback((event) => {
@@ -93,6 +103,28 @@ function EventTimelineContainer({ worldId, direction, showToast }) {
 
   const hasEvents = timeline?.years?.length > 0
   const totalEvents = timeline?.years?.reduce((sum, y) => sum + y.events.length, 0) || 0
+
+  // No events yet — show empty state with extract prompt
+  if (!hasEvents && !loading) {
+    return (
+      <div className="flex flex-col justify-center items-center py-12 text-base-content/50">
+        <svg xmlns="http://www.w3.org/2000/svg" className="opacity-30 mb-3 w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <p className="mb-1 font-semibold">Chưa có sự kiện nào</p>
+        <p className="mb-4 text-sm">Hãy trích xuất sự kiện từ các câu chuyện bằng GPT</p>
+        <GptButton
+          onClick={() => handleExtractEvents(true)}
+          loading={extracting}
+          loadingText={extractProgress || 'Đang phân tích...'}
+          size="sm"
+          variant="primary"
+        >
+          <BoltIcon className="inline w-4 h-4" /> Trích xuất sự kiện
+        </GptButton>
+      </div>
+    )
+  }
 
   return (
     <div>

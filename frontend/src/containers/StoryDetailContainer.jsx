@@ -4,10 +4,12 @@ import { storiesAPI, worldsAPI, gptAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StoryDetailView from '../components/storyDetail/StoryDetailView'
 import { useGptTasks } from '../contexts/GptTaskContext'
+import { useAuth } from '../contexts/AuthContext'
 
 function StoryDetailContainer({ showToast }) {
   const { storyId } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { registerTask } = useGptTasks()
   const [searchParams] = useSearchParams()
   const highlightEventId = searchParams.get('event')
@@ -297,12 +299,15 @@ function StoryDetailContainer({ showToast }) {
   const normalizedTimelineIndex = normalizeTimeIndex(story.time_index)
   const formattedWorldTime = formatWorldTime(story)
 
+  const canEdit = !!(user && story && user.user_id === story.owner_id)
+
   return (
     <StoryDetailView
       story={story}
       world={world}
       linkedCharacters={linkedCharacters}
       linkedLocations={linkedLocations}
+      canEdit={canEdit}
       editing={editing}
       editForm={editForm}
       formattedWorldTime={formattedWorldTime}
