@@ -33,6 +33,7 @@ export const worldsAPI = {
   getLocations: (id) => api.get(`/worlds/${id}/locations`),
   autoLinkStories: (id) => api.post(`/worlds/${id}/auto-link-stories`),
   deleteEntity: (worldId, entityId) => api.delete(`/worlds/${worldId}/entities/${entityId}`),
+  updateEntity: (worldId, entityId, data) => api.put(`/worlds/${worldId}/entities/${entityId}`, data),
   deleteLocation: (worldId, locationId) => api.delete(`/worlds/${worldId}/locations/${locationId}`),
 }
 

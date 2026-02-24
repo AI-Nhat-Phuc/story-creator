@@ -1,3 +1,4 @@
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'
@@ -46,6 +47,7 @@ function WorldDetailView({
   onCloseUnlinkedModal,
   // Delete entity/location/story props
   onDeleteEntity,
+  onUpdateEntity,
   onDeleteLocation,
   onDeleteStory,
   // Story creation props
@@ -66,6 +68,44 @@ function WorldDetailView({
   onOpenAnalyzedModal,
   onCreateStory
 }) {
+  const [editingEntityId, setEditingEntityId] = useState(null)
+  const [entityEditForm, setEntityEditForm] = useState({})
+
+  const startEditEntity = (char) => {
+    setEditingEntityId(char.entity_id)
+    setEntityEditForm({
+      name: char.name || '',
+      entity_type: char.entity_type || '',
+      description: char.description || '',
+      attributes: { ...char.attributes }
+    })
+  }
+
+  const cancelEditEntity = () => {
+    setEditingEntityId(null)
+    setEntityEditForm({})
+  }
+
+  const saveEditEntity = async () => {
+    if (onUpdateEntity) {
+      await onUpdateEntity(editingEntityId, entityEditForm)
+    }
+    setEditingEntityId(null)
+    setEntityEditForm({})
+  }
+
+  const handleEntityFieldChange = (field, value) => {
+    setEntityEditForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleAttributeChange = (attr, value) => {
+    const num = Math.min(10, Math.max(0, Number(value) || 0))
+    setEntityEditForm(prev => ({
+      ...prev,
+      attributes: { ...prev.attributes, [attr]: num }
+    }))
+  }
+
   return (
     <div>
       <div className="mb-4">
@@ -206,25 +246,101 @@ function WorldDetailView({
           {characters.map(char => (
             <div key={char.entity_id} className="bg-base-100 shadow card">
               <div className="card-body">
-                <div className="flex justify-between items-start">
-                  <h3 className="card-title"><UserIcon className="inline w-4 h-4" /> {char.name}</h3>
-                  {canEdit && (
-                    <button
-                      onClick={() => onDeleteEntity(char.entity_id, char.name)}
-                      className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
-                      title="Xóa nhân vật"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                <p className="badge">{char.entity_type}</p>
-                {char.attributes && (
-                  <div className="text-sm">
-                    <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> Sức mạnh: {char.attributes.Strength}</p>
-                    <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> Trí tuệ: {char.attributes.Intelligence}</p>
-                    <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> Sức hút: {char.attributes.Charisma}</p>
-                  </div>
+                {editingEntityId === char.entity_id ? (
+                  /* Inline edit mode */
+                  <>
+                    <div className="form-control">
+                      <label className="py-0 label"><span className="text-xs label-text">Tên</span></label>
+                      <input
+                        type="text"
+                        value={entityEditForm.name}
+                        onChange={(e) => handleEntityFieldChange('name', e.target.value)}
+                        className="input input-bordered input-sm"
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="py-0 label"><span className="text-xs label-text">Loại</span></label>
+                      <input
+                        type="text"
+                        value={entityEditForm.entity_type}
+                        onChange={(e) => handleEntityFieldChange('entity_type', e.target.value)}
+                        className="input input-bordered input-sm"
+                        placeholder="anh hùng, pháp sư, thường dân..."
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="py-0 label"><span className="text-xs label-text">Mô tả</span></label>
+                      <textarea
+                        value={entityEditForm.description}
+                        onChange={(e) => handleEntityFieldChange('description', e.target.value)}
+                        className="h-16 textarea textarea-bordered textarea-sm"
+                      />
+                    </div>
+                    {entityEditForm.attributes && (
+                      <div className="gap-2 grid grid-cols-3 text-sm">
+                        <div className="form-control">
+                          <label className="py-0 label"><span className="text-xs label-text">Sức mạnh</span></label>
+                          <input type="number" min="0" max="10" value={entityEditForm.attributes.Strength ?? 0}
+                            onChange={(e) => handleAttributeChange('Strength', e.target.value)}
+                            className="w-full input input-bordered input-xs" />
+                        </div>
+                        <div className="form-control">
+                          <label className="py-0 label"><span className="text-xs label-text">Trí tuệ</span></label>
+                          <input type="number" min="0" max="10" value={entityEditForm.attributes.Intelligence ?? 0}
+                            onChange={(e) => handleAttributeChange('Intelligence', e.target.value)}
+                            className="w-full input input-bordered input-xs" />
+                        </div>
+                        <div className="form-control">
+                          <label className="py-0 label"><span className="text-xs label-text">Sức hút</span></label>
+                          <input type="number" min="0" max="10" value={entityEditForm.attributes.Charisma ?? 0}
+                            onChange={(e) => handleAttributeChange('Charisma', e.target.value)}
+                            className="w-full input input-bordered input-xs" />
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex gap-1 mt-1">
+                      <button onClick={saveEditEntity} className="btn btn-primary btn-xs">
+                        <CheckCircleIcon className="w-3.5 h-3.5" /> Lưu
+                      </button>
+                      <button onClick={cancelEditEntity} className="btn btn-ghost btn-xs">
+                        <XMarkIcon className="w-3.5 h-3.5" /> Hủy
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  /* View mode */
+                  <>
+                    <div className="flex justify-between items-start">
+                      <h3 className="card-title"><UserIcon className="inline w-4 h-4" /> {char.name}</h3>
+                      {canEdit && (
+                        <div className="flex gap-0.5">
+                          <button
+                            onClick={() => startEditEntity(char)}
+                            className="btn btn-ghost btn-xs"
+                            title="Sửa nhân vật"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => onDeleteEntity(char.entity_id, char.name)}
+                            className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
+                            title="Xóa nhân vật"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="badge">{char.entity_type}</p>
+                    {char.description && <p className="opacity-70 text-sm">{char.description}</p>}
+                    {char.attributes && (
+                      <div className="text-sm">
+                        <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> Sức mạnh: {char.attributes.Strength}</p>
+                        <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> Trí tuệ: {char.attributes.Intelligence}</p>
+                        <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> Sức hút: {char.attributes.Charisma}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

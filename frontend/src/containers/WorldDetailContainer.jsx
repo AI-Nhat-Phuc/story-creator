@@ -205,6 +205,16 @@ function WorldDetailContainer({ showToast }) {
     }
   }
 
+  const handleUpdateEntity = async (entityId, updatedData) => {
+    try {
+      const response = await worldsAPI.updateEntity(worldId, entityId, updatedData)
+      setCharacters(prev => prev.map(c => c.entity_id === entityId ? { ...c, ...response.data } : c))
+      showToast('Đã cập nhật nhân vật!', 'success')
+    } catch (error) {
+      showToast('Lỗi khi cập nhật nhân vật: ' + (error.response?.data?.error || error.message), 'error')
+    }
+  }
+
   const handleDeleteLocation = async (locationId, locationName) => {
     if (!confirm(`Bạn có chắc muốn xóa địa điểm "${locationName}"? Hành động này không thể hoàn tác.`)) {
       return
@@ -464,6 +474,7 @@ function WorldDetailContainer({ showToast }) {
       onCloseUnlinkedModal={handleCloseUnlinkedModal}
       // Delete entity/location/story props
       onDeleteEntity={handleDeleteEntity}
+      onUpdateEntity={handleUpdateEntity}
       onDeleteLocation={handleDeleteLocation}
       onDeleteStory={handleDeleteStory}
       // Story creation props

@@ -207,7 +207,7 @@ class BatchAnalyzeService:
             if existing:
                 entity_id = existing.get('entity_id')
             else:
-                new_entity = Entity(name=char_name, entity_type='character', world_id=world_id)
+                new_entity = Entity(name=char_name, entity_type=char_role or 'nhân vật', world_id=world_id)
                 new_entity.description = char_role
                 entity_dict = new_entity.to_dict()
                 self.storage.save_entity(entity_dict)

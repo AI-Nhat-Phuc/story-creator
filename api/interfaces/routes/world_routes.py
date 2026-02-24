@@ -383,6 +383,70 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                 locations.append(loc_data)
         return jsonify(locations)
 
+    @world_bp.route('/api/worlds/<world_id>/entities/<entity_id>', methods=['PUT'])
+    @token_required
+    def update_entity(world_id, entity_id):
+        """Update an entity in a world.
+        ---
+        tags:
+          - Worlds
+        parameters:
+          - name: world_id
+            in: path
+            type: string
+            required: true
+          - name: entity_id
+            in: path
+            type: string
+            required: true
+          - in: body
+            name: body
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                entity_type:
+                  type: string
+                description:
+                  type: string
+                attributes:
+                  type: object
+        responses:
+          200:
+            description: Entity updated successfully
+          404:
+            description: World or entity not found
+        """
+        world_data = storage.load_world(world_id)
+        if not world_data:
+            return jsonify({'error': 'World not found'}), 404
+
+        entity_data = storage.load_entity(entity_id)
+        if not entity_data:
+            return jsonify({'error': 'Entity not found'}), 404
+
+        # Check ownership
+        owner_id = world_data.get('owner_id')
+        if owner_id and g.current_user.user_id != owner_id and g.current_user.role != 'admin':
+            return jsonify({'error': 'Bạn không có quyền sửa nhân vật này'}), 403
+
+        data = request.json
+        # Update allowed fields
+        if 'name' in data:
+            entity_data['name'] = data['name']
+        if 'entity_type' in data:
+            entity_data['entity_type'] = data['entity_type']
+        if 'description' in data:
+            entity_data['description'] = data['description']
+        if 'attributes' in data:
+            entity_data['attributes'] = data['attributes']
+
+        storage.save_entity(entity_data)
+        flush_data()
+
+        return jsonify(entity_data), 200
+
     @world_bp.route('/api/worlds/<world_id>/entities/<entity_id>', methods=['DELETE'])
     def delete_entity(world_id, entity_id):
         """Delete an entity from a world.

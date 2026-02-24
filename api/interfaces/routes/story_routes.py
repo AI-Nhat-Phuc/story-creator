@@ -146,7 +146,7 @@ def create_story_bp(storage, story_generator, flush_data):
             # Create a new character entity with a placeholder name (GPT will name in description)
             new_entity = Entity(
               name='(GPT đặt tên)',
-              entity_type='character',
+              entity_type='nhân vật',
               description='Nhân vật mới được tạo bởi GPT',
               world_id=world_id
             )
@@ -499,8 +499,8 @@ def create_story_bp(storage, story_generator, flush_data):
                     char_desc = char.get('description', '') if isinstance(char, dict) else ''
                     new_entity = Entity(
                         name=char_name,
-                        entity_type='character',
-                        description=char_desc or f'Nhân vật {char_role} trong câu chuyện',
+                        entity_type=char_role or 'nhân vật',
+                        description=char_desc or f'Nhân vật trong câu chuyện',
                         world_id=world_id,
                         metadata={'role': char_role, 'auto_created': True}
                     )

@@ -154,28 +154,29 @@ TASK: ONLY identify and extract information from the description, DO NOT create 
 ANALYSIS REQUIREMENTS:
 1. CHARACTERS:
    - ONLY list characters that ARE MENTIONED in the description
-   - Identify type (entity_type): hero/commoner/mage/scientist/merchant/dangerous_creature
-   - Creatures/monsters/enemies MUST have entity_type="dangerous_creature"
+   - Identify type (entity_type) in Vietnamese
    - IF no characters are mentioned → return empty array []
+   - ALL description text MUST be in Vietnamese
 
 2. LOCATIONS:
    - ONLY list locations that ARE MENTIONED in the description
    - IF no locations are mentioned → return empty array []
+   - ALL description text MUST be in Vietnamese
 
 Return JSON with structure:
 {{
   "entities": [
     {{
       "name": "Character NAME from description",
-      "entity_type": "hero/commoner/mage/scientist/merchant/dangerous_creature",
-      "description": "Description based on EXISTING information in text (10-20 words)",
-      "attributes": {{"Strength": number_0_10, "Intelligence": number_0_10, "Charisma": number_0_10}}
+      "entity_type": "Loai thực thể bằng tiếng Việt (nhân vật chính/nhân vật phụ/sinh vật nguy hiểm/...)",
+      "description": "Mô tả bằng tiếng Việt dựa trên thông tin CÓ SẴN trong văn bản (10-20 từ)",
+      "attributes": {{"Tên": number_0_10, "Trí tuệ": number_0_10, "Sức hấp dẫn": number_0_10}}
     }}
   ],
   "locations": [
     {{
       "name": "Location NAME from description",
-      "description": "Description based on EXISTING information (10-20 words)",
+      "description": "Mô tả bằng tiếng Việt dựa trên thông tin CÓ SẴN (10-20 từ)",
       "coordinates": {{"x": random_number_0_100, "y": random_number_0_100}}
     }}
   ]
@@ -186,7 +187,7 @@ MANDATORY RULES:
 ✅ IF no characters/locations found → return empty array []
 ✅ DESCRIPTION must be based on existing information, no fictional details
 ✅ Keep proper names as-is
-✅ CREATURES/MONSTERS/ENEMIES must have entity_type="dangerous_creature"
+✅ entity_type and description MUST be in Vietnamese
 ✅ Estimate attributes based on description (if unclear → average value 5)
 ✅ Return only valid JSON, NO additional explanations"""
 
@@ -201,7 +202,7 @@ TASK: ONLY identify and extract information from the story description, DO NOT c
 ANALYSIS REQUIREMENTS:
 1. CHARACTERS:
    - ONLY list characters that ARE MENTIONED in the story
-   - Identify their role in the story
+   - Identify their role in the story (in Vietnamese)
    - IF no characters are mentioned → return empty array []
 
 2. LOCATIONS:
@@ -213,13 +214,13 @@ Return JSON with structure:
   "characters": [
     {{
       "name": "Character NAME from story",
-      "role": "Role in story (protagonist/supporting character/antagonist/...)"
+      "role": "Vai trò trong câu chuyện bằng tiếng Việt (nhân vật chính/nhân vật phụ/phản diện/...)"
     }}
   ],
   "locations": [
     {{
       "name": "Location NAME from story",
-      "description": "Brief description of location (if available in text)"
+      "description": "Mô tả ngắn bằng tiếng Việt (nếu có trong văn bản)"
     }}
   ]
 }}
@@ -228,6 +229,7 @@ MANDATORY RULES:
 ✅ ONLY extract information that EXISTS in the story description, DO NOT create new content
 ✅ IF no characters/locations found → return empty array []
 ✅ Keep names exactly as they appear in the text
+✅ All role and description text MUST be in Vietnamese
 ✅ Return only valid JSON, NO additional explanations"""
 
     BATCH_ANALYZE_STORY_ENTITIES_TEMPLATE = """You are a text analysis assistant. ANALYZE the following story description and ONLY EXTRACT characters and locations that ARE MENTIONED.
@@ -249,7 +251,7 @@ ANALYSIS REQUIREMENTS:
 1. CHARACTERS:
    - ONLY list characters that ARE MENTIONED in the story
    - If a character matches a known character, use the known name exactly
-   - Identify their role in the story
+   - Identify their role in the story (in Vietnamese)
    - IF no characters are mentioned → return empty array []
 
 2. LOCATIONS:
@@ -262,13 +264,13 @@ Return JSON with structure:
   "characters": [
     {{
       "name": "Character NAME from story",
-      "role": "Role in story (protagonist/supporting character/antagonist/...)"
+      "role": "Vai trò trong câu chuyện bằng tiếng Việt (nhân vật chính/nhân vật phụ/phản diện/...)"
     }}
   ],
   "locations": [
     {{
       "name": "Location NAME from story",
-      "description": "Brief description of location (if available in text)"
+      "description": "Mô tả ngắn bằng tiếng Việt (nếu có trong văn bản)"
     }}
   ]
 }}
@@ -278,6 +280,7 @@ MANDATORY RULES:
 ✅ IF no characters/locations found → return empty array []
 ✅ If character/location matches a known one, use the EXACT known name
 ✅ Keep names exactly as they appear in the text
+✅ All role and description text MUST be in Vietnamese
 ✅ Return only valid JSON, NO additional explanations"""
 
     # ===== EVENT EXTRACTION PROMPTS =====
@@ -290,29 +293,30 @@ MANDATORY RULES:
     )
 
     EXTRACT_WORLD_EVENTS_SYSTEM = (
-        "Bạn là trợ lý phân tích sự kiện chuyên nghiệp. Luôn trả về JSON hợp lệ."
+        "You are a professional event analysis assistant. Always return valid JSON. "
+        + OUTPUT_LANGUAGE_INSTRUCTION
     )
 
-    EXTRACT_WORLD_EVENTS_TEMPLATE = """Bạn là một nhà phân tích văn học chuyên nghiệp. Nhiệm vụ: trích xuất các SỰ KIỆN quan trọng từ TẤT CẢ các câu chuyện sau đây trong cùng một thế giới.
+    EXTRACT_WORLD_EVENTS_TEMPLATE = """You are a professional literary analyst. TASK: Extract important EVENTS from ALL the following stories in the same world.
 
-DANH SÁCH CÁC CÂU CHUYỆN:
+STORY LIST:
 {story_list}
 
-NỘI DUNG CÁC CÂU CHUYỆN (có đánh số dòng):
+STORY CONTENT (with line numbers):
 {combined_content}
 
-NGUYÊN TẮC:
-1. Mỗi sự kiện PHẢI gắn với STORY_INDEX (0, 1, 2, ...) của câu chuyện chứa nó
-2. story_position là SỐ THỨ TỰ ĐẦU DÒNG (số trước dấu |) trong câu chuyện đó
-3. Chỉ trích xuất sự kiện từ đoạn văn CÓ NỘI DUNG (không phải dòng trống)
-4. Tạo connections giữa các sự kiện TRONG và GIỮA các câu chuyện
-5. Không tạo sự kiện với vị trí đoạn văn trống
+RULES:
+1. Each event MUST be associated with a STORY_INDEX (0, 1, 2, ...) of the story containing it
+2. story_position is the LINE NUMBER (the number before the | delimiter) in that story
+3. Only extract events from paragraphs with ACTUAL CONTENT (not empty lines)
+4. Create connections between events WITHIN and ACROSS stories
+5. Do not create events with empty paragraph positions
 
-NHÂN VẬT BIẾT: {known_characters}
-ĐỊA ĐIỂM BIẾT: {known_locations}
-LỊCH: {calendar_info}
+KNOWN CHARACTERS: {known_characters}
+KNOWN LOCATIONS: {known_locations}
+CALENDAR: {calendar_info}
 
-Trả về JSON với format:
+Return JSON in this format (all title, description, era, relation_label values MUST be in Vietnamese):
 {{
   "events": [
     {{
@@ -324,7 +328,7 @@ Trả về JSON với format:
       "characters": ["Tên nhân vật"],
       "locations": ["Tên địa điểm"],
       "story_position": 5,
-      "abstract_image_seed": "mô tả hình ảnh trừu tượng"
+      "abstract_image_seed": "mô tả hình ảnh trừu tượng bằng tiếng Việt"
     }}
   ],
   "connections": [
@@ -337,30 +341,30 @@ Trả về JSON với format:
   ]
 }}"""
 
-    EXTRACT_EVENTS_TEMPLATE = """Phân tích câu chuyện sau và trích xuất các sự kiện chính.
+    EXTRACT_EVENTS_TEMPLATE = """Analyze the following story and extract the main events.
 
-Tiêu đề: {story_title}
-Thể loại: {story_genre}
-Nội dung câu chuyện (mỗi dòng có số thứ tự ở đầu, dòng trống cũng có số):
+Title: {story_title}
+Genre: {story_genre}
+Story content (each line is numbered at the beginning, empty lines also have numbers):
 {story_content_numbered}
 
-Thông tin thế giới:
-- Nhân vật đã biết: {known_characters}
-- Địa điểm đã biết: {known_locations}
-- Hệ lịch: {calendar_info}
+World information:
+- Known characters: {known_characters}
+- Known locations: {known_locations}
+- Calendar system: {calendar_info}
 
-Trả về JSON với format:
+Return JSON in the following format (all title, description, era, relation_label values MUST be in Vietnamese):
 {{
     "events": [
         {{
             "title": "Tên sự kiện ngắn gọn (3-8 từ)",
             "description": "Mô tả ngắn 1-2 câu về sự kiện",
-            "year": <số nguyên, năm xảy ra trong timeline thế giới, dựa vào ngữ cảnh câu chuyện>,
-            "era": "Kỷ nguyên (nếu có, lấy từ ngữ cảnh)",
-            "characters": ["tên nhân vật 1", "tên nhân vật 2"],
-            "locations": ["tên địa điểm"],
-            "story_position": <chỉ số đoạn văn trong nội dung, bắt đầu từ 0>,
-            "abstract_image_seed": "2-3 từ khóa tiếng Anh mô tả hình ảnh trừu tượng cho sự kiện"
+            "year": <integer, year in the world timeline, inferred from story context>,
+            "era": "Kỷ nguyên (if available, from context)",
+            "characters": ["character name 1", "character name 2"],
+            "locations": ["location name"],
+            "story_position": <paragraph index in content, starting from 0>,
+            "abstract_image_seed": "2-3 English keywords describing an abstract image for the event"
         }}
     ],
     "connections": [
@@ -373,17 +377,17 @@ Trả về JSON với format:
     ]
 }}
 
-QUY TẮC BẮT BUỘC:
-✅ CHỈ trích xuất sự kiện THỰC SỰ CÓ trong nội dung, KHÔNG bịa thêm
-✅ Mỗi sự kiện phải có ít nhất 1 nhân vật HOẶC 1 địa điểm
-✅ year phải là số nguyên, ước lượng dựa trên ngữ cảnh câu chuyện
-✅ story_position là SỐ THỨ TỰ ĐẦU DÒNG (số trước dấu |) của dòng chứa sự kiện. Dùng đúng số này, KHÔNG tự đếm lại. CHỈ chọn dòng có nội dung (không chọn dòng trống).
-✅ abstract_image_seed: dùng từ khóa tiếng Anh ngắn gọn (fire, battle, discovery, forest...)
-✅ relation_type chỉ có 4 loại: character, location, causation, temporal
-✅ KHÔNG tạo sự kiện cho đoạn văn trống hoặc chỉ chứa khoảng trắng
-✅ KHÔNG dùng tên thế giới (world name) làm location — chỉ dùng địa điểm cụ thể bên trong thế giới
-✅ KHÔNG tạo connection loại "location" nếu lý do chỉ là chung thế giới — chỉ kết nối khi chia sẻ địa điểm cụ thể
-✅ Trả về JSON hợp lệ, KHÔNG thêm giải thích"""
+MANDATORY RULES:
+✅ ONLY extract events that ACTUALLY EXIST in the content, DO NOT fabricate
+✅ Each event must have at least 1 character OR 1 location
+✅ year must be an integer, estimated based on story context
+✅ story_position is the LINE NUMBER at the beginning of the line (the number before the | delimiter). Use this exact number, DO NOT recount. ONLY select lines with content (not empty lines).
+✅ abstract_image_seed: use short English keywords (fire, battle, discovery, forest...)
+✅ relation_type has only 4 types: character, location, causation, temporal
+✅ DO NOT create events for empty paragraphs or paragraphs containing only whitespace
+✅ DO NOT use world name as a location — only use specific places within the world
+✅ DO NOT create "location" connections if the only reason is sharing the same world — only connect when sharing a specific location
+✅ Return valid JSON, NO additional explanations"""
 
     # User prompts
     @staticmethod
