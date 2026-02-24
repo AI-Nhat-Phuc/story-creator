@@ -4,6 +4,7 @@
   "installCommand": "echo skip",
   "framework": null,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/app.py" }
+    { "source": "/api/(.*)", "destination": "/api/app.py" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
