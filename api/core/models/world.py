@@ -29,7 +29,7 @@ class World:
             world_id: Unique identifier (generated if not provided)
             created_at: Creation timestamp (current time if not provided)
             metadata: Additional metadata for the world
-            visibility: 'public' or 'private' (default: 'private')
+            visibility: 'draft', 'private', or 'public' (default: 'private')
             owner_id: User ID of the creator
             shared_with: List of user IDs who have access (for private worlds)
         """

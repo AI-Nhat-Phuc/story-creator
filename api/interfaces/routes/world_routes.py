@@ -66,7 +66,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                   example: "Một thế giới đầy phép thuật và rồng"
                 visibility:
                   type: string
-                  enum: [public, private]
+                  enum: [draft, private, public]
                   default: private
                 gpt_entities:
                   type: object
@@ -237,7 +237,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                   type: string
                 visibility:
                   type: string
-                  enum: [public, private]
+                  enum: [draft, private, public]
         responses:
           200:
             description: World updated successfully
@@ -265,7 +265,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             user_data = storage.load_user(g.current_user.user_id)
             user = User.from_dict(user_data)
 
-            if old_visibility == 'private' and new_visibility == 'public':
+            if old_visibility != 'public' and new_visibility == 'public':
                 # Changing to public - check quota
                 if not user.can_create_public_world():
                     return jsonify({
@@ -276,8 +276,8 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                 user.increment_public_worlds()
                 storage.save_user(user.to_dict())
 
-            elif old_visibility == 'public' and new_visibility == 'private':
-                # Changing to private - decrement quota
+            elif old_visibility == 'public' and new_visibility != 'public':
+                # Changing from public - decrement quota
                 user.decrement_public_worlds()
                 storage.save_user(user.to_dict())
 

@@ -18,7 +18,7 @@ function StoryDetailContainer({ showToast }) {
   const [linkedLocations, setLinkedLocations] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [editForm, setEditForm] = useState({ title: '', content: '' })
+  const [editForm, setEditForm] = useState({ title: '', content: '', visibility: '' })
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [analyzedEntities, setAnalyzedEntities] = useState(null)
   const [showAnalyzedModal, setShowAnalyzedModal] = useState(false)
@@ -33,7 +33,7 @@ function StoryDetailContainer({ showToast }) {
       const storyRes = await storiesAPI.getById(storyId)
       const storyData = storyRes.data
       setStory(storyData)
-      setEditForm({ title: storyData.title, content: storyData.content })
+      setEditForm({ title: storyData.title, content: storyData.content, visibility: storyData.visibility || 'private' })
 
       if (storyData.world_id) {
         const worldRes = await worldsAPI.getById(storyData.world_id)
@@ -131,7 +131,7 @@ function StoryDetailContainer({ showToast }) {
   const handleCancelEdit = () => {
     setEditing(false)
     if (story) {
-      setEditForm({ title: story.title, content: story.content })
+      setEditForm({ title: story.title, content: story.content, visibility: story.visibility || 'private' })
     }
   }
 

@@ -3,8 +3,22 @@
   "outputDirectory": "frontend/dist",
   "installCommand": "echo skip",
   "framework": null,
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/((?!assets/).*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/app.py" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|assets/).*)", "destination": "/index.html" }
   ]
 }

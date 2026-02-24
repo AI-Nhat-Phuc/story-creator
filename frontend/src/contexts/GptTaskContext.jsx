@@ -22,6 +22,11 @@ export function GptTaskProvider({ children, showToast }) {
   const callbacksRef = useRef({})
   const pollTimerRef = useRef(null)
   const mountedRef = useRef(true)
+  const tasksRef = useRef(tasks)
+  const pollRef = useRef(null)
+
+  // Keep tasksRef in sync
+  useEffect(() => { tasksRef.current = tasks }, [tasks])
 
   // ---- localStorage helpers ----
   const loadStoredTasks = useCallback(() => {
@@ -68,7 +73,8 @@ export function GptTaskProvider({ children, showToast }) {
   // ---- Handle a completed/errored task ----
   const handleTaskDone = useCallback((taskId, taskData) => {
     const status = taskData.status
-    const label = taskData.label || tasks[taskId]?.label || 'GPT Task'
+    // Read label from ref to avoid stale closure
+    const label = taskData.label || tasksRef.current[taskId]?.label || 'GPT Task'
 
     if (status === 'completed') {
       showToast?.(`✅ ${label} — hoàn tất!`, 'success')
@@ -90,16 +96,16 @@ export function GptTaskProvider({ children, showToast }) {
       saveStoredTasks(next)
       return next
     })
-  }, [tasks, showToast, saveStoredTasks])
+  }, [showToast, saveStoredTasks])
 
   // ---- Polling loop ----
   const pollPendingTasks = useCallback(async () => {
     if (!mountedRef.current) return
 
-    // Collect all IDs that need polling
+    // Collect all IDs that need polling — use ref for fresh state
     const pending = {}
-    // From state
-    for (const [id, t] of Object.entries(tasks)) {
+    // From state (via ref to avoid stale closure)
+    for (const [id, t] of Object.entries(tasksRef.current)) {
       if (t.status === 'pending' || t.status === 'processing') {
         pending[id] = t
       }
@@ -149,7 +155,10 @@ export function GptTaskProvider({ children, showToast }) {
     } catch (err) {
       console.error('[GptTaskContext] Poll error:', err)
     }
-  }, [tasks, loadStoredTasks, handleTaskDone])
+  }, [loadStoredTasks, handleTaskDone])
+
+  // Keep pollRef in sync so interval always calls the latest version
+  useEffect(() => { pollRef.current = pollPendingTasks }, [pollPendingTasks])
 
   // ---- Start/stop polling based on pending tasks ----
   useEffect(() => {
@@ -159,13 +168,15 @@ export function GptTaskProvider({ children, showToast }) {
     const storedHasPending = Object.keys(loadStoredTasks()).length > 0
 
     if (hasPending || storedHasPending) {
-      if (!pollTimerRef.current) {
-        pollTimerRef.current = setInterval(() => {
-          pollPendingTasks()
-        }, POLL_INTERVAL)
-        // Also poll immediately
-        pollPendingTasks()
+      // Always restart interval to pick up the latest pollRef
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current)
       }
+      pollTimerRef.current = setInterval(() => {
+        pollRef.current?.()
+      }, POLL_INTERVAL)
+      // Also poll immediately
+      pollRef.current?.()
     } else {
       if (pollTimerRef.current) {
         clearInterval(pollTimerRef.current)
@@ -176,7 +187,7 @@ export function GptTaskProvider({ children, showToast }) {
     return () => {
       // Don't clear on re-render, only on unmount
     }
-  }, [tasks, loadStoredTasks, pollPendingTasks])
+  }, [tasks, loadStoredTasks])
 
   // ---- On mount: recover tasks from localStorage ----
   useEffect(() => {

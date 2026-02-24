@@ -10,7 +10,8 @@ const initialStoryForm = {
   title: '',
   description: '',
   genre: 'adventure',
-  time_index: 0
+  time_index: 0,
+  visibility: ''
 }
 
 function WorldDetailContainer({ showToast }) {
@@ -24,7 +25,7 @@ function WorldDetailContainer({ showToast }) {
   const [activeTab, setActiveTab] = useState('stories')
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', description: '' })
+  const [editForm, setEditForm] = useState({ name: '', description: '', visibility: '' })
 
   // Story creation state
   const [showStoryModal, setShowStoryModal] = useState(false)
@@ -60,7 +61,7 @@ function WorldDetailContainer({ showToast }) {
       setStories(storiesRes.data)
       setCharacters(charsRes.data)
       setLocations(locsRes.data)
-      setEditForm({ name: worldRes.data.name, description: worldRes.data.description })
+      setEditForm({ name: worldRes.data.name, description: worldRes.data.description, visibility: worldRes.data.visibility || 'private' })
     } catch (error) {
       showToast('Không thể tải chi tiết thế giới', 'error')
     } finally {
@@ -233,7 +234,7 @@ function WorldDetailContainer({ showToast }) {
   const handleCancelEdit = () => {
     setEditing(false)
     if (world) {
-      setEditForm({ name: world.name, description: world.description })
+      setEditForm({ name: world.name, description: world.description, visibility: world.visibility || 'private' })
     }
   }
 
@@ -369,10 +370,9 @@ function WorldDetailContainer({ showToast }) {
     }
 
     try {
-      const response = await storiesAPI.create({
-        ...storyForm,
-        world_id: worldId
-      })
+      const submitData = { ...storyForm, world_id: worldId }
+      if (!submitData.visibility) delete submitData.visibility
+      const response = await storiesAPI.create(submitData)
       const createdStory = response.data.story
 
       // If we have analyzed entities, link them

@@ -283,6 +283,23 @@ function StoriesView({
               </div>
 
               <div className="mb-4 form-control">
+                <label className="label">
+                  <span className="label-text">Chế độ hiển thị</span>
+                </label>
+                <select
+                  name="visibility"
+                  value={formData.visibility}
+                  onChange={onInputChange}
+                  className="select-bordered select"
+                >
+                  <option value="">Mặc định (theo thế giới)</option>
+                  <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
+                  <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
+                  <option value="public">Công khai - Mọi người có thể xem</option>
+                </select>
+              </div>
+
+              <div className="mb-4 form-control">
                 <div className='flex justify-between'>
                   <label className="label">
                     <span className="label-text">Mô tả *</span>

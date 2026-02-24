@@ -88,6 +88,20 @@ function WorldDetailView({
               className="mb-4 w-full min-h-[120px] textarea textarea-bordered"
               placeholder="Mô tả thế giới"
             />
+            <div className="mb-4 form-control">
+              <label className="label">
+                <span className="font-semibold label-text">Chế độ hiển thị</span>
+              </label>
+              <select
+                value={editForm.visibility}
+                onChange={(e) => onChangeField('visibility', e.target.value)}
+                className="w-full max-w-xs select-bordered select"
+              >
+                <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
+                <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
+                <option value="public">Công khai - Mọi người có thể xem</option>
+              </select>
+            </div>
             <div className="flex gap-2">
               <button onClick={onSaveEdit} className="btn btn-primary">
                 <ArrowDownTrayIcon className="inline w-4 h-4" /> Lưu
@@ -105,7 +119,14 @@ function WorldDetailView({
                 <PencilIcon className="inline w-4 h-4" /> Sửa
               </button>
             </div>
-            <p className="mb-4 badge badge-primary">{world.world_type}</p>
+            <p className="flex gap-2 mb-4">
+              <span className="badge badge-primary">{world.world_type}</span>
+              {world.visibility && (
+                <span className={`badge ${world.visibility === 'public' ? 'badge-success' : world.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
+                  {world.visibility === 'public' ? 'Công khai' : world.visibility === 'draft' ? 'Bản nháp' : 'Riêng tư'}
+                </span>
+              )}
+            </p>
             <p className="text-lg">{world.description}</p>
           </>
         )}
@@ -259,6 +280,23 @@ function WorldDetailView({
                   <option value="mystery">Bí ẩn</option>
                   <option value="conflict">Xung đột</option>
                   <option value="discovery">Khám phá</option>
+                </select>
+              </div>
+
+              <div className="mb-4 form-control">
+                <label className="label">
+                  <span className="label-text">Chế độ hiển thị</span>
+                </label>
+                <select
+                  name="visibility"
+                  value={storyForm.visibility}
+                  onChange={onStoryFormChange}
+                  className="select-bordered select"
+                >
+                  <option value="">Mặc định (theo thế giới)</option>
+                  <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
+                  <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
+                  <option value="public">Công khai - Mọi người có thể xem</option>
                 </select>
               </div>
 

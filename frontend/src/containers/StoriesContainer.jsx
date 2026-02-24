@@ -9,7 +9,8 @@ const initialFormState = {
   title: '',
   description: '',
   genre: 'adventure',
-  time_index: 0
+  time_index: 0,
+  visibility: ''
 }
 
 function StoriesContainer({ showToast }) {
@@ -255,7 +256,9 @@ function StoriesContainer({ showToast }) {
     }
 
     try {
-      const response = await storiesAPI.create(formData)
+      const submitData = { ...formData }
+      if (!submitData.visibility) delete submitData.visibility
+      const response = await storiesAPI.create(submitData)
       const createdStory = response.data.story
 
       // If we have analyzed entities, link them to the created story

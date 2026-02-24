@@ -79,7 +79,7 @@ def create_story_bp(storage, story_generator, flush_data):
                   example: adventure
                 visibility:
                   type: string
-                  enum: [public, private]
+                  enum: [draft, private, public]
                   default: private
                 time_index:
                   type: integer
@@ -102,12 +102,15 @@ def create_story_bp(storage, story_generator, flush_data):
         """
         data = request.json
         world_id = data.get('world_id')
-        visibility = data.get('visibility', 'private')
 
         # Load world to check ownership
         world_data = storage.load_world(world_id)
         if not world_data:
             return jsonify({'error': 'World not found'}), 404
+
+        # Default visibility inherits from the world
+        world_visibility = world_data.get('visibility', 'private')
+        visibility = data.get('visibility', world_visibility)
 
         # Check if user can create stories in this world (must view world)
         if not PermissionService.can_view(g.current_user.user_id, world_data):
@@ -302,7 +305,7 @@ def create_story_bp(storage, story_generator, flush_data):
                   type: string
                 visibility:
                   type: string
-                  enum: [public, private]
+                  enum: [draft, private, public]
         responses:
           200:
             description: Story updated
@@ -330,7 +333,7 @@ def create_story_bp(storage, story_generator, flush_data):
             user_data = storage.load_user(g.current_user.user_id)
             user = User.from_dict(user_data)
 
-            if old_visibility == 'private' and new_visibility == 'public':
+            if old_visibility != 'public' and new_visibility == 'public':
                 if not user.can_create_public_story():
                     return jsonify({
                         'error': 'Bạn đã đạt giới hạn số câu chuyện công khai',
@@ -340,7 +343,7 @@ def create_story_bp(storage, story_generator, flush_data):
                 user.increment_public_stories()
                 storage.save_user(user.to_dict())
 
-            elif old_visibility == 'public' and new_visibility == 'private':
+            elif old_visibility == 'public' and new_visibility != 'public':
                 user.decrement_public_stories()
                 storage.save_user(user.to_dict())
 

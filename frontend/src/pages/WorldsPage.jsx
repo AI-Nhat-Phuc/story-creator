@@ -302,8 +302,9 @@ function WorldsPage({ showToast }) {
                   onChange={handleInputChange}
                   className="select-bordered select"
                 >
-                  <option value="public">Công khai - Mọi người có thể xem</option>
+                  <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
                   <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
+                  <option value="public">Công khai - Mọi người có thể xem</option>
                 </select>
                 {isAuthenticated && quota?.worlds && (
                   <label className="label">

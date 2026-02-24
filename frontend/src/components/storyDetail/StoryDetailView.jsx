@@ -126,6 +126,20 @@ function StoryDetailView({
               className="mb-4 w-full min-h-[200px] textarea textarea-bordered"
               placeholder="Mô tả câu chuyện"
             />
+            <div className="mb-4 form-control">
+              <label className="label">
+                <span className="font-semibold label-text">Chế độ hiển thị</span>
+              </label>
+              <select
+                value={editForm.visibility}
+                onChange={(e) => onChangeForm('visibility', e.target.value)}
+                className="w-full max-w-xs select-bordered select"
+              >
+                <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
+                <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
+                <option value="public">Công khai - Mọi người có thể xem</option>
+              </select>
+            </div>
             <div className="flex gap-2">
               <button onClick={onSaveEdit} className="btn btn-primary">
                 <ArrowDownTrayIcon className="inline w-4 h-4" /> Lưu
@@ -154,6 +168,11 @@ function StoryDetailView({
               <span className="badge badge-neutral" title={`Time index: ${normalizedTimelineIndex ?? 0}`}>
                                 <ClockIcon className="inline w-3.5 h-3.5" /> {formattedWorldTime}
               </span>
+              {story.visibility && (
+                <span className={`badge ${story.visibility === 'public' ? 'badge-success' : story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
+                  {story.visibility === 'public' ? 'Công khai' : story.visibility === 'draft' ? 'Bản nháp' : 'Riêng tư'}
+                </span>
+              )}
               {world && (
                 <Link to={`/worlds/${world.world_id}`} className="cursor-pointer badge badge-info hover:badge-info-focus">
                                     <GlobeAltIcon className="inline w-3.5 h-3.5" /> {world.name}
