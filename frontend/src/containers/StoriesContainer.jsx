@@ -23,6 +23,7 @@ function StoriesContainer({ showToast }) {
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [detectedCharacters, setDetectedCharacters] = useState([])
   const [analyzedEntities, setAnalyzedEntities] = useState(null)
+  const [showAnalyzedModal, setShowAnalyzedModal] = useState(false)
   const [availableCharacters, setAvailableCharacters] = useState([]);
   const [selectedCharacters, setSelectedCharacters] = useState([]);
   // Fetch characters for selected world when modal opens or world changes
@@ -217,6 +218,7 @@ function StoriesContainer({ showToast }) {
         onComplete: (taskData) => {
           if (taskData.status === 'completed') {
             setAnalyzedEntities(taskData.result)
+            setShowAnalyzedModal(true)
           }
           setGptAnalyzing(false)
         }
@@ -229,6 +231,19 @@ function StoriesContainer({ showToast }) {
 
   const handleClearAnalyzedEntities = () => {
     setAnalyzedEntities(null)
+    setShowAnalyzedModal(false)
+  }
+
+  const handleCloseAnalyzedModal = () => {
+    setShowAnalyzedModal(false)
+  }
+
+  const handleOpenAnalyzedModal = () => {
+    setShowAnalyzedModal(true)
+  }
+
+  const handleUpdateAnalyzedEntities = (updated) => {
+    setAnalyzedEntities(updated)
   }
 
   const handleSubmit = async (e) => {
@@ -269,6 +284,7 @@ function StoriesContainer({ showToast }) {
       setFormData(initialFormState)
       setDetectedCharacters([])
       setAnalyzedEntities(null)
+      setShowAnalyzedModal(false)
       loadData()
     } catch (error) {
       showToast('Không thể tạo câu chuyện: ' + (error.message || error), 'error')
@@ -285,6 +301,7 @@ function StoriesContainer({ showToast }) {
     setFormData(initialFormState)
     setDetectedCharacters([])
     setAnalyzedEntities(null)
+    setShowAnalyzedModal(false)
     setGptGenerating(false)
     setGptAnalyzing(false)
     setAvailableCharacters([]);
@@ -309,7 +326,11 @@ function StoriesContainer({ showToast }) {
       onSubmit={handleSubmit}
       onGenerateDescription={handleGenerateDescription}
       onAnalyzeStory={handleAnalyzeStory}
+      showAnalyzedModal={showAnalyzedModal}
+      onCloseAnalyzedModal={handleCloseAnalyzedModal}
+      onOpenAnalyzedModal={handleOpenAnalyzedModal}
       onClearAnalyzedEntities={handleClearAnalyzedEntities}
+      onUpdateAnalyzedEntities={handleUpdateAnalyzedEntities}
       formatWorldTime={formatWorldTime}
       getWorldName={getWorldName}
       availableCharacters={availableCharacters}

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import GptButton, { OpenAILogo } from '../GptButton'
+import GptButton from '../GptButton'
+import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
 import {
   GlobeAltIcon,
   UserIcon,
@@ -9,7 +10,6 @@ import {
   ClipboardDocumentListIcon,
   PencilIcon,
   XMarkIcon,
-  CheckCircleIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
@@ -32,7 +32,10 @@ function StoryDetailView({
   onChangeForm,
   onAnalyzeStory,
   onClearAnalyzedEntities,
+  onUpdateAnalyzedEntities,
   onLinkEntities,
+  showAnalyzedModal,
+  onCloseAnalyzedModal,
   onReanalyzeStory,
   onDeleteStory,
   highlightEventId,
@@ -189,79 +192,7 @@ function StoryDetailView({
               </div>
             )}
 
-            {/* Analyzed Entities Display */}
-            {analyzedEntities && (
-              <div className="bg-base-200/50 mt-6 p-5 border border-base-300 rounded-xl">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="flex items-center gap-2 font-semibold text-base">
-                    <span className="flex justify-center items-center bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full w-7 h-7 text-emerald-600">
-                      <OpenAILogo className="w-4 h-4" />
-                    </span>
-                    Kết quả phân tích GPT
-                  </h4>
-                  <button
-                    type="button"
-                    className="opacity-50 hover:opacity-100 btn btn-xs btn-circle btn-ghost"
-                    onClick={onClearAnalyzedEntities}
-                    title="Xóa kết quả"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {analyzedEntities.characters?.length > 0 && (
-                    <div>
-                      <p className="opacity-70 mb-2 text-sm">
-                                                <UserIcon className="inline w-3.5 h-3.5" /> Nhân vật <span className="opacity-50">({analyzedEntities.characters.length})</span>
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {analyzedEntities.characters.map((char, i) => (
-                          <span key={i} className="bg-primary/10 px-3 py-1.5 border border-primary/30 rounded-lg font-medium text-primary text-sm">
-                            {char.name || char}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {analyzedEntities.locations?.length > 0 && (
-                    <div>
-                      <p className="opacity-70 mb-2 text-sm">
-                                                <MapPinIcon className="inline w-3.5 h-3.5" /> Địa điểm <span className="opacity-50">({analyzedEntities.locations.length})</span>
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {analyzedEntities.locations.map((loc, i) => (
-                          <span key={i} className="bg-secondary/10 px-3 py-1.5 border border-secondary/30 rounded-lg font-medium text-secondary text-sm">
-                            {loc.name || loc}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {(!analyzedEntities.characters?.length && !analyzedEntities.locations?.length) && (
-                    <p className="opacity-60 text-sm text-center">Không tìm thấy nhân vật hoặc địa điểm cụ thể.</p>
-                  )}
-                </div>
-
-                {/* Link Entities Button */}
-                {(analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0) && (
-                  <div className="flex items-center gap-3 mt-5 pt-4 border-base-300 border-t">
-                    <button
-                      type="button"
-                      onClick={onLinkEntities}
-                      className="bg-gradient-to-r from-success hover:from-success/90 to-emerald-500 hover:to-emerald-500/90 shadow-sm border-0 text-white btn btn-sm"
-                    >
-                                            <CheckCircleIcon className="inline w-4 h-4 text-success" /> Xác nhận liên kết
-                    </button>
-                    <span className="opacity-50 text-xs">
-                      Lưu nhân vật và địa điểm vào câu chuyện
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Analyzed Entities Display - now in modal */}
           </>
         )}
       </div>
@@ -353,6 +284,17 @@ function StoryDetailView({
           </table>
         </div>
       </div>
+
+      {/* GPT Analyzed Entities Modal */}
+      <AnalyzedEntitiesEditor
+        open={showAnalyzedModal}
+        analyzedEntities={analyzedEntities}
+        onUpdate={onUpdateAnalyzedEntities}
+        onClose={onCloseAnalyzedModal}
+        onClear={onClearAnalyzedEntities}
+        onLink={onLinkEntities}
+        linkLabel="Xác nhận liên kết"
+      />
     </div>
   )
 }

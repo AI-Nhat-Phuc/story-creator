@@ -21,6 +21,7 @@ function StoryDetailContainer({ showToast }) {
   const [editForm, setEditForm] = useState({ title: '', content: '' })
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [analyzedEntities, setAnalyzedEntities] = useState(null)
+  const [showAnalyzedModal, setShowAnalyzedModal] = useState(false)
 
   useEffect(() => {
     loadStoryDetails()
@@ -171,6 +172,7 @@ function StoryDetailContainer({ showToast }) {
         onComplete: (taskData) => {
           if (taskData.status === 'completed') {
             setAnalyzedEntities(taskData.result)
+            setShowAnalyzedModal(true)
           }
           setGptAnalyzing(false)
         }
@@ -183,6 +185,15 @@ function StoryDetailContainer({ showToast }) {
 
   const handleClearAnalyzedEntities = () => {
     setAnalyzedEntities(null)
+    setShowAnalyzedModal(false)
+  }
+
+  const handleCloseAnalyzedModal = () => {
+    setShowAnalyzedModal(false)
+  }
+
+  const handleUpdateAnalyzedEntities = (updated) => {
+    setAnalyzedEntities(updated)
   }
 
   const handleLinkEntities = async () => {
@@ -204,6 +215,7 @@ function StoryDetailContainer({ showToast }) {
       // Update story with linked entities and reload to get character/location details
       setStory(response.data.story)
       setAnalyzedEntities(null)
+      setShowAnalyzedModal(false)
 
       if (createdCount > 0) {
         showToast(`Đã liên kết và tạo mới ${created_entities?.length || 0} nhân vật, ${created_locations?.length || 0} địa điểm!`, 'success')
@@ -248,6 +260,7 @@ function StoryDetailContainer({ showToast }) {
         onComplete: (taskData) => {
           if (taskData.status === 'completed') {
             setAnalyzedEntities(taskData.result)
+            setShowAnalyzedModal(true)
           }
           setGptAnalyzing(false)
         }
@@ -302,7 +315,10 @@ function StoryDetailContainer({ showToast }) {
       onSaveEdit={handleSaveEdit}
       onChangeForm={handleEditFormChange}
       onAnalyzeStory={handleAnalyzeStory}
+      showAnalyzedModal={showAnalyzedModal}
+      onCloseAnalyzedModal={handleCloseAnalyzedModal}
       onClearAnalyzedEntities={handleClearAnalyzedEntities}
+      onUpdateAnalyzedEntities={handleUpdateAnalyzedEntities}
       onLinkEntities={handleLinkEntities}
       onReanalyzeStory={handleReanalyzeStory}
       onDeleteStory={handleDeleteStory}

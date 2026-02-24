@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'
-import GptButton, { OpenAILogo } from '../GptButton'
+import GptButton from '../GptButton'
+import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
 import {
   BookOpenIcon,
   UserIcon,
@@ -57,6 +58,10 @@ function WorldDetailView({
   onGenerateStoryDescription,
   onAnalyzeStory,
   onClearAnalyzedEntities,
+  onUpdateAnalyzedEntities,
+  showAnalyzedModal,
+  onCloseAnalyzedModal,
+  onOpenAnalyzedModal,
   onCreateStory
 }) {
   return (
@@ -305,56 +310,20 @@ function WorldDetailView({
                 </div>
               )}
 
-              {/* Analyzed Entities Display */}
-              {analyzedEntities && (
-                <div className="bg-base-200/50 mb-4 p-4 border border-base-300 rounded-xl">
-                  <div className="w-full">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="flex items-center gap-2 font-semibold">
-                        <span className="flex justify-center items-center bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full w-6 h-6 text-emerald-600">
-                          <OpenAILogo className="w-3.5 h-3.5" />
-                        </span>
-                        Kết quả phân tích
-                      </span>
-                      <button
-                        type="button"
-                        className="opacity-50 hover:opacity-100 btn btn-xs btn-circle btn-ghost"
-                        onClick={onClearAnalyzedEntities}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    {analyzedEntities.characters?.length > 0 && (
-                      <div className="mb-2">
-                        <span className="font-semibold"><UserIcon className="inline w-3.5 h-3.5" /> Nhân vật ({analyzedEntities.characters.length}):</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {analyzedEntities.characters.map((char, i) => (
-                            <span key={i} className="badge badge-primary">{char.name || char}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {analyzedEntities.locations?.length > 0 && (
-                      <div className="mb-2">
-                        <span className="font-semibold"><MapPinIcon className="inline w-3.5 h-3.5" /> Địa điểm ({analyzedEntities.locations.length}):</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {analyzedEntities.locations.map((loc, i) => (
-                            <span key={i} className="badge badge-secondary">{loc.name || loc}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {(!analyzedEntities.characters?.length && !analyzedEntities.locations?.length) && (
-                      <p className="text-sm">Không tìm thấy nhân vật hoặc địa điểm cụ thể.</p>
-                    )}
-                    {(analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0) && (
-                      <div className="mt-2 pt-2 border-success/30 border-t">
-                        <span className="text-sm">
-                                                    <CheckCircleIcon className="inline w-4 h-4 text-success" /> Nhấn <strong>Tạo câu chuyện</strong> để lưu và liên kết các thực thể này
-                        </span>
-                      </div>
-                    )}
-                  </div>
+              {/* Analyzed entities indicator */}
+              {analyzedEntities && (analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0) && (
+                <div className="flex items-center gap-2 bg-success/10 mb-4 px-3 py-2 border border-success/30 rounded-lg text-sm">
+                  <CheckCircleIcon className="w-4 h-4 text-success shrink-0" />
+                  <span>
+                    Đã phân tích: {analyzedEntities.characters?.length || 0} nhân vật, {analyzedEntities.locations?.length || 0} địa điểm
+                  </span>
+                  <button
+                    type="button"
+                    className="ml-auto text-xs link link-primary"
+                    onClick={onOpenAnalyzedModal}
+                  >
+                    Xem / Sửa
+                  </button>
                 </div>
               )}
 
@@ -403,6 +372,16 @@ function WorldDetailView({
         batchProgress={batchProgress}
         batchResult={batchResult}
         onBatchAnalyze={onBatchAnalyze}
+      />
+
+      {/* GPT Analyzed Entities Modal */}
+      <AnalyzedEntitiesEditor
+        open={showAnalyzedModal}
+        analyzedEntities={analyzedEntities}
+        onUpdate={onUpdateAnalyzedEntities}
+        onClose={onCloseAnalyzedModal}
+        onClear={onClearAnalyzedEntities}
+        linkLabel="Xác nhận"
       />
     </div>
   )

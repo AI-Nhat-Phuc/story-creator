@@ -32,6 +32,7 @@ function WorldDetailContainer({ showToast }) {
   const [gptGenerating, setGptGenerating] = useState(false)
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [analyzedEntities, setAnalyzedEntities] = useState(null)
+  const [showAnalyzedModal, setShowAnalyzedModal] = useState(false)
   const [autoLinking, setAutoLinking] = useState(false)
 
   // Unlinked stories modal state
@@ -258,6 +259,7 @@ function WorldDetailContainer({ showToast }) {
     setShowStoryModal(false)
     setStoryForm(initialStoryForm)
     setAnalyzedEntities(null)
+    setShowAnalyzedModal(false)
     setGptGenerating(false)
     setGptAnalyzing(false)
   }
@@ -330,6 +332,7 @@ function WorldDetailContainer({ showToast }) {
         onComplete: (taskData) => {
           if (taskData.status === 'completed') {
             setAnalyzedEntities(taskData.result)
+            setShowAnalyzedModal(true)
           }
           setGptAnalyzing(false)
         }
@@ -342,6 +345,19 @@ function WorldDetailContainer({ showToast }) {
 
   const handleClearAnalyzedEntities = () => {
     setAnalyzedEntities(null)
+    setShowAnalyzedModal(false)
+  }
+
+  const handleCloseAnalyzedModal = () => {
+    setShowAnalyzedModal(false)
+  }
+
+  const handleOpenAnalyzedModal = () => {
+    setShowAnalyzedModal(true)
+  }
+
+  const handleUpdateAnalyzedEntities = (updated) => {
+    setAnalyzedEntities(updated)
   }
 
   const handleCreateStory = async (e) => {
@@ -434,7 +450,11 @@ function WorldDetailContainer({ showToast }) {
       onStoryFormChange={handleStoryFormChange}
       onGenerateStoryDescription={handleGenerateStoryDescription}
       onAnalyzeStory={handleAnalyzeStory}
+      showAnalyzedModal={showAnalyzedModal}
+      onCloseAnalyzedModal={handleCloseAnalyzedModal}
+      onOpenAnalyzedModal={handleOpenAnalyzedModal}
       onClearAnalyzedEntities={handleClearAnalyzedEntities}
+      onUpdateAnalyzedEntities={handleUpdateAnalyzedEntities}
       onCreateStory={handleCreateStory}
     />
   )
