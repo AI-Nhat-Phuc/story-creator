@@ -194,13 +194,22 @@ function StoryDetailContainer({ showToast }) {
     try {
       const response = await storiesAPI.linkEntities(storyId, {
         characters: analyzedEntities.characters || [],
-        locations: analyzedEntities.locations || []
+        locations: analyzedEntities.locations || [],
+        auto_create: true
       })
+
+      const { created_entities, created_locations } = response.data
+      const createdCount = (created_entities?.length || 0) + (created_locations?.length || 0)
 
       // Update story with linked entities and reload to get character/location details
       setStory(response.data.story)
       setAnalyzedEntities(null)
-      showToast('Đã liên kết nhân vật và địa điểm!', 'success')
+
+      if (createdCount > 0) {
+        showToast(`Đã liên kết và tạo mới ${created_entities?.length || 0} nhân vật, ${created_locations?.length || 0} địa điểm!`, 'success')
+      } else {
+        showToast('Đã liên kết nhân vật và địa điểm!', 'success')
+      }
 
       // Reload to get full character/location data
       loadStoryDetails()

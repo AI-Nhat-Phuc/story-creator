@@ -453,6 +453,7 @@ def create_story_bp(storage, story_generator, flush_data):
         data = request.json
         characters = data.get('characters', [])
         locations = data.get('locations', [])
+        auto_create = data.get('auto_create', True)
 
         # Get world to add entities
         world_id = story_data.get('world_id')
@@ -489,8 +490,25 @@ def create_story_bp(storage, story_generator, flush_data):
                     entity_id = existing.get('entity_id')
                     if entity_id not in linked_entities:
                         linked_entities.append(entity_id)
+                elif auto_create and world_id:
+                    # Auto-create new entity and link it
+                    from core.models.entity import Entity
+                    char_desc = char.get('description', '') if isinstance(char, dict) else ''
+                    new_entity = Entity(
+                        name=char_name,
+                        entity_type='character',
+                        description=char_desc or f'Nhân vật {char_role} trong câu chuyện',
+                        world_id=world_id,
+                        metadata={'role': char_role, 'auto_created': True}
+                    )
+                    entity_data = new_entity.to_dict()
+                    storage.save_entity(entity_data)
+                    created_entities.append(entity_data)
+                    linked_entities.append(new_entity.entity_id)
+                    # Add to existing list so subsequent lookups find it
+                    existing_entities.append(entity_data)
                 else:
-                    # Not found - mark as unmatched (don't auto-create)
+                    # Not found - mark as unmatched
                     unmatched_characters.append({'name': char_name, 'role': char_role})
 
         # Link or create locations from analyzed locations
@@ -509,8 +527,23 @@ def create_story_bp(storage, story_generator, flush_data):
                     location_id = existing.get('location_id')
                     if location_id not in linked_locations:
                         linked_locations.append(location_id)
+                elif auto_create and world_id:
+                    # Auto-create new location and link it
+                    from core.models.location import Location
+                    new_location = Location(
+                        name=loc_name,
+                        description=loc_desc or f'Địa điểm trong câu chuyện',
+                        world_id=world_id,
+                        metadata={'auto_created': True}
+                    )
+                    location_data = new_location.to_dict()
+                    storage.save_location(location_data)
+                    created_locations.append(location_data)
+                    linked_locations.append(new_location.location_id)
+                    # Add to existing list so subsequent lookups find it
+                    existing_locations.append(location_data)
                 else:
-                    # Not found - mark as unmatched (don't auto-create)
+                    # Not found - mark as unmatched
                     unmatched_locations.append({'name': loc_name, 'description': loc_desc})
 
         # Update story with entity and location IDs (avoid duplicates)

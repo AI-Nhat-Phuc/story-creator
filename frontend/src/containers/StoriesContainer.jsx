@@ -247,11 +247,17 @@ function StoriesContainer({ showToast }) {
       if (analyzedEntities && createdStory?.story_id) {
         const hasEntities = analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0
         if (hasEntities) {
-          await storiesAPI.linkEntities(createdStory.story_id, {
+          const linkRes = await storiesAPI.linkEntities(createdStory.story_id, {
             characters: analyzedEntities.characters || [],
-            locations: analyzedEntities.locations || []
+            locations: analyzedEntities.locations || [],
+            auto_create: true
           })
-          showToast('Tạo câu chuyện và liên kết thành công!', 'success')
+          const createdCount = (linkRes.data.created_entities?.length || 0) + (linkRes.data.created_locations?.length || 0)
+          if (createdCount > 0) {
+            showToast(`Tạo câu chuyện, liên kết và tạo mới ${linkRes.data.created_entities?.length || 0} nhân vật, ${linkRes.data.created_locations?.length || 0} địa điểm!`, 'success')
+          } else {
+            showToast('Tạo câu chuyện và liên kết thành công!', 'success')
+          }
         } else {
           showToast('Tạo câu chuyện thành công!', 'success')
         }
