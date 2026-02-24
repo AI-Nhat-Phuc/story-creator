@@ -8,6 +8,7 @@ from storage import NoSQLStorage, JSONStorage, MongoStorage
 from ai.gpt_client import GPTIntegration
 from services import GPTService, AuthService
 from services import EventService
+from services.task_store import TaskStore
 from visualization import RelationshipDiagram
 from interfaces.auth_middleware import init_auth_middleware
 from interfaces.routes import (
@@ -148,8 +149,8 @@ class APIBackend:
         # Ensure default admin account exists
         self._ensure_default_admin()
 
-        # Store for async GPT results
-        self.gpt_results = {}
+        # Store for async GPT results (persisted in database)
+        self.gpt_results = TaskStore(self.storage)
 
         # Setup signal handlers
         signal.signal(signal.SIGINT, self._signal_handler)

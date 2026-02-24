@@ -80,6 +80,7 @@ class MongoStorage:
         self.events = self.db['events']
         self.event_analysis_cache = self.db['event_analysis_cache']
         self.users = self.db['users']
+        self.gpt_tasks = self.db['gpt_tasks']
 
         # Create indexes for fast lookups
         self._ensure_indexes()
@@ -112,6 +113,8 @@ class MongoStorage:
             self.users.create_index('user_id', unique=True)
             self.users.create_index('username', unique=True)
             self.users.create_index('email', unique=True, sparse=True)
+            self.gpt_tasks.create_index('task_id', unique=True)
+            self.gpt_tasks.create_index('created_at')
         except Exception as e:
             logger.warning(f"Index creation warning (may already exist): {e}")
 
@@ -568,6 +571,44 @@ class MongoStorage:
             'location_count': self.locations.estimated_document_count(),
             'worlds_summary': worlds_summary
         }
+
+    # ==================== GPT Task Methods ====================
+
+    def save_gpt_task(self, task_data: Dict[str, Any]) -> str:
+        """Save or update a GPT task (upsert)."""
+        task_id = task_data['task_id']
+        self.gpt_tasks.replace_one(
+            {'task_id': task_id},
+            task_data,
+            upsert=True
+        )
+        return task_id
+
+    def load_gpt_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+        """Load a GPT task by ID."""
+        doc = self.gpt_tasks.find_one({'task_id': task_id})
+        return self._clean_doc(doc)
+
+    def update_gpt_task(self, task_id: str, update_data: Dict[str, Any]) -> bool:
+        """Update specific fields of a GPT task."""
+        result = self.gpt_tasks.update_one(
+            {'task_id': task_id},
+            {'$set': update_data}
+        )
+        return result.modified_count > 0
+
+    def list_pending_gpt_tasks(self) -> List[Dict[str, Any]]:
+        """List tasks that are still pending or processing."""
+        return self._clean_docs(list(self.gpt_tasks.find(
+            {'status': {'$in': ['pending', 'processing']}}
+        )))
+
+    def cleanup_old_gpt_tasks(self, max_age_hours: int = 24) -> int:
+        """Delete GPT tasks older than max_age_hours."""
+        from datetime import datetime, timedelta
+        cutoff = (datetime.utcnow() - timedelta(hours=max_age_hours)).isoformat()
+        result = self.gpt_tasks.delete_many({'created_at': {'$lt': cutoff}})
+        return result.deleted_count
 
     def close(self) -> None:
         """Close the MongoDB connection."""

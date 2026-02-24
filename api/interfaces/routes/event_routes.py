@@ -85,7 +85,9 @@ def create_event_bp(storage, event_service, gpt_results, has_gpt):
         task_id = str(uuid.uuid4())
         gpt_results[task_id] = {
             'status': 'pending',
-            'total_stories': len(stories)
+            'total_stories': len(stories),
+            'task_type': 'extract_world_events',
+            'label': f'Trích xuất sự kiện: {world.get("name", "")}'
         }
 
         def on_success(result):
@@ -148,7 +150,11 @@ def create_event_bp(storage, event_service, gpt_results, has_gpt):
         force = request.args.get('force', 'false').lower() == 'true'
 
         task_id = str(uuid.uuid4())
-        gpt_results[task_id] = {'status': 'pending'}
+        gpt_results[task_id] = {
+            'status': 'pending',
+            'task_type': 'extract_story_events',
+            'label': f'Trích xuất sự kiện: {story.get("title", "")}'
+        }
 
         def on_success(result):
             gpt_results[task_id] = {

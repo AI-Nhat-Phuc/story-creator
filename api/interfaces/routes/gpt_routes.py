@@ -79,7 +79,12 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         gen_type = data.get('type', 'world')
 
         task_id = str(uuid.uuid4())
-        gpt_results[task_id] = {'status': 'pending'}
+        label = world_name if gen_type == 'world' else data.get('story_title', '')
+        gpt_results[task_id] = {
+            'status': 'pending',
+            'task_type': f'generate_{gen_type}_description',
+            'label': f'Tạo mô tả: {label}'
+        }
 
         def generate_description():
             try:
@@ -240,7 +245,12 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
             return jsonify({'error': 'Either world_description or story_description is required'}), 400
 
         task_id = str(uuid.uuid4())
-        gpt_results[task_id] = {'status': 'pending'}
+        label = story_title or 'thế giới'
+        gpt_results[task_id] = {
+            'status': 'pending',
+            'task_type': 'analyze_entities',
+            'label': f'Phân tích: {label}'
+        }
 
         def on_success(result):
             gpt_results[task_id] = {
@@ -373,7 +383,12 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
             return jsonify({'error': 'World not found'}), 404
 
         task_id = str(uuid.uuid4())
-        gpt_results[task_id] = {'status': 'pending', 'result': {'progress': 0, 'total': 0}}
+        gpt_results[task_id] = {
+            'status': 'pending',
+            'task_type': 'batch_analyze',
+            'label': f'Phân tích hàng loạt ({len(story_ids)} chuyện)',
+            'result': {'progress': 0, 'total': 0}
+        }
 
         def batch_analyze():
             try:
@@ -414,5 +429,38 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         thread.start()
 
         return jsonify({'task_id': task_id})
+
+    @gpt_bp.route('/api/gpt/tasks', methods=['GET'])
+    def gpt_list_tasks():
+        """List pending/processing GPT tasks.
+        ---
+        tags:
+          - GPT
+        parameters:
+          - in: query
+            name: task_ids
+            type: string
+            required: false
+            description: Comma-separated list of task IDs to check
+        responses:
+          200:
+            description: List of task statuses
+        """
+        task_ids_param = request.args.get('task_ids', '')
+        if task_ids_param:
+            # Check specific tasks (used by frontend on page load)
+            task_ids = [t.strip() for t in task_ids_param.split(',') if t.strip()]
+            tasks = []
+            for tid in task_ids:
+                task = gpt_results.get(tid)
+                if task:
+                    tasks.append(task)
+            return jsonify({'tasks': tasks})
+        else:
+            # List all pending/processing tasks from DB
+            if hasattr(storage, 'list_pending_gpt_tasks'):
+                tasks = storage.list_pending_gpt_tasks()
+                return jsonify({'tasks': tasks})
+            return jsonify({'tasks': []})
 
     return gpt_bp

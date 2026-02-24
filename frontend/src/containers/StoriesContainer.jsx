@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { worldsAPI, storiesAPI, gptAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StoriesView from '../components/stories/StoriesView'
+import { useGptTasks } from '../contexts/GptTaskContext'
 
 const initialFormState = {
   world_id: '',
@@ -12,6 +13,7 @@ const initialFormState = {
 }
 
 function StoriesContainer({ showToast }) {
+  const { registerTask } = useGptTasks()
   const [worlds, setWorlds] = useState([])
   const [stories, setStories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -172,26 +174,21 @@ function StoriesContainer({ showToast }) {
 
       const taskId = response.data.task_id
 
-      const checkResults = async () => {
-        const result = await gptAPI.getResults(taskId)
-        if (result.data.status === 'completed') {
-          const resultData = result.data.result
-          const generatedDesc = 'story_description' in resultData
-            ? resultData.story_description
-            : (typeof resultData === 'string' ? resultData : '')
-          setFormData(prev => ({ ...prev, description: generatedDesc }))
-          detectCharacters(generatedDesc, formData.world_id)
-          showToast('Đã tạo mô tả bằng GPT!', 'success')
+      registerTask(taskId, {
+        label: `Tạo mô tả: ${formData.title}`,
+        task_type: 'generate_story_description',
+        onComplete: (taskData) => {
+          if (taskData.status === 'completed') {
+            const resultData = taskData.result
+            const generatedDesc = 'story_description' in resultData
+              ? resultData.story_description
+              : (typeof resultData === 'string' ? resultData : '')
+            setFormData(prev => ({ ...prev, description: generatedDesc }))
+            detectCharacters(generatedDesc, formData.world_id)
+          }
           setGptGenerating(false)
-        } else if (result.data.status === 'error') {
-          showToast(result.data.result, 'error')
-          setGptGenerating(false)
-        } else {
-          setTimeout(checkResults, 500)
         }
-      }
-
-      checkResults()
+      })
     } catch (error) {
       showToast('Lỗi tạo mô tả GPT', 'error')
       setGptGenerating(false)
@@ -214,21 +211,16 @@ function StoriesContainer({ showToast }) {
 
       const taskId = response.data.task_id
 
-      const checkResults = async () => {
-        const result = await gptAPI.getResults(taskId)
-        if (result.data.status === 'completed') {
-          setAnalyzedEntities(result.data.result)
-          showToast('Phân tích GPT hoàn tất!', 'success')
+      registerTask(taskId, {
+        label: `Phân tích: ${formData.title}`,
+        task_type: 'analyze_entities',
+        onComplete: (taskData) => {
+          if (taskData.status === 'completed') {
+            setAnalyzedEntities(taskData.result)
+          }
           setGptAnalyzing(false)
-        } else if (result.data.status === 'error') {
-          showToast(result.data.result, 'error')
-          setGptAnalyzing(false)
-        } else {
-          setTimeout(checkResults, 500)
         }
-      }
-
-      checkResults()
+      })
     } catch (error) {
       showToast('Lỗi phân tích GPT', 'error')
       setGptAnalyzing(false)

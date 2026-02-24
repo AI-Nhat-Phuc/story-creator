@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from './contexts/AuthContext'
+import { GptTaskProvider } from './contexts/GptTaskContext'
 import MainLayout from './layouts/MainLayout'
 import Toast from './components/Toast'
 import LoadingSpinner from './components/LoadingSpinner'
@@ -29,21 +30,23 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route element={<MainLayout />}>
-              <Route path="/" element={<Dashboard showToast={showToast} />} />
-              <Route path="/worlds" element={<WorldsPage showToast={showToast} />} />
-              <Route path="/worlds/:worldId" element={<WorldDetailPage showToast={showToast} />} />
-              <Route path="/stories" element={<StoriesPage showToast={showToast} />} />
-              <Route path="/stories/:storyId" element={<StoryDetailPage showToast={showToast} />} />
-              <Route path="/admin" element={<AdminPanel showToast={showToast} />} />
-            </Route>
-          </Routes>
-        </Suspense>
-        {toast && <Toast message={toast.message} type={toast.type} />}
+        <GptTaskProvider showToast={showToast}>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<Dashboard showToast={showToast} />} />
+                <Route path="/worlds" element={<WorldsPage showToast={showToast} />} />
+                <Route path="/worlds/:worldId" element={<WorldDetailPage showToast={showToast} />} />
+                <Route path="/stories" element={<StoriesPage showToast={showToast} />} />
+                <Route path="/stories/:storyId" element={<StoryDetailPage showToast={showToast} />} />
+                <Route path="/admin" element={<AdminPanel showToast={showToast} />} />
+              </Route>
+            </Routes>
+          </Suspense>
+          {toast && <Toast message={toast.message} type={toast.type} />}
+        </GptTaskProvider>
       </AuthProvider>
     </GoogleOAuthProvider>
   )

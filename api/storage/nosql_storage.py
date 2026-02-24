@@ -64,6 +64,7 @@ class NoSQLStorage:
         self.events = self.db.table('events')
         self.event_analysis_cache = self.db.table('event_analysis_cache')
         self.users = self.db.table('users')
+        self.gpt_tasks = self.db.table('gpt_tasks')
 
         logger.info(f"NoSQLStorage initialized: {db_path}")
 
@@ -584,6 +585,52 @@ class NoSQLStorage:
             "events": len(self.events),
             "event_analysis_cache": len(self.event_analysis_cache)
         }
+
+    # ===== GPT Task methods =====
+
+    def save_gpt_task(self, task_data: Dict[str, Any]) -> str:
+        """Save or update a GPT task."""
+        task_id = task_data['task_id']
+        TaskQuery = Query()
+        existing = self.gpt_tasks.search(TaskQuery.task_id == task_id)
+        if existing:
+            self.gpt_tasks.update(task_data, TaskQuery.task_id == task_id)
+        else:
+            self.gpt_tasks.insert(task_data)
+        return task_id
+
+    def load_gpt_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+        """Load a GPT task by ID."""
+        TaskQuery = Query()
+        results = self._safe_read(self.gpt_tasks,
+                                  lambda: self.gpt_tasks.search(TaskQuery.task_id == task_id))
+        return results[0] if results else None
+
+    def update_gpt_task(self, task_id: str, update_data: Dict[str, Any]) -> bool:
+        """Update specific fields of a GPT task."""
+        TaskQuery = Query()
+        existing = self.gpt_tasks.search(TaskQuery.task_id == task_id)
+        if not existing:
+            return False
+        merged = {**existing[0], **update_data}
+        self.gpt_tasks.update(merged, TaskQuery.task_id == task_id)
+        return True
+
+    def list_pending_gpt_tasks(self) -> List[Dict[str, Any]]:
+        """List tasks that are still pending or processing."""
+        TaskQuery = Query()
+        return self._safe_read(self.gpt_tasks,
+                               lambda: self.gpt_tasks.search(
+                                   (TaskQuery.status == 'pending') | (TaskQuery.status == 'processing')
+                               ))
+
+    def cleanup_old_gpt_tasks(self, max_age_hours: int = 24) -> int:
+        """Delete GPT tasks older than max_age_hours."""
+        from datetime import datetime, timedelta
+        cutoff = (datetime.utcnow() - timedelta(hours=max_age_hours)).isoformat()
+        TaskQuery = Query()
+        removed = self.gpt_tasks.remove(TaskQuery.created_at < cutoff)
+        return len(removed) if removed else 0
 
     # ===== Event methods =====
 

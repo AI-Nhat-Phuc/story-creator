@@ -3,10 +3,12 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { storiesAPI, worldsAPI, gptAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StoryDetailView from '../components/storyDetail/StoryDetailView'
+import { useGptTasks } from '../contexts/GptTaskContext'
 
 function StoryDetailContainer({ showToast }) {
   const { storyId } = useParams()
   const navigate = useNavigate()
+  const { registerTask } = useGptTasks()
   const [searchParams] = useSearchParams()
   const highlightEventId = searchParams.get('event')
   const highlightPosition = parseInt(searchParams.get('position') || '-1', 10)
@@ -163,21 +165,16 @@ function StoryDetailContainer({ showToast }) {
 
       const taskId = response.data.task_id
 
-      const checkResults = async () => {
-        const result = await gptAPI.getResults(taskId)
-        if (result.data.status === 'completed') {
-          setAnalyzedEntities(result.data.result)
-          showToast('Phân tích GPT hoàn tất!', 'success')
+      registerTask(taskId, {
+        label: `Phân tích: ${story.title}`,
+        task_type: 'analyze_entities',
+        onComplete: (taskData) => {
+          if (taskData.status === 'completed') {
+            setAnalyzedEntities(taskData.result)
+          }
           setGptAnalyzing(false)
-        } else if (result.data.status === 'error') {
-          showToast(result.data.result, 'error')
-          setGptAnalyzing(false)
-        } else {
-          setTimeout(checkResults, 500)
         }
-      }
-
-      checkResults()
+      })
     } catch (error) {
       showToast('Lỗi phân tích GPT', 'error')
       setGptAnalyzing(false)
@@ -236,21 +233,16 @@ function StoryDetailContainer({ showToast }) {
 
       const taskId = response.data.task_id
 
-      const checkResults = async () => {
-        const result = await gptAPI.getResults(taskId)
-        if (result.data.status === 'completed') {
-          setAnalyzedEntities(result.data.result)
-          showToast('Phân tích lại hoàn tất!', 'success')
+      registerTask(taskId, {
+        label: `Phân tích lại: ${story.title}`,
+        task_type: 'analyze_entities',
+        onComplete: (taskData) => {
+          if (taskData.status === 'completed') {
+            setAnalyzedEntities(taskData.result)
+          }
           setGptAnalyzing(false)
-        } else if (result.data.status === 'error') {
-          showToast(result.data.result, 'error')
-          setGptAnalyzing(false)
-        } else {
-          setTimeout(checkResults, 500)
         }
-      }
-
-      checkResults()
+      })
     } catch (error) {
       showToast('Lỗi phân tích lại: ' + (error.response?.data?.error || error.message), 'error')
       setGptAnalyzing(false)

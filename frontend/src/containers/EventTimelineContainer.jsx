@@ -6,6 +6,7 @@ import TimelineCanvas from '../components/timeline/TimelineCanvas'
 import GptButton from '../components/GptButton'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { BoltIcon } from '@heroicons/react/24/outline'
+import { useGptTasks } from '../contexts/GptTaskContext'
 
 /**
  * EventTimelineContainer - Data fetching and state management
@@ -13,6 +14,7 @@ import { BoltIcon } from '@heroicons/react/24/outline'
  */
 function EventTimelineContainer({ worldId, direction, showToast }) {
   const navigate = useNavigate()
+  const { registerTask } = useGptTasks()
   const [timeline, setTimeline] = useState(null)
   const [loading, setLoading] = useState(false)
   const [extracting, setExtracting] = useState(false)
@@ -53,46 +55,19 @@ function EventTimelineContainer({ worldId, direction, showToast }) {
 
       setExtractProgress('Đang phân tích câu chuyện...')
 
-      // Poll for results
-      const pollInterval = setInterval(async () => {
-        try {
-          const result = await gptAPI.getResults(taskId)
-          const data = result.data
-
-          if (data.status === 'completed') {
-            clearInterval(pollInterval)
-            setExtracting(false)
-            setExtractProgress('')
-            const totalEvents = data.result?.total_events || 0
+      registerTask(taskId, {
+        label: 'Trích xuất sự kiện timeline',
+        task_type: 'extract_events',
+        onComplete: (taskData) => {
+          setExtracting(false)
+          setExtractProgress('')
+          if (taskData.status === 'completed') {
+            const totalEvents = taskData.result?.total_events || 0
             showToast?.(`Đã trích xuất ${totalEvents} sự kiện`, 'success')
-            loadTimeline() // Reload timeline
-          } else if (data.status === 'error') {
-            clearInterval(pollInterval)
-            setExtracting(false)
-            setExtractProgress('')
-            showToast?.(`Lỗi: ${data.result}`, 'error')
-          } else {
-            // Still pending - combined analysis in progress
-            setExtractProgress('Đang phân tích tất cả câu chuyện...')
+            loadTimeline()
           }
-        } catch (err) {
-          clearInterval(pollInterval)
-          setExtracting(false)
-          setExtractProgress('')
-          showToast?.('Lỗi khi kiểm tra kết quả', 'error')
         }
-      }, 2000)
-
-      // Safety timeout: stop polling after 5 minutes
-      setTimeout(() => {
-        clearInterval(pollInterval)
-        if (extracting) {
-          setExtracting(false)
-          setExtractProgress('')
-          showToast?.('Quá thời gian chờ, vui lòng thử lại', 'warning')
-        }
-      }, 300000)
-
+      })
     } catch (error) {
       setExtracting(false)
       setExtractProgress('')
@@ -103,7 +78,7 @@ function EventTimelineContainer({ worldId, direction, showToast }) {
         showToast?.('Lỗi khi trích xuất sự kiện', 'error')
       }
     }
-  }, [worldId, showToast, loadTimeline, extracting])
+  }, [worldId, showToast, loadTimeline, registerTask])
 
   // Navigate to story when event is clicked
   const handleEventClick = useCallback((event) => {

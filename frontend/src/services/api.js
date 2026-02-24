@@ -53,6 +53,7 @@ export const gptAPI = {
   generateDescription: (data) => api.post('/gpt/generate-description', data),
   getResults: (taskId) => api.get(`/gpt/results/${taskId}`),
   batchAnalyzeStories: (data) => api.post('/gpt/batch-analyze-stories', data),
+  getTasks: (taskIds) => api.get('/gpt/tasks', { params: { task_ids: taskIds.join(',') } }),
 }
 
 // Stats API

@@ -4,6 +4,7 @@ import { worldsAPI, storiesAPI, gptAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import WorldDetailView from '../components/worldDetail/WorldDetailView'
 import { useAuth } from '../contexts/AuthContext'
+import { useGptTasks } from '../contexts/GptTaskContext'
 
 const initialStoryForm = {
   title: '',
@@ -15,6 +16,7 @@ const initialStoryForm = {
 function WorldDetailContainer({ showToast }) {
   const { worldId } = useParams()
   const { user } = useAuth()
+  const { registerTask } = useGptTasks()
   const [world, setWorld] = useState(null)
   const [stories, setStories] = useState([])
   const [characters, setCharacters] = useState([])
@@ -148,43 +150,27 @@ function WorldDetailContainer({ showToast }) {
       })
       const taskId = response.data.task_id
 
-      const pollResults = async () => {
-        try {
-          const result = await gptAPI.getResults(taskId)
-          const data = result.data
-
-          if (data.status === 'completed') {
-            // Merge with previous results if any
+      registerTask(taskId, {
+        label: `Phân tích batch ${storyIds.length} truyện`,
+        task_type: 'batch_analyze',
+        onComplete: (taskData) => {
+          if (taskData.status === 'completed') {
             setBatchResult(prev => {
-              if (!prev) return data.result
+              if (!prev) return taskData.result
               const prevStories = prev.analyzed_stories || []
-              const newStories = data.result.analyzed_stories || []
+              const newStories = taskData.result.analyzed_stories || []
               return {
-                ...data.result,
+                ...taskData.result,
                 analyzed_stories: [...prevStories, ...newStories],
-                total_characters_found: (prev.total_characters_found || 0) + (data.result.total_characters_found || 0),
-                total_locations_found: (prev.total_locations_found || 0) + (data.result.total_locations_found || 0),
+                total_characters_found: (prev.total_characters_found || 0) + (taskData.result.total_characters_found || 0),
+                total_locations_found: (prev.total_locations_found || 0) + (taskData.result.total_locations_found || 0),
               }
             })
-            setBatchAnalyzing(false)
-            showToast(data.result.message || 'Phân tích hoàn tất!', 'success')
-          } else if (data.status === 'error') {
-            showToast('Lỗi phân tích: ' + data.result, 'error')
-            setBatchAnalyzing(false)
-          } else {
-            // Still processing - update progress
-            if (data.result) {
-              setBatchProgress(data.result)
-            }
-            setTimeout(pollResults, 1000)
+            showToast(taskData.result.message || 'Phân tích hoàn tất!', 'success')
           }
-        } catch (err) {
-          showToast('Lỗi kiểm tra kết quả', 'error')
           setBatchAnalyzing(false)
         }
-      }
-
-      pollResults()
+      })
     } catch (error) {
       showToast('Lỗi phân tích batch: ' + (error.response?.data?.error || error.message), 'error')
       setBatchAnalyzing(false)
@@ -302,25 +288,20 @@ function WorldDetailContainer({ showToast }) {
 
       const taskId = response.data.task_id
 
-      const checkResults = async () => {
-        const result = await gptAPI.getResults(taskId)
-        if (result.data.status === 'completed') {
-          const resultData = result.data.result
-          const generatedDesc = 'story_description' in resultData
-            ? resultData.story_description
-            : (typeof resultData === 'string' ? resultData : '')
-          setStoryForm(prev => ({ ...prev, description: generatedDesc }))
-          showToast('Đã tạo mô tả bằng GPT!', 'success')
+      registerTask(taskId, {
+        label: `Tạo mô tả: ${storyForm.title}`,
+        task_type: 'generate_story_description',
+        onComplete: (taskData) => {
+          if (taskData.status === 'completed') {
+            const resultData = taskData.result
+            const generatedDesc = 'story_description' in resultData
+              ? resultData.story_description
+              : (typeof resultData === 'string' ? resultData : '')
+            setStoryForm(prev => ({ ...prev, description: generatedDesc }))
+          }
           setGptGenerating(false)
-        } else if (result.data.status === 'error') {
-          showToast(result.data.result, 'error')
-          setGptGenerating(false)
-        } else {
-          setTimeout(checkResults, 500)
         }
-      }
-
-      checkResults()
+      })
     } catch (error) {
       showToast('Lỗi tạo mô tả GPT', 'error')
       setGptGenerating(false)
@@ -343,21 +324,16 @@ function WorldDetailContainer({ showToast }) {
 
       const taskId = response.data.task_id
 
-      const checkResults = async () => {
-        const result = await gptAPI.getResults(taskId)
-        if (result.data.status === 'completed') {
-          setAnalyzedEntities(result.data.result)
-          showToast('Phân tích GPT hoàn tất!', 'success')
+      registerTask(taskId, {
+        label: `Phân tích: ${storyForm.title}`,
+        task_type: 'analyze_entities',
+        onComplete: (taskData) => {
+          if (taskData.status === 'completed') {
+            setAnalyzedEntities(taskData.result)
+          }
           setGptAnalyzing(false)
-        } else if (result.data.status === 'error') {
-          showToast(result.data.result, 'error')
-          setGptAnalyzing(false)
-        } else {
-          setTimeout(checkResults, 500)
         }
-      }
-
-      checkResults()
+      })
     } catch (error) {
       showToast('Lỗi phân tích GPT', 'error')
       setGptAnalyzing(false)
