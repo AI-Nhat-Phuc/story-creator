@@ -262,7 +262,10 @@ function Dashboard({ showToast }) {
 
       {/* Event Timeline Section - Only show if there are worlds */}
       {stats?.total_worlds > 0 && (
-        <EventTimelineSection showToast={showToast} />
+        <EventTimelineSection
+          showToast={showToast}
+          worldsList={stats?.worlds_summary || []}
+        />
       )}
     </div>
   )

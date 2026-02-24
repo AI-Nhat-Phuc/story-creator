@@ -62,45 +62,40 @@ def create_stats_bp(storage, has_gpt):
         """
         user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
 
-        # Get basic stats (already filtered by permissions)
-        all_worlds = storage.list_worlds(user_id=user_id)
-        all_stories = storage.list_stories(user_id=user_id)
+        # Use efficient count methods instead of loading full documents
+        worlds_counts = storage.count_visible('worlds', user_id=user_id)
+        stories_counts = storage.count_visible('stories', user_id=user_id)
 
+        # Get entity/location counts (lightweight)
         stats_data = storage.get_stats()
 
+        # Get minimal worlds list for dashboard dropdown (avoids extra API call)
+        worlds_summary = storage.list_worlds_summary(user_id=user_id)
+
         result = {
-            'total_worlds': len(all_worlds),
-            'total_stories': len(all_stories),
+            'total_worlds': worlds_counts['total'],
+            'total_stories': stories_counts['total'],
             'total_entities': stats_data.get('entities', 0),
             'total_locations': stats_data.get('locations', 0),
             'has_gpt': has_gpt,
-            'storage_type': type(storage).__name__
+            'storage_type': type(storage).__name__,
+            'worlds_summary': worlds_summary
         }
 
         # Add breakdown for authenticated users
         if user_id:
             user_data = storage.load_user(user_id)
 
-            # Worlds breakdown
-            worlds_private = [w for w in all_worlds if w.get('visibility') == 'private' and w.get('owner_id') == user_id]
-            worlds_shared = [w for w in all_worlds if w.get('visibility') == 'private' and w.get('owner_id') != user_id and user_id in w.get('shared_with', [])]
-            worlds_public = [w for w in all_worlds if w.get('visibility') == 'public']
-
-            # Stories breakdown
-            stories_private = [s for s in all_stories if s.get('visibility') == 'private' and s.get('owner_id') == user_id]
-            stories_shared = [s for s in all_stories if s.get('visibility') == 'private' and s.get('owner_id') != user_id and user_id in s.get('shared_with', [])]
-            stories_public = [s for s in all_stories if s.get('visibility') == 'public']
-
             result['breakdown'] = {
                 'worlds': {
-                    'private': len(worlds_private),
-                    'shared': len(worlds_shared),
-                    'public': len(worlds_public)
+                    'private': worlds_counts.get('private', 0),
+                    'shared': worlds_counts.get('shared', 0),
+                    'public': worlds_counts['public']
                 },
                 'stories': {
-                    'private': len(stories_private),
-                    'shared': len(stories_shared),
-                    'public': len(stories_public)
+                    'private': stories_counts.get('private', 0),
+                    'shared': stories_counts.get('shared', 0),
+                    'public': stories_counts['public']
                 }
             }
 
@@ -120,10 +115,10 @@ def create_stats_bp(storage, has_gpt):
             # Anonymous user - only public data
             result['breakdown'] = {
                 'worlds': {
-                    'public': len(all_worlds)
+                    'public': worlds_counts['public']
                 },
                 'stories': {
-                    'public': len(all_stories)
+                    'public': stories_counts['public']
                 }
             }
 

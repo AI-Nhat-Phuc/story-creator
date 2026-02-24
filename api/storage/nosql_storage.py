@@ -175,6 +175,58 @@ class NoSQLStorage:
         # Filter by permissions (public + owned + shared)
         return PermissionService.filter_viewable(user_id, all_worlds)
 
+    def list_worlds_summary(self, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        List worlds with minimal fields for dropdowns/stats.
+
+        Only returns world_id, name, created_at, visibility, owner_id, shared_with, world_type.
+        Uses permission filtering.
+
+        Args:
+            user_id: Current user ID (None for anonymous)
+
+        Returns:
+            List of minimal world dicts
+        """
+        SUMMARY_KEYS = ('world_id', 'name', 'created_at', 'visibility', 'owner_id', 'shared_with', 'world_type')
+        all_worlds = self._safe_read(self.worlds, lambda: self.worlds.all())
+
+        if user_id is None:
+            filtered = [w for w in all_worlds if w.get('visibility') == 'public']
+        else:
+            filtered = PermissionService.filter_viewable(user_id, all_worlds)
+
+        return [{k: w.get(k) for k in SUMMARY_KEYS} for w in filtered]
+
+    def count_visible(self, collection_name: str, user_id: Optional[str] = None) -> dict:
+        """
+        Count documents by visibility category.
+
+        Args:
+            collection_name: 'worlds' or 'stories'
+            user_id: Current user ID (None for anonymous)
+
+        Returns:
+            dict with counts: {total, public, private?, shared?}
+        """
+        table = getattr(self, collection_name)
+        all_items = self._safe_read(table, lambda: table.all())
+
+        public = [i for i in all_items if i.get('visibility') == 'public']
+
+        if user_id is None:
+            return {'total': len(public), 'public': len(public)}
+
+        private = [i for i in all_items if i.get('visibility') == 'private' and i.get('owner_id') == user_id]
+        shared = [i for i in all_items if i.get('visibility') == 'private' and i.get('owner_id') != user_id and user_id in i.get('shared_with', [])]
+
+        return {
+            'total': len(public) + len(private) + len(shared),
+            'public': len(public),
+            'private': len(private),
+            'shared': len(shared)
+        }
+
     def save_story(self, story_data: Dict[str, Any]) -> str:
         """
         Save a story to the database.

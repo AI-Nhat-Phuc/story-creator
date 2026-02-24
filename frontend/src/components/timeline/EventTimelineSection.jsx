@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { worldsAPI, eventsAPI, gptAPI } from '../../services/api'
+import { useState, useEffect, useRef } from 'react'
 import EventTimelineContainer from '../../containers/EventTimelineContainer'
 
 /**
@@ -9,8 +8,9 @@ import EventTimelineContainer from '../../containers/EventTimelineContainer'
  * - World dropdown selector
  * - Lazy loads when scrolled into view
  * - Persists preferences in localStorage
+ * - Receives worlds list from parent (avoids extra API call)
  */
-function EventTimelineSection({ showToast }) {
+function EventTimelineSection({ showToast, worldsList = [] }) {
   const [expanded, setExpanded] = useState(() => {
     try {
       const prefs = JSON.parse(localStorage.getItem('timelinePrefs') || '{}')
@@ -18,7 +18,7 @@ function EventTimelineSection({ showToast }) {
     } catch { return false }
   })
 
-  const [worlds, setWorlds] = useState([])
+  const [worlds, setWorlds] = useState(worldsList)
   const [selectedWorldId, setSelectedWorldId] = useState(() => {
     return localStorage.getItem('lastViewedWorldId') || ''
   })
@@ -53,11 +53,10 @@ function EventTimelineSection({ showToast }) {
     return () => observer.disconnect()
   }, [])
 
-  // Fetch worlds list when visible
+  // Sync worlds from props
   useEffect(() => {
-    if (!isVisible) return
-    loadWorlds()
-  }, [isVisible])
+    setWorlds(worldsList)
+  }, [worldsList])
 
   // Auto-select world
   useEffect(() => {
@@ -80,15 +79,6 @@ function EventTimelineSection({ showToast }) {
       localStorage.setItem('lastViewedWorldId', selectedWorldId)
     }
   }, [selectedWorldId])
-
-  const loadWorlds = async () => {
-    try {
-      const response = await worldsAPI.getAll()
-      setWorlds(response.data || [])
-    } catch (error) {
-      console.error('Error loading worlds:', error)
-    }
-  }
 
   const toggleDirection = () => {
     setDirection(prev => prev === 'horizontal' ? 'vertical' : 'horizontal')

@@ -142,16 +142,78 @@ class MongoStorage:
         doc = self.worlds.find_one({'world_id': world_id})
         return self._clean_doc(doc)
 
+    def _build_permission_query(self, user_id: Optional[str] = None) -> dict:
+        """Build MongoDB query filter for permission-based access.
+
+        Args:
+            user_id: Current user ID (None for anonymous)
+
+        Returns:
+            MongoDB query dict
+        """
+        if user_id is None:
+            return {'visibility': 'public'}
+        return {'$or': [
+            {'visibility': 'public'},
+            {'owner_id': user_id},
+            {'shared_with': user_id}
+        ]}
+
     def list_worlds(self, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """List all worlds visible to the user."""
-        from services.permission_service import PermissionService
+        query = self._build_permission_query(user_id)
+        return self._clean_docs(list(self.worlds.find(query)))
 
-        all_worlds = self._clean_docs(list(self.worlds.find()))
+    def list_worlds_summary(self, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List worlds with minimal fields for dropdowns/stats.
+
+        Only fetches world_id, name, created_at, visibility, owner_id, shared_with.
+        Uses query-level permission filtering for efficiency.
+
+        Args:
+            user_id: Current user ID (None for anonymous)
+
+        Returns:
+            List of minimal world dicts
+        """
+        query = self._build_permission_query(user_id)
+        projection = {
+            '_id': 0, 'world_id': 1, 'name': 1, 'created_at': 1,
+            'visibility': 1, 'owner_id': 1, 'shared_with': 1, 'world_type': 1
+        }
+        return list(self.worlds.find(query, projection))
+
+    def count_visible(self, collection_name: str, user_id: Optional[str] = None) -> dict:
+        """Count documents by visibility category.
+
+        Returns dict with total, and optionally private/shared/public breakdown.
+
+        Args:
+            collection_name: 'worlds' or 'stories'
+            user_id: Current user ID (None for anonymous)
+
+        Returns:
+            dict with counts: {total, public, private?, shared?}
+        """
+        coll = getattr(self, collection_name)
+        public_count = coll.count_documents({'visibility': 'public'})
 
         if user_id is None:
-            return [w for w in all_worlds if w.get('visibility') == 'public']
+            return {'total': public_count, 'public': public_count}
 
-        return PermissionService.filter_viewable(user_id, all_worlds)
+        private_count = coll.count_documents({'visibility': 'private', 'owner_id': user_id})
+        shared_count = coll.count_documents({
+            'visibility': 'private',
+            'owner_id': {'$ne': user_id},
+            'shared_with': user_id
+        })
+
+        return {
+            'total': public_count + private_count + shared_count,
+            'public': public_count,
+            'private': private_count,
+            'shared': shared_count
+        }
 
     def delete_world(self, world_id: str) -> bool:
         """Delete a world."""
@@ -177,15 +239,12 @@ class MongoStorage:
 
     def list_stories(self, world_id: Optional[str] = None, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """List stories, optionally filtered by world."""
-        from services.permission_service import PermissionService
-
-        query = {'world_id': world_id} if world_id else {}
-        stories = self._clean_docs(list(self.stories.find(query)))
-
-        if user_id is None:
-            return [s for s in stories if s.get('visibility') == 'public']
-
-        return PermissionService.filter_viewable(user_id, stories)
+        perm_query = self._build_permission_query(user_id)
+        if world_id:
+            query = {'$and': [{'world_id': world_id}, perm_query]}
+        else:
+            query = perm_query
+        return self._clean_docs(list(self.stories.find(query)))
 
     def delete_story(self, story_id: str) -> bool:
         """Delete a story."""
