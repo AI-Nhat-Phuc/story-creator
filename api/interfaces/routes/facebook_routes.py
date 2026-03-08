@@ -1,0 +1,410 @@
+"""Facebook API routes for the Story Creator backend."""
+
+from flask import Blueprint, request, jsonify
+from interfaces.auth_middleware import token_required
+import uuid
+import threading
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def _extract_fb_error(result):
+    """Extract error message from a Facebook Graph API error response."""
+    err = result.get('error', '')
+    if isinstance(err, dict):
+        return err.get('message', str(err))
+    return str(err)
+
+
+def create_facebook_bp(facebook_service, gpt_results, has_gpt):
+    """Create and configure the Facebook blueprint.
+
+    Args:
+        facebook_service: FacebookService instance
+        gpt_results: Shared TaskStore for async GPT results
+        has_gpt: Boolean indicating if GPT is available
+
+    Returns:
+        Blueprint: Configured Flask blueprint for Facebook routes
+    """
+    fb_bp = Blueprint('facebook', __name__)
+
+    # ------------------------------------------------------------------
+    # Token management
+    # ------------------------------------------------------------------
+
+    @fb_bp.route('/api/facebook/token/exchange', methods=['POST'])
+    @token_required
+    def exchange_token():
+        """Exchange a short-lived Facebook token for a long-lived one.
+        ---
+        tags:
+          - Facebook
+        parameters:
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              properties:
+                short_token:
+                  type: string
+                  description: Short-lived access token from Facebook Login
+        responses:
+          200:
+            description: Long-lived token returned
+          400:
+            description: Missing token
+        """
+        data = request.json or {}
+        short_token = data.get('short_token', '').strip()
+        if not short_token:
+            return jsonify({'error': 'short_token is required'}), 400
+
+        result = facebook_service.exchange_short_token(short_token)
+        if 'error' in result:
+            return jsonify({'error': _extract_fb_error(result)}), 400
+        return jsonify(result)
+
+    @fb_bp.route('/api/facebook/pages', methods=['GET'])
+    @token_required
+    def list_pages():
+        """Get pages managed by the authenticated Facebook user.
+        ---
+        tags:
+          - Facebook
+        parameters:
+          - name: fb_token
+            in: query
+            type: string
+            required: true
+            description: Facebook user access token
+        responses:
+          200:
+            description: List of pages
+          400:
+            description: Missing token
+        """
+        fb_token = request.args.get('fb_token', '').strip()
+        if not fb_token:
+            return jsonify({'error': 'fb_token query parameter is required'}), 400
+
+        result = facebook_service.get_page_tokens(fb_token)
+        if 'error' in result:
+            return jsonify({'error': _extract_fb_error(result)}), 400
+        return jsonify(result)
+
+    # ------------------------------------------------------------------
+    # User info
+    # ------------------------------------------------------------------
+
+    @fb_bp.route('/api/facebook/me', methods=['GET'])
+    @token_required
+    def get_me():
+        """Get info about the Facebook token owner.
+        ---
+        tags:
+          - Facebook
+        parameters:
+          - name: fb_token
+            in: query
+            type: string
+            required: true
+        responses:
+          200:
+            description: User info
+        """
+        fb_token = request.args.get('fb_token', '').strip()
+        if not fb_token:
+            return jsonify({'error': 'fb_token is required'}), 400
+
+        result = facebook_service.get_user_info(fb_token)
+        if 'error' in result:
+            return jsonify({'error': _extract_fb_error(result)}), 400
+        return jsonify(result)
+
+    # ------------------------------------------------------------------
+    # Posts
+    # ------------------------------------------------------------------
+
+    @fb_bp.route('/api/facebook/pages/<page_id>/posts', methods=['GET'])
+    @token_required
+    def get_posts(page_id):
+        """Get posts from a Facebook page.
+        ---
+        tags:
+          - Facebook
+        parameters:
+          - name: page_id
+            in: path
+            type: string
+            required: true
+          - name: fb_token
+            in: query
+            type: string
+            required: true
+          - name: limit
+            in: query
+            type: integer
+            default: 10
+        responses:
+          200:
+            description: List of posts
+        """
+        fb_token = request.args.get('fb_token', '').strip()
+        if not fb_token:
+            return jsonify({'error': 'fb_token is required'}), 400
+
+        limit = request.args.get('limit', 10, type=int)
+        result = facebook_service.get_page_posts(page_id, fb_token, limit=limit)
+        if 'error' in result:
+            return jsonify({'error': _extract_fb_error(result)}), 400
+        return jsonify(result)
+
+    @fb_bp.route('/api/facebook/posts/<post_id>', methods=['GET'])
+    @token_required
+    def get_post(post_id):
+        """Get details of a single Facebook post.
+        ---
+        tags:
+          - Facebook
+        parameters:
+          - name: post_id
+            in: path
+            type: string
+            required: true
+          - name: fb_token
+            in: query
+            type: string
+            required: true
+        responses:
+          200:
+            description: Post details with engagement
+        """
+        fb_token = request.args.get('fb_token', '').strip()
+        if not fb_token:
+            return jsonify({'error': 'fb_token is required'}), 400
+
+        result = facebook_service.get_post_detail(post_id, fb_token)
+        if 'error' in result:
+            return jsonify({'error': _extract_fb_error(result)}), 400
+        return jsonify(result)
+
+    @fb_bp.route('/api/facebook/posts/<post_id>/comments', methods=['GET'])
+    @token_required
+    def get_comments(post_id):
+        """Get comments on a Facebook post.
+        ---
+        tags:
+          - Facebook
+        parameters:
+          - name: post_id
+            in: path
+            type: string
+            required: true
+          - name: fb_token
+            in: query
+            type: string
+            required: true
+          - name: limit
+            in: query
+            type: integer
+            default: 25
+        responses:
+          200:
+            description: List of comments
+        """
+        fb_token = request.args.get('fb_token', '').strip()
+        if not fb_token:
+            return jsonify({'error': 'fb_token is required'}), 400
+
+        limit = request.args.get('limit', 25, type=int)
+        result = facebook_service.get_post_comments(post_id, fb_token, limit=limit)
+        if 'error' in result:
+            return jsonify({'error': _extract_fb_error(result)}), 400
+        return jsonify(result)
+
+    # ------------------------------------------------------------------
+    # Publish
+    # ------------------------------------------------------------------
+
+    @fb_bp.route('/api/facebook/pages/<page_id>/posts', methods=['POST'])
+    @token_required
+    def create_post(page_id):
+        """Create a new post on a Facebook page.
+        ---
+        tags:
+          - Facebook
+        parameters:
+          - name: page_id
+            in: path
+            type: string
+            required: true
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              properties:
+                fb_token:
+                  type: string
+                  description: Page access token with publish permissions
+                message:
+                  type: string
+                link:
+                  type: string
+                image_url:
+                  type: string
+        responses:
+          200:
+            description: Created post id
+          400:
+            description: Validation error
+        """
+        data = request.json or {}
+        fb_token = data.get('fb_token', '').strip()
+        if not fb_token:
+            return jsonify({'error': 'fb_token is required'}), 400
+
+        message = data.get('message', '').strip()
+        link = data.get('link', '').strip()
+        image_url = data.get('image_url', '').strip()
+
+        if not message and not link and not image_url:
+            return jsonify({'error': 'At least message, link, or image_url is required'}), 400
+
+        result = facebook_service.create_post(
+            page_id, fb_token,
+            message=message, link=link, image_url=image_url
+        )
+        if 'error' in result:
+            return jsonify({'error': _extract_fb_error(result)}), 400
+        return jsonify(result)
+
+    # ------------------------------------------------------------------
+    # Search
+    # ------------------------------------------------------------------
+
+    @fb_bp.route('/api/facebook/pages/<page_id>/search', methods=['GET'])
+    @token_required
+    def search_posts(page_id):
+        """Search posts on a page by keyword.
+        ---
+        tags:
+          - Facebook
+        parameters:
+          - name: page_id
+            in: path
+            type: string
+            required: true
+          - name: fb_token
+            in: query
+            type: string
+            required: true
+          - name: keyword
+            in: query
+            type: string
+            required: true
+          - name: limit
+            in: query
+            type: integer
+            default: 25
+        responses:
+          200:
+            description: Matching posts
+          400:
+            description: Missing parameters
+        """
+        fb_token = request.args.get('fb_token', '').strip()
+        keyword = request.args.get('keyword', '').strip()
+        if not fb_token:
+            return jsonify({'error': 'fb_token is required'}), 400
+        if not keyword:
+            return jsonify({'error': 'keyword is required'}), 400
+
+        limit = request.args.get('limit', 25, type=int)
+        result = facebook_service.search_page_posts(page_id, fb_token, keyword, limit=limit)
+        if 'error' in result:
+            return jsonify({'error': _extract_fb_error(result)}), 400
+        return jsonify(result)
+
+    # ------------------------------------------------------------------
+    # GPT content generation
+    # ------------------------------------------------------------------
+
+    @fb_bp.route('/api/facebook/generate-content', methods=['POST'])
+    @token_required
+    def generate_content():
+        """Generate Facebook post content using GPT.
+        ---
+        tags:
+          - Facebook
+        parameters:
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              required:
+                - topic
+              properties:
+                topic:
+                  type: string
+                  example: "Khuyến mãi mùa hè"
+                requirements:
+                  type: string
+                  example: "Nhấn mạnh giảm giá 50%"
+                tone:
+                  type: string
+                  enum: [professional, casual, creative, humorous]
+                  default: professional
+        responses:
+          200:
+            description: Task created (async)
+          400:
+            description: Missing topic
+          503:
+            description: GPT not available
+        """
+        if not has_gpt:
+            return jsonify({'error': 'GPT not available'}), 503
+
+        data = request.json or {}
+        topic = data.get('topic', '').strip()
+        if not topic:
+            return jsonify({'error': 'topic is required'}), 400
+
+        requirements = data.get('requirements', '')
+        tone = data.get('tone', 'professional')
+
+        task_id = str(uuid.uuid4())
+        gpt_results.set(task_id, {'status': 'pending'})
+
+        def background_generate():
+            try:
+                content = facebook_service.generate_post_content(
+                    topic, requirements=requirements, tone=tone
+                )
+                if content:
+                    gpt_results.set(task_id, {
+                        'status': 'completed',
+                        'result': {'content': content}
+                    })
+                else:
+                    gpt_results.set(task_id, {
+                        'status': 'error',
+                        'result': 'Failed to generate content'
+                    })
+            except Exception as e:
+                logger.error(f"GPT generate content error: {e}")
+                gpt_results.set(task_id, {
+                    'status': 'error',
+                    'result': str(e)
+                })
+
+        thread = threading.Thread(target=background_generate, daemon=True)
+        thread.start()
+        return jsonify({'task_id': task_id})
+
+    return fb_bp
