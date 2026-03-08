@@ -17,6 +17,16 @@ def _extract_fb_error(result):
     return str(err)
 
 
+def _check_facebook_access(current_user):
+    """Return 403 response if user does not have facebook_access permission."""
+    if not current_user.metadata.get('facebook_access', False):
+        return jsonify({
+            'error': 'Bạn không có quyền truy cập tính năng quản lý Facebook',
+            'code': 'FACEBOOK_ACCESS_DENIED'
+        }), 403
+    return None
+
+
 def create_facebook_bp(facebook_service, gpt_results, has_gpt):
     """Create and configure the Facebook blueprint.
 
@@ -56,7 +66,13 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
             description: Long-lived token returned
           400:
             description: Missing token
+          403:
+            description: Facebook access not granted
         """
+        from flask import g
+        denied = _check_facebook_access(g.current_user)
+        if denied:
+            return denied
         data = request.json or {}
         short_token = data.get('short_token', '').strip()
         if not short_token:
@@ -85,7 +101,13 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
             description: List of pages
           400:
             description: Missing token
+          403:
+            description: Facebook access not granted
         """
+        from flask import g
+        denied = _check_facebook_access(g.current_user)
+        if denied:
+            return denied
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
             return jsonify({'error': 'fb_token query parameter is required'}), 400
@@ -114,7 +136,13 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
         responses:
           200:
             description: User info
+          403:
+            description: Facebook access not granted
         """
+        from flask import g
+        denied = _check_facebook_access(g.current_user)
+        if denied:
+            return denied
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
             return jsonify({'error': 'fb_token is required'}), 400
@@ -151,7 +179,13 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
         responses:
           200:
             description: List of posts
+          403:
+            description: Facebook access not granted
         """
+        from flask import g
+        denied = _check_facebook_access(g.current_user)
+        if denied:
+            return denied
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
             return jsonify({'error': 'fb_token is required'}), 400
@@ -181,7 +215,13 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
         responses:
           200:
             description: Post details with engagement
+          403:
+            description: Facebook access not granted
         """
+        from flask import g
+        denied = _check_facebook_access(g.current_user)
+        if denied:
+            return denied
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
             return jsonify({'error': 'fb_token is required'}), 400
@@ -214,7 +254,13 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
         responses:
           200:
             description: List of comments
+          403:
+            description: Facebook access not granted
         """
+        from flask import g
+        denied = _check_facebook_access(g.current_user)
+        if denied:
+            return denied
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
             return jsonify({'error': 'fb_token is required'}), 400
@@ -261,7 +307,13 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
             description: Created post id
           400:
             description: Validation error
+          403:
+            description: Facebook access not granted
         """
+        from flask import g
+        denied = _check_facebook_access(g.current_user)
+        if denied:
+            return denied
         data = request.json or {}
         fb_token = data.get('fb_token', '').strip()
         if not fb_token:
@@ -315,7 +367,13 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
             description: Matching posts
           400:
             description: Missing parameters
+          403:
+            description: Facebook access not granted
         """
+        from flask import g
+        denied = _check_facebook_access(g.current_user)
+        if denied:
+            return denied
         fb_token = request.args.get('fb_token', '').strip()
         keyword = request.args.get('keyword', '').strip()
         if not fb_token:
@@ -364,9 +422,15 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
             description: Task created (async)
           400:
             description: Missing topic
+          403:
+            description: Facebook access not granted
           503:
             description: GPT not available
         """
+        from flask import g
+        denied = _check_facebook_access(g.current_user)
+        if denied:
+            return denied
         if not has_gpt:
             return jsonify({'error': 'GPT not available'}), 503
 

@@ -6,7 +6,7 @@ function MainLayout() {
   return (
     <div className="bg-base-200 min-h-screen">
       <Navbar />
-      <div className="mx-auto px-4 py-8 container">
+      <div className="mx-auto px-3 py-4 md:px-4 md:py-8 container">
         <Outlet />
       </div>
     </div>

@@ -327,6 +327,65 @@ def create_admin_bp(storage, auth_service):
                 'message': f'Lỗi: {str(e)}'
             }), 500
 
+    @admin_bp.route('/api/admin/users/<user_id>/facebook-access', methods=['PUT'])
+    @token_required
+    @admin_required
+    def toggle_facebook_access(user_id):
+        """Toggle Facebook page access for a user (admin only).
+        ---
+        tags:
+          - Admin
+        parameters:
+          - in: path
+            name: user_id
+            type: string
+            required: true
+          - in: header
+            name: Authorization
+            type: string
+            required: true
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              properties:
+                facebook_access:
+                  type: boolean
+        responses:
+          200:
+            description: Facebook access updated
+          404:
+            description: User not found
+        """
+        try:
+            data = request.json or {}
+            facebook_access = bool(data.get('facebook_access', False))
+
+            user_data = storage.load_user(user_id)
+            if not user_data:
+                return jsonify({
+                    'success': False,
+                    'message': 'Không tìm thấy user'
+                }), 404
+
+            if 'metadata' not in user_data:
+                user_data['metadata'] = {}
+
+            user_data['metadata']['facebook_access'] = facebook_access
+            storage.save_user(user_data)
+
+            return jsonify({
+                'success': True,
+                'message': f'Đã {"bật" if facebook_access else "tắt"} quyền Facebook cho {user_data.get("username")}',
+                'facebook_access': facebook_access
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Lỗi: {str(e)}'
+            }), 500
+
     @admin_bp.route('/api/admin/stats', methods=['GET'])
     @token_required
     @moderator_required

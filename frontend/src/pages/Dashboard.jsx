@@ -10,8 +10,8 @@ import {
   LockClosedIcon,
   GlobeAltIcon,
   ChartPieIcon,
-  ChartBarSquareIcon,
 } from '@heroicons/react/24/outline'
+import { SparklesIcon } from '@heroicons/react/24/solid'
 
 function Dashboard({ showToast }) {
   const { isAuthenticated, user } = useAuth()
@@ -51,10 +51,10 @@ function Dashboard({ showToast }) {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="font-bold text-3xl"><ChartBarIcon className="inline w-8 h-8" /> Dashboard</h1>
-        <button onClick={loadStats} className="btn btn-circle btn-ghost">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="flex justify-between items-center mb-4 md:mb-6">
+        <h1 className="font-bold text-2xl md:text-3xl"><ChartBarIcon className="inline w-7 h-7 md:w-8 md:h-8" /> Dashboard</h1>
+        <button onClick={loadStats} className="btn btn-circle btn-ghost btn-sm md:btn-md">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         </button>
@@ -62,7 +62,7 @@ function Dashboard({ showToast }) {
 
       {/* Note for anonymous users */}
       {!isAuthenticated && (
-        <div className="mb-6 alert alert-info">
+        <div className="mb-4 md:mb-6 alert alert-info">
           <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
@@ -75,7 +75,7 @@ function Dashboard({ showToast }) {
         </div>
       )}
 
-      <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
+      <div className="gap-3 md:gap-4 grid grid-cols-1 md:grid-cols-2">
         <Link to="/worlds" className="bg-base-100 hover:bg-primary/10 shadow rounded-box transition cursor-pointer stat">
           <div className="text-primary stat-figure">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -101,12 +101,12 @@ function Dashboard({ showToast }) {
 
       {/* Privacy Breakdown Section */}
       {stats?.breakdown && (
-        <div className="bg-base-100 shadow mt-8 p-6 rounded-box">
-          <h2 className="mb-4 font-bold text-2xl">
+        <div className="bg-base-100 shadow mt-4 md:mt-8 p-4 md:p-6 rounded-box">
+          <h2 className="mb-4 font-bold text-xl md:text-2xl">
             {isAuthenticated ? <><LockClosedIcon className="inline w-5 h-5" /> Phân loại dữ liệu</> : <><GlobeAltIcon className="inline w-5 h-5" /> Dữ liệu công khai</>}
           </h2>
 
-          <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
+          <div className="gap-4 md:gap-6 grid grid-cols-1 md:grid-cols-2">
             {/* Worlds Breakdown */}
             <div className="bg-base-200 p-4 rounded-lg">
               <h3 className="mb-3 font-semibold text-lg">Thế giới</h3>
@@ -176,9 +176,9 @@ function Dashboard({ showToast }) {
 
       {/* User Quota Section (Only for authenticated users) */}
       {isAuthenticated && stats?.user_quota && (
-        <div className="bg-base-100 shadow mt-6 p-6 rounded-box">
-          <h2 className="mb-4 font-bold text-2xl"><ChartPieIcon className="inline w-6 h-6" /> Quota của bạn</h2>
-          <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
+        <div className="bg-base-100 shadow mt-4 md:mt-6 p-4 md:p-6 rounded-box">
+          <h2 className="mb-4 font-bold text-xl md:text-2xl"><ChartPieIcon className="inline w-6 h-6" /> Quota của bạn</h2>
+          <div className="gap-4 md:gap-6 grid grid-cols-1 md:grid-cols-2">
             {/* Worlds Quota */}
             <div>
               <div className="flex justify-between items-center mb-2">
@@ -218,45 +218,24 @@ function Dashboard({ showToast }) {
         </div>
       )}
 
-      {stats && (
-        <div className="bg-base-100 shadow mt-8 p-6 rounded-box">
-          <h2 className="mb-4 font-bold text-2xl"><ChartBarSquareIcon className="inline w-6 h-6" /> Thông tin hệ thống</h2>
-          <div className="overflow-x-auto">
-            <table className="table table-zebra w-full">
-              <tbody>
-                <tr>
-                  <td className="font-semibold">Hệ thống lưu trữ</td>
-                  <td>{stats.storage_type}</td>
-                </tr>
-                <tr>
-                  <td className="font-semibold">Tích hợp GPT</td>
-                  <td>
-                    {stats.has_gpt ? (
-                      <span className="badge badge-success">Đã kích hoạt</span>
-                    ) : (
-                      <span className="badge badge-error">Chưa kích hoạt</span>
-                    )}
-                  </td>
-                </tr>
-                {isAuthenticated && (
-                  <>
-                    <tr>
-                      <td className="font-semibold">Tài khoản</td>
-                      <td>
-                        <span className="badge badge-primary">{user?.username}</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="font-semibold">Vai trò</td>
-                      <td>
-                        <RoleBadge role={user?.role} />
-                      </td>
-                    </tr>
-                  </>
-                )}
-              </tbody>
-            </table>
-          </div>
+      {/* Facebook Manager Card - Only for users with facebook_access */}
+      {isAuthenticated && user?.metadata?.facebook_access && (
+        <div className="bg-base-100 shadow mt-4 md:mt-6 p-4 md:p-6 rounded-box">
+          <h2 className="mb-4 font-bold text-xl md:text-2xl">
+            <SparklesIcon className="inline w-6 h-6 text-primary" /> Công cụ quản lý
+          </h2>
+          <Link
+            to="/facebook"
+            className="flex items-center gap-4 bg-base-200 hover:bg-primary/10 p-4 rounded-lg transition cursor-pointer"
+          >
+            <div className="flex justify-center items-center bg-blue-500 rounded-xl w-12 h-12 text-white text-2xl shrink-0">
+              f
+            </div>
+            <div>
+              <h3 className="font-bold text-base">Facebook Manager</h3>
+              <p className="opacity-70 text-sm">Quản lý trang Facebook, đăng bài và tạo nội dung với AI</p>
+            </div>
+          </Link>
         </div>
       )}
 

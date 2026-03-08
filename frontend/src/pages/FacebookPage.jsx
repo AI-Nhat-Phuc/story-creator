@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import {
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
@@ -10,16 +10,15 @@ import {
   SparklesIcon,
   DocumentTextIcon,
   ExclamationTriangleIcon,
-  KeyIcon,
+  LockClosedIcon,
   ClipboardDocumentIcon,
 } from '@heroicons/react/24/outline'
 import { facebookAPI, gptAPI } from '../services/api'
-
-const ACCESS_KEY = 'story-creator-fb-2024'
+import { useAuth } from '../contexts/AuthContext'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 export default function FacebookPage({ showToast }) {
-  const [searchParams] = useSearchParams()
-  const key = searchParams.get('key')
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
 
   // Auth / page selection state
   const [fbToken, setFbToken] = useState('')
@@ -52,21 +51,28 @@ export default function FacebookPage({ showToast }) {
   const [commentsPostId, setCommentsPostId] = useState(null)
   const [loadingComments, setLoadingComments] = useState(false)
 
-  // --- Access gate ---
-  if (key !== ACCESS_KEY) {
+  // --- Auth / permission gate ---
+  if (authLoading) return <LoadingSpinner />
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (!user?.metadata?.facebook_access) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-[60vh] text-center">
-        <KeyIcon className="mx-auto mb-4 w-16 h-16 text-warning" />
+      <div className="flex flex-col justify-center items-center min-h-[60vh] text-center px-4">
+        <LockClosedIcon className="mx-auto mb-4 w-16 h-16 text-warning" />
         <h2 className="mb-2 font-bold text-2xl">Truy cập bị từ chối</h2>
         <p className="text-base-content/60">
-          Bạn cần cung cấp đúng <code className="badge badge-outline">key</code> trong URL để truy cập trang này.
+          Tài khoản của bạn chưa được cấp quyền truy cập tính năng quản lý Facebook.
         </p>
         <p className="mt-2 text-sm text-base-content/40">
-          Ví dụ: <code>/facebook?key=YOUR_KEY</code>
+          Vui lòng liên hệ quản trị viên để được cấp quyền.
         </p>
       </div>
     )
   }
+
 
   // --- Handlers ---
 
