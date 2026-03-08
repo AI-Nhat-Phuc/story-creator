@@ -226,6 +226,7 @@ function Dashboard({ showToast }) {
           </h2>
           <Link
             to="/facebook"
+            aria-label="Facebook Manager"
             className="flex items-center gap-4 bg-base-200 hover:bg-primary/10 p-4 rounded-lg transition cursor-pointer"
           >
             <div className="flex justify-center items-center bg-blue-500 rounded-xl w-12 h-12 text-white text-2xl shrink-0">

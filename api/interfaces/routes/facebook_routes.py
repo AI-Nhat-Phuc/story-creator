@@ -1,6 +1,6 @@
 """Facebook API routes for the Story Creator backend."""
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from interfaces.auth_middleware import token_required
 import uuid
 import threading
@@ -69,7 +69,6 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        from flask import g
         denied = _check_facebook_access(g.current_user)
         if denied:
             return denied
@@ -104,7 +103,6 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        from flask import g
         denied = _check_facebook_access(g.current_user)
         if denied:
             return denied
@@ -139,7 +137,6 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        from flask import g
         denied = _check_facebook_access(g.current_user)
         if denied:
             return denied
@@ -182,7 +179,6 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        from flask import g
         denied = _check_facebook_access(g.current_user)
         if denied:
             return denied
@@ -218,7 +214,6 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        from flask import g
         denied = _check_facebook_access(g.current_user)
         if denied:
             return denied
@@ -257,7 +252,6 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        from flask import g
         denied = _check_facebook_access(g.current_user)
         if denied:
             return denied
@@ -310,7 +304,6 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        from flask import g
         denied = _check_facebook_access(g.current_user)
         if denied:
             return denied
@@ -370,7 +363,6 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        from flask import g
         denied = _check_facebook_access(g.current_user)
         if denied:
             return denied
@@ -427,7 +419,6 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           503:
             description: GPT not available
         """
-        from flask import g
         denied = _check_facebook_access(g.current_user)
         if denied:
             return denied

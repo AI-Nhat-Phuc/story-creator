@@ -131,7 +131,7 @@ function Navbar() {
             </label>
             <ul tabIndex={0} className="bg-base-100 shadow mt-3 p-2 rounded-box w-56 text-base-content menu dropdown-content z-50">
               {navLinks}
-              <li className="divider my-1"></li>
+              <div className="divider my-1"></div>
               {isAuthenticated ? (
                 <>
                   <li className="menu-title px-4 py-1">
