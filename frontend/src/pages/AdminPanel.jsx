@@ -102,6 +102,17 @@ function AdminPanel({ showToast }) {
     }
   }
 
+  const handleToggleFacebookAccess = async (targetUser) => {
+    const newAccess = !targetUser.metadata?.facebook_access
+    try {
+      await adminAPI.setFacebookAccess(targetUser.user_id, newAccess)
+      showToast(`Đã ${newAccess ? 'bật' : 'tắt'} quyền Facebook cho ${targetUser.username}`, 'success')
+      loadData()
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Không thể cập nhật quyền Facebook', 'error')
+    }
+  }
+
   const getRoleBadge = (role) => {
     const roleInfo = roles.find(r => r.role === role)
     if (!roleInfo) return <span className="badge">{role}</span>
@@ -242,6 +253,14 @@ function AdminPanel({ showToast }) {
                       disabled={u.user_id === user.user_id}
                     >
                       Đổi role
+                    </button>
+                    <button
+                      className={`btn btn-sm ${u.metadata?.facebook_access ? 'btn-info' : 'btn-ghost'}`}
+                      onClick={() => handleToggleFacebookAccess(u)}
+                      disabled={u.user_id === user.user_id}
+                      title={u.metadata?.facebook_access ? 'Tắt quyền Facebook' : 'Bật quyền Facebook'}
+                    >
+                      FB
                     </button>
                     <button
                       className={`btn btn-sm ${u.metadata?.banned ? 'btn-success' : 'btn-error'}`}

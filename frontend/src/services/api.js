@@ -99,6 +99,7 @@ export const adminAPI = {
   getUserDetail: (userId) => api.get(`/admin/users/${userId}`),
   changeUserRole: (userId, role) => api.put(`/admin/users/${userId}/role`, { role }),
   banUser: (userId, banned, reason) => api.post(`/admin/users/${userId}/ban`, { banned, reason }),
+  setFacebookAccess: (userId, facebook_access) => api.put(`/admin/users/${userId}/facebook-access`, { facebook_access }),
 
   // System info
   getRoles: () => api.get('/admin/roles'),
