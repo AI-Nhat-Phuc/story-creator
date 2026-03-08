@@ -1,8 +1,8 @@
-{/* Đảm bảo màu nền trắng cho nội dung card */ }
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
+import Tag from '../Tag'
 import { STORY_TEMPLATES } from '../storyTemplates'
 import {
   BookOpenIcon,
@@ -399,8 +399,9 @@ function StoriesView({
                       <div className="font-bold">Đã phát hiện {detectedCharacters.length} nhân vật:</div>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {detectedCharacters.map(char => (
-                          <span key={char.entity_id} className="badge badge-primary">
-                                                        <UserIcon className="inline w-3.5 h-3.5" /> {char.name}                          </span>
+                          <Tag key={char.entity_id} color="primary" icon={UserIcon}>
+                            {char.name}
+                          </Tag>
                         ))}
                       </div>
                     </div>

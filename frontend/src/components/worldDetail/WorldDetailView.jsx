@@ -4,6 +4,7 @@ import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
+import Tag from '../Tag'
 import {
   BookOpenIcon,
   UserIcon,
@@ -163,14 +164,14 @@ function WorldDetailView({
                 </button>
               )}
             </div>
-            <p className="flex gap-2 mb-4">
-              <span className="badge badge-primary">{world.world_type}</span>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Tag color="primary">{world.world_type}</Tag>
               {world.visibility && (
-                <span className={`badge ${world.visibility === 'public' ? 'badge-success' : world.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
+                <Tag color={world.visibility === 'public' ? 'success' : world.visibility === 'draft' ? 'warning' : 'ghost'}>
                   {world.visibility === 'public' ? 'Công khai' : world.visibility === 'draft' ? 'Bản nháp' : 'Riêng tư'}
-                </span>
+                </Tag>
               )}
-            </p>
+            </div>
             <p className="text-lg">{world.description}</p>
           </>
         )}
@@ -331,7 +332,7 @@ function WorldDetailView({
                         </div>
                       )}
                     </div>
-                    <p className="badge">{char.entity_type}</p>
+                     <Tag color="ghost">{char.entity_type}</Tag>
                     {char.description && <p className="opacity-70 text-sm">{char.description}</p>}
                     {char.attributes && (
                       <div className="text-sm">
@@ -366,7 +367,7 @@ function WorldDetailView({
                     </button>
                   )}
                 </div>
-                {loc.location_type && <p className="badge">{loc.location_type}</p>}
+                {loc.location_type && <Tag color="ghost">{loc.location_type}</Tag>}
                 {loc.description && <p className="opacity-70 text-sm">{loc.description}</p>}
                 {loc.coordinates && (
                   <p className="opacity-50 text-xs">

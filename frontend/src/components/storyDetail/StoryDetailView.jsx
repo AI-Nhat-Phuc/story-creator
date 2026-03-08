@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
+import Tag from '../Tag'
 import {
   GlobeAltIcon,
   UserIcon,
@@ -167,19 +168,19 @@ function StoryDetailView({
                 </div>
               )}
             </div>
-            <div className="flex gap-2 mb-4">
-              <span className="badge badge-neutral" title={`Time index: ${normalizedTimelineIndex ?? 0}`}>
-                                <ClockIcon className="inline w-3.5 h-3.5" /> {formattedWorldTime}
-              </span>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Tag color="neutral" icon={ClockIcon} title={`Time index: ${normalizedTimelineIndex ?? 0}`}>
+                {formattedWorldTime}
+              </Tag>
               {story.visibility && (
-                <span className={`badge ${story.visibility === 'public' ? 'badge-success' : story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
+                <Tag color={story.visibility === 'public' ? 'success' : story.visibility === 'draft' ? 'warning' : 'ghost'}>
                   {story.visibility === 'public' ? 'Công khai' : story.visibility === 'draft' ? 'Bản nháp' : 'Riêng tư'}
-                </span>
+                </Tag>
               )}
               {world && (
-                <Link to={`/worlds/${world.world_id}`} className="cursor-pointer badge badge-info hover:badge-info-focus">
-                                    <GlobeAltIcon className="inline w-3.5 h-3.5" /> {world.name}
-                </Link>
+                <Tag as={Link} to={`/worlds/${world.world_id}`} color="info" icon={GlobeAltIcon} className="cursor-pointer hover:badge-info-focus">
+                  {world.name}
+                </Tag>
               )}
             </div>
             {renderStoryContent()}
@@ -271,9 +272,9 @@ function StoryDetailView({
                   <td>
                     <div className="flex flex-wrap gap-1">
                       {linkedCharacters.map((char) => (
-                        <span key={char.entity_id} className="badge badge-primary badge-sm">
-                          <UserIcon className="inline w-3 h-3" /> {char.name}
-                        </span>
+                        <Tag key={char.entity_id} color="primary" size="sm" icon={UserIcon}>
+                          {char.name}
+                        </Tag>
                       ))}
                     </div>
                   </td>
@@ -285,9 +286,9 @@ function StoryDetailView({
                   <td>
                     <div className="flex flex-wrap gap-1">
                       {linkedLocations.map((loc) => (
-                        <span key={loc.location_id} className="badge badge-secondary badge-sm">
-                          <MapPinIcon className="inline w-3 h-3" /> {loc.name}
-                        </span>
+                        <Tag key={loc.location_id} color="secondary" size="sm" icon={MapPinIcon}>
+                          {loc.name}
+                        </Tag>
                       ))}
                     </div>
                   </td>
