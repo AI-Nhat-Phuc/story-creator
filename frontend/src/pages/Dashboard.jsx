@@ -4,6 +4,7 @@ import { statsAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import RoleBadge from '../components/RoleBadge'
+import Tag from '../components/Tag'
 import EventTimelineSection from '../components/timeline/EventTimelineSection'
 import {
   ChartBarIcon,
@@ -114,7 +115,7 @@ function Dashboard({ showToast }) {
                 {isAuthenticated && stats.breakdown.worlds.private !== undefined && (
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2">
-                      <span className="badge badge-primary badge-sm">Riêng tư</span>
+                      <Tag color="primary" size="sm">Riêng tư</Tag>
                       <span className="text-sm">Của bạn</span>
                     </span>
                     <span className="font-bold">{stats.breakdown.worlds.private}</span>
@@ -123,7 +124,7 @@ function Dashboard({ showToast }) {
                 {isAuthenticated && stats.breakdown.worlds.shared !== undefined && (
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2">
-                      <span className="badge badge-info badge-sm">Được chia sẻ</span>
+                      <Tag color="info" size="sm">Được chia sẻ</Tag>
                       <span className="text-sm">Từ người khác</span>
                     </span>
                     <span className="font-bold">{stats.breakdown.worlds.shared}</span>
@@ -131,7 +132,7 @@ function Dashboard({ showToast }) {
                 )}
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-2">
-                    <span className="badge badge-success badge-sm">Công khai</span>
+                    <Tag color="success" size="sm">Công khai</Tag>
                     <span className="text-sm">Mọi người xem được</span>
                   </span>
                   <span className="font-bold">{stats.breakdown.worlds.public}</span>
@@ -146,7 +147,7 @@ function Dashboard({ showToast }) {
                 {isAuthenticated && stats.breakdown.stories.private !== undefined && (
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2">
-                      <span className="badge badge-primary badge-sm">Riêng tư</span>
+                      <Tag color="primary" size="sm">Riêng tư</Tag>
                       <span className="text-sm">Của bạn</span>
                     </span>
                     <span className="font-bold">{stats.breakdown.stories.private}</span>
@@ -155,7 +156,7 @@ function Dashboard({ showToast }) {
                 {isAuthenticated && stats.breakdown.stories.shared !== undefined && (
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2">
-                      <span className="badge badge-info badge-sm">Được chia sẻ</span>
+                      <Tag color="info" size="sm">Được chia sẻ</Tag>
                       <span className="text-sm">Từ người khác</span>
                     </span>
                     <span className="font-bold">{stats.breakdown.stories.shared}</span>
@@ -163,7 +164,7 @@ function Dashboard({ showToast }) {
                 )}
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-2">
-                    <span className="badge badge-success badge-sm">Công khai</span>
+                    <Tag color="success" size="sm">Công khai</Tag>
                     <span className="text-sm">Mọi người xem được</span>
                   </span>
                   <span className="font-bold">{stats.breakdown.stories.public}</span>

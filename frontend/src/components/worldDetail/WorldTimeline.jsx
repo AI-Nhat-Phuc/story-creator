@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Tag from '../Tag'
 import {
   UserIcon,
   MapPinIcon,
@@ -13,10 +14,10 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
   }
 
   const paletteMap = {
-    adventure: { line: 'bg-primary', iconText: 'text-primary', iconBorder: 'border-primary', badge: 'badge-success' },
-    mystery: { line: 'bg-secondary', iconText: 'text-secondary', iconBorder: 'border-secondary', badge: 'badge-secondary' },
-    conflict: { line: 'bg-error', iconText: 'text-error', iconBorder: 'border-error', badge: 'badge-error' },
-    discovery: { line: 'bg-info', iconText: 'text-info', iconBorder: 'border-info', badge: 'badge-info' }
+    adventure: { line: 'bg-primary', iconText: 'text-primary', iconBorder: 'border-primary', badgeColor: 'success' },
+    mystery: { line: 'bg-secondary', iconText: 'text-secondary', iconBorder: 'border-secondary', badgeColor: 'secondary' },
+    conflict: { line: 'bg-error', iconText: 'text-error', iconBorder: 'border-error', badgeColor: 'error' },
+    discovery: { line: 'bg-info', iconText: 'text-info', iconBorder: 'border-info', badgeColor: 'info' }
   }
 
   // Get characters for a story by entities (entity IDs array)
@@ -66,7 +67,7 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
           line: 'bg-accent',
           iconText: 'text-accent',
           iconBorder: 'border-accent',
-          badge: 'badge-accent'
+          badgeColor: 'accent'
         }
 
         return (
@@ -92,7 +93,7 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
                   line: 'bg-accent',
                   iconText: 'text-accent',
                   iconBorder: 'border-accent',
-                  badge: 'badge-accent'
+                  badgeColor: 'accent'
                 }
 
                 // Get linked stories
@@ -118,22 +119,22 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <span className={`badge ${storyPalette.badge}`}>{story.genre}</span>
+                      <Tag color={storyPalette.badgeColor}>{story.genre}</Tag>
                       {getStoryCharacters(story).slice(0, 3).map(char => (
-                        <span key={char.entity_id} className="text-primary-content badge badge-primary">
-                          <UserIcon className="inline w-3 h-3" /> {char.name}
-                        </span>
+                        <Tag key={char.entity_id} color="primary" icon={UserIcon} className="text-primary-content">
+                          {char.name}
+                        </Tag>
                       ))}
                       {getStoryCharacters(story).length > 3 && (
-                        <span className="badge badge-ghost">+{getStoryCharacters(story).length - 3}</span>
+                        <Tag color="ghost">+{getStoryCharacters(story).length - 3}</Tag>
                       )}
                       {getStoryLocations(story).slice(0, 2).map(loc => (
-                        <span key={loc.location_id} className="text-secondary-content badge badge-secondary">
-                          <MapPinIcon className="inline w-3 h-3" /> {loc.name}
-                        </span>
+                        <Tag key={loc.location_id} color="secondary" icon={MapPinIcon} className="text-secondary-content">
+                          {loc.name}
+                        </Tag>
                       ))}
                       {getStoryLocations(story).length > 2 && (
-                        <span className="badge badge-ghost">+{getStoryLocations(story).length - 2} địa điểm</span>
+                        <Tag color="ghost">+{getStoryLocations(story).length - 2} địa điểm</Tag>
                       )}
                     </div>
                     {linkedStories.length > 0 && (
@@ -141,13 +142,16 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
                         <p className="opacity-70 mb-2 text-xs"><LinkIcon className="inline w-3 h-3" /> Liên kết với:</p>
                         <div className="flex flex-wrap gap-1">
                           {linkedStories.map(linked => (
-                            <Link
+                            <Tag
                               key={linked.story_id}
+                              as={Link}
                               to={`/stories/${linked.story_id}`}
-                              className="badge-outline badge badge-sm hover:badge-secondary"
+                              size="sm"
+                              outline
+                              className="hover:badge-secondary"
                             >
                               {linked.title}
-                            </Link>
+                            </Tag>
                           ))}
                         </div>
                       </div>
