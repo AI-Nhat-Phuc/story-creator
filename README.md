@@ -4,6 +4,20 @@ Hệ thống tạo thế giới và câu chuyện tương tác với **React Fro
 
 🌐 **Live**: [story-creator-cyan.vercel.app](https://story-creator-cyan.vercel.app)
 
+## Truy cập nhanh
+
+| Trang | Link | Mô tả |
+|-------|------|-------|
+| 🏠 Dashboard | [/](https://story-creator-cyan.vercel.app/) | Trang chủ — tổng quan hệ thống |
+| 🌍 Worlds | [/worlds](https://story-creator-cyan.vercel.app/worlds) | Danh sách & quản lý thế giới |
+| 📖 Stories | [/stories](https://story-creator-cyan.vercel.app/stories) | Danh sách & quản lý câu chuyện |
+| 🔐 Login | [/login](https://story-creator-cyan.vercel.app/login) | Đăng nhập tài khoản |
+| 📝 Register | [/register](https://story-creator-cyan.vercel.app/register) | Đăng ký tài khoản mới |
+| ⚙️ Admin | [/admin](https://story-creator-cyan.vercel.app/admin) | Quản trị hệ thống (yêu cầu admin) |
+| 📘 Facebook Manager | [/facebook?key=...](https://story-creator-cyan.vercel.app/facebook) | Quản lý bài đăng Facebook Page (yêu cầu key) |
+| 🔑 Facebook Token | [/facebook-token](https://story-creator-cyan.vercel.app/facebook-token) | Lấy Facebook Access Token cá nhân |
+| 📚 API Docs | [/api/docs](https://story-creator-cyan.vercel.app/api/docs) | Swagger UI — tài liệu API |
+
 ## Tính năng
 
 - 🌍 Tạo và quản lý thế giới (Fantasy, Sci-Fi, Modern, Historical)
