@@ -189,7 +189,7 @@ class FacebookService:
             }
         else:
             url = f"{GRAPH_API_BASE}/{page_id}/feed"
-            data: Dict[str, str] = {
+            data = {
                 "message": message,
                 "access_token": access_token,
             }

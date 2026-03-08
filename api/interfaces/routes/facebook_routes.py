@@ -9,6 +9,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _extract_fb_error(result):
+    """Extract error message from a Facebook Graph API error response."""
+    err = result.get('error', '')
+    if isinstance(err, dict):
+        return err.get('message', str(err))
+    return str(err)
+
+
 def create_facebook_bp(facebook_service, gpt_results, has_gpt):
     """Create and configure the Facebook blueprint.
 
@@ -56,7 +64,7 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
 
         result = facebook_service.exchange_short_token(short_token)
         if 'error' in result:
-            return jsonify({'error': result.get('error', {}).get('message', str(result['error']))}), 400
+            return jsonify({'error': _extract_fb_error(result)}), 400
         return jsonify(result)
 
     @fb_bp.route('/api/facebook/pages', methods=['GET'])
@@ -84,7 +92,7 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
 
         result = facebook_service.get_page_tokens(fb_token)
         if 'error' in result:
-            return jsonify({'error': result['error'].get('message', str(result['error']))}), 400
+            return jsonify({'error': _extract_fb_error(result)}), 400
         return jsonify(result)
 
     # ------------------------------------------------------------------
@@ -113,7 +121,7 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
 
         result = facebook_service.get_user_info(fb_token)
         if 'error' in result:
-            return jsonify({'error': result['error'].get('message', str(result['error']))}), 400
+            return jsonify({'error': _extract_fb_error(result)}), 400
         return jsonify(result)
 
     # ------------------------------------------------------------------
@@ -151,7 +159,7 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
         limit = request.args.get('limit', 10, type=int)
         result = facebook_service.get_page_posts(page_id, fb_token, limit=limit)
         if 'error' in result:
-            return jsonify({'error': result['error'].get('message', str(result['error']))}), 400
+            return jsonify({'error': _extract_fb_error(result)}), 400
         return jsonify(result)
 
     @fb_bp.route('/api/facebook/posts/<post_id>', methods=['GET'])
@@ -180,7 +188,7 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
 
         result = facebook_service.get_post_detail(post_id, fb_token)
         if 'error' in result:
-            return jsonify({'error': result['error'].get('message', str(result['error']))}), 400
+            return jsonify({'error': _extract_fb_error(result)}), 400
         return jsonify(result)
 
     @fb_bp.route('/api/facebook/posts/<post_id>/comments', methods=['GET'])
@@ -214,7 +222,7 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
         limit = request.args.get('limit', 25, type=int)
         result = facebook_service.get_post_comments(post_id, fb_token, limit=limit)
         if 'error' in result:
-            return jsonify({'error': result['error'].get('message', str(result['error']))}), 400
+            return jsonify({'error': _extract_fb_error(result)}), 400
         return jsonify(result)
 
     # ------------------------------------------------------------------
@@ -271,7 +279,7 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
             message=message, link=link, image_url=image_url
         )
         if 'error' in result:
-            return jsonify({'error': result['error'].get('message', str(result['error']))}), 400
+            return jsonify({'error': _extract_fb_error(result)}), 400
         return jsonify(result)
 
     # ------------------------------------------------------------------
@@ -318,7 +326,7 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
         limit = request.args.get('limit', 25, type=int)
         result = facebook_service.search_page_posts(page_id, fb_token, keyword, limit=limit)
         if 'error' in result:
-            return jsonify({'error': result['error'].get('message', str(result['error']))}), 400
+            return jsonify({'error': _extract_fb_error(result)}), 400
         return jsonify(result)
 
     # ------------------------------------------------------------------

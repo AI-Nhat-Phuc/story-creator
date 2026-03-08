@@ -159,18 +159,31 @@ export default function FacebookPage({ showToast }) {
         tone: gptTone,
       })
       const taskId = res.data.task_id
+      let retries = 0
+      const maxRetries = 60
 
       const poll = async () => {
-        const result = await gptAPI.getResults(taskId)
-        if (result.data.status === 'completed') {
-          setNewMessage(result.data.result.content)
+        if (retries >= maxRetries) {
+          showToast('Quá thời gian chờ tạo nội dung', 'error')
           setGenerating(false)
-          showToast('Đã tạo nội dung!', 'success')
-        } else if (result.data.status === 'error') {
-          showToast(result.data.result, 'error')
+          return
+        }
+        retries++
+        try {
+          const result = await gptAPI.getResults(taskId)
+          if (result.data.status === 'completed') {
+            setNewMessage(result.data.result.content)
+            setGenerating(false)
+            showToast('Đã tạo nội dung!', 'success')
+          } else if (result.data.status === 'error') {
+            showToast(result.data.result, 'error')
+            setGenerating(false)
+          } else {
+            setTimeout(poll, 1000)
+          }
+        } catch (pollErr) {
+          showToast('Lỗi kiểm tra kết quả: ' + (pollErr.message || 'Unknown'), 'error')
           setGenerating(false)
-        } else {
-          setTimeout(poll, 1000)
         }
       }
       poll()
