@@ -105,4 +105,22 @@ export const adminAPI = {
   getAdminStats: () => api.get('/admin/stats')
 }
 
+// Facebook API
+export const facebookAPI = {
+  exchangeToken: (shortToken) => api.post('/facebook/token/exchange', { short_token: shortToken }),
+  getPages: (fbToken) => api.get('/facebook/pages', { params: { fb_token: fbToken } }),
+  getMe: (fbToken) => api.get('/facebook/me', { params: { fb_token: fbToken } }),
+  getPagePosts: (pageId, fbToken, limit = 10) =>
+    api.get(`/facebook/pages/${pageId}/posts`, { params: { fb_token: fbToken, limit } }),
+  getPostDetail: (postId, fbToken) =>
+    api.get(`/facebook/posts/${postId}`, { params: { fb_token: fbToken } }),
+  getPostComments: (postId, fbToken, limit = 25) =>
+    api.get(`/facebook/posts/${postId}/comments`, { params: { fb_token: fbToken, limit } }),
+  createPost: (pageId, data) =>
+    api.post(`/facebook/pages/${pageId}/posts`, data),
+  searchPosts: (pageId, fbToken, keyword, limit = 25) =>
+    api.get(`/facebook/pages/${pageId}/search`, { params: { fb_token: fbToken, keyword, limit } }),
+  generateContent: (data) => api.post('/facebook/generate-content', data),
+}
+
 export default api

@@ -8,6 +8,7 @@ from storage import NoSQLStorage, JSONStorage, MongoStorage
 from ai.gpt_client import GPTIntegration
 from services import GPTService, AuthService
 from services import EventService
+from services.facebook_service import FacebookService
 from services.task_store import TaskStore
 from visualization import RelationshipDiagram
 from interfaces.auth_middleware import init_auth_middleware
@@ -19,7 +20,8 @@ from interfaces.routes import (
     create_stats_bp,
     create_event_bp,
     create_auth_bp,
-    create_admin_bp
+    create_admin_bp,
+    create_facebook_bp
 )
 import os
 import signal
@@ -95,7 +97,8 @@ class APIBackend:
                 {"name": "Stories", "description": "Story management"},
                 {"name": "Events", "description": "Event timeline management"},
                 {"name": "GPT", "description": "GPT integration"},
-                {"name": "Stats", "description": "Statistics"}
+                {"name": "Stats", "description": "Statistics"},
+                {"name": "Facebook", "description": "Facebook Page management"}
             ]
         }
 
@@ -142,6 +145,11 @@ class APIBackend:
 
         # Initialize Auth service
         self.auth_service = AuthService(self.storage)
+
+        # Initialize Facebook service
+        self.facebook_service = FacebookService(
+            gpt_integration=self.gpt if self.has_gpt else None
+        )
 
         # Initialize auth middleware
         init_auth_middleware(self.auth_service)
@@ -281,6 +289,14 @@ class APIBackend:
             auth_service=self.auth_service
         )
         self.app.register_blueprint(admin_bp)
+
+        # Facebook routes
+        facebook_bp = create_facebook_bp(
+            facebook_service=self.facebook_service,
+            gpt_results=self.gpt_results,
+            has_gpt=self.has_gpt
+        )
+        self.app.register_blueprint(facebook_bp)
 
     def _kill_existing_server(self, port=5000):
         """Kill any existing process using the specified port."""
