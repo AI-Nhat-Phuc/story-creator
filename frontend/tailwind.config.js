@@ -19,6 +19,24 @@ export default {
   daisyui: {
     themes: [
       {
+        "sc-light": {
+          "primary":   "#4A90D9",
+          "secondary": "#6BA3BE",
+          "accent":    "#F5A623",
+          "base-100":  "#FFFFFF",
+          "base-200":  "#F2F4F6",
+        },
+      },
+      {
+        "sc-dark": {
+          "primary":   "#E2E8F0",
+          "secondary": "#94A3B8",
+          "accent":    "#F59E0B",
+          "base-100":  "#1E293B",
+          "base-200":  "#0F172A",
+        },
+      },
+      {
         storyCreator: {
           "primary": "#D79922",      // Gold - Main actions
           "secondary": "#EFE2BA",    // Cream - Backgrounds
