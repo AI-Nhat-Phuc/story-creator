@@ -7,6 +7,7 @@ import {
   isValidHex,
   deriveCustomPalette,
   hexToHsl,
+  relativeLuminance,
 } from '../utils/themeUtils'
 
 const ThemeContext = createContext(null)
@@ -37,7 +38,12 @@ function hexToDaisyHsl(hex) {
   return `${h} ${s}% ${l}%`
 }
 
-const CSS_VARS = ['--p', '--s', '--a', '--b1', '--b2']
+const CSS_VARS = ['--p', '--pc', '--s', '--sc', '--a', '--ac', '--b1', '--b2']
+
+// Returns DaisyUI HSL for readable text on the given background hex color
+function contrastHsl(hex) {
+  return relativeLuminance(hex) > 0.179 ? '0 0% 20%' : '0 0% 100%'
+}
 
 function clearCustomVars() {
   CSS_VARS.forEach((v) => document.documentElement.style.removeProperty(v))
@@ -45,8 +51,11 @@ function clearCustomVars() {
 
 function injectCustomVars(palette) {
   document.documentElement.style.setProperty('--p', hexToDaisyHsl(palette.primary))
+  document.documentElement.style.setProperty('--pc', contrastHsl(palette.primary))
   document.documentElement.style.setProperty('--s', hexToDaisyHsl(palette.secondary))
+  document.documentElement.style.setProperty('--sc', contrastHsl(palette.secondary))
   document.documentElement.style.setProperty('--a', hexToDaisyHsl(palette.accent))
+  document.documentElement.style.setProperty('--ac', contrastHsl(palette.accent))
   document.documentElement.style.setProperty('--b1', hexToDaisyHsl(palette.base100))
   document.documentElement.style.setProperty('--b2', hexToDaisyHsl(palette.base200))
 }

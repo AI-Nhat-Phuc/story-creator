@@ -63,7 +63,7 @@ function hslToHex(h, s, l) {
 }
 
 // WCAG relative luminance — byteOffset is the hex string byte position (1, 3, 5)
-function relativeLuminance(hex) {
+export function relativeLuminance(hex) {
   const toLinear = (byteOffset) => {
     const v = parseInt(hex.slice(byteOffset, byteOffset + 2), 16) / 255
     return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
