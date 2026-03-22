@@ -40,9 +40,11 @@ function hexToDaisyHsl(hex) {
 
 const CSS_VARS = ['--p', '--pc', '--s', '--sc', '--a', '--ac', '--b1', '--b2']
 
-// Returns DaisyUI HSL for readable text on the given background hex color
+// Returns DaisyUI HSL for readable text on the given background hex color.
+// Threshold 0.22 (~sRGB midpoint) ensures both white and black text have
+// sufficient contrast across the widest range of mid-tone colors (WCAG AA).
 function contrastHsl(hex) {
-  return relativeLuminance(hex) > 0.179 ? '0 0% 20%' : '0 0% 100%'
+  return relativeLuminance(hex) > 0.22 ? '0 0% 0%' : '0 0% 100%'
 }
 
 function clearCustomVars() {
@@ -76,7 +78,7 @@ function applyTheme(mode, palette) {
     html.setAttribute('data-theme', 'sc-dark')
     clearCustomVars()
   } else {
-    const base = relativeLuminance(palette.base100) > 0.179 ? 'sc-light' : 'sc-dark'
+    const base = relativeLuminance(palette.base100) > 0.22 ? 'sc-light' : 'sc-dark'
     html.setAttribute('data-theme', base)
     injectCustomVars(palette)
   }
