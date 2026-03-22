@@ -1,13 +1,20 @@
 """GPT routes for the API backend."""
 
 from flask import Blueprint, request, jsonify
+from core.exceptions import (
+    ResourceNotFoundError,
+    ValidationError as APIValidationError,
+    ExternalServiceError,
+    BusinessRuleError
+)
+from utils.responses import success_response
 from interfaces.auth_middleware import token_required
 from services import BatchAnalyzeService
 import uuid
 import threading
 
 
-def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_data=None):
+def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_data=None, limiter=None):
     """Create and configure the GPT blueprint.
 
     Args:
@@ -17,13 +24,18 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         has_gpt: Boolean indicating if GPT is available
         storage: Storage instance for database access (optional, needed for batch analyze)
         flush_data: Function to flush data to disk (optional)
+        limiter: Optional Flask-Limiter instance for rate limiting
 
     Returns:
         Blueprint: Configured Flask blueprint for GPT routes
     """
     gpt_bp = Blueprint('gpt', __name__)
 
+    # Stricter limit on GPT endpoints to control API costs
+    _gpt_limit = limiter.limit("10 per minute") if limiter else (lambda f: f)
+
     @gpt_bp.route('/api/gpt/generate-description', methods=['POST'])
+    @_gpt_limit
     @token_required
     def gpt_generate_description():
         """Generate world or story description with GPT.
@@ -64,24 +76,19 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         responses:
           200:
             description: Generation task created
-            schema:
-              type: object
-              properties:
-                task_id:
-                  type: string
           400:
             description: Invalid input
           503:
             description: GPT not available
         """
         if not has_gpt:
-            return jsonify({'error': 'GPT not available'}), 503
+            raise ExternalServiceError('GPT', 'GPT not available')
 
         data = request.json
         gen_type = data.get('type', 'world')
 
         task_id = str(uuid.uuid4())
-        label = world_name if gen_type == 'world' else data.get('story_title', '')
+        label = data.get('world_name', '') if gen_type == 'world' else data.get('story_title', '')
         gpt_results[task_id] = {
             'status': 'pending',
             'task_type': f'generate_{gen_type}_description',
@@ -101,7 +108,6 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                         }
                         return
 
-                    # Generate world description using PromptTemplates
                     from ai.prompts import PromptTemplates
                     prompt = PromptTemplates.API_WORLD_DESCRIPTION_TEMPLATE.format(
                         world_type=world_type,
@@ -118,8 +124,6 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                     )
 
                     description = response.choices[0].message.content.strip()
-
-                    # Debug logging
                     print(f"[DEBUG] Generated world description: {description[:100]}..." if len(description) > 100 else f"[DEBUG] Generated world description: {description}")
 
                     gpt_results[task_id] = {
@@ -140,7 +144,6 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                         }
                         return
 
-                    # Generate story description using PromptTemplates
                     from ai.prompts import PromptTemplates
                     context_parts = []
                     if world_desc:
@@ -167,8 +170,6 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                     )
 
                     description = response.choices[0].message.content.strip()
-
-                    # Debug logging
                     print(f"[DEBUG] Generated story description: {description[:100]}..." if len(description) > 100 else f"[DEBUG] Generated story description: {description}")
 
                     gpt_results[task_id] = {
@@ -182,7 +183,6 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                     'result': str(e)
                 }
 
-        # Run in background thread
         thread = threading.Thread(target=generate_description)
         thread.daemon = True
         thread.start()
@@ -190,6 +190,7 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         return jsonify({'task_id': task_id})
 
     @gpt_bp.route('/api/gpt/analyze', methods=['POST'])
+    @_gpt_limit
     @token_required
     def gpt_analyze():
         """Analyze world or story description with GPT to extract entities and locations.
@@ -222,19 +223,13 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         responses:
           200:
             description: GPT analysis task created
-            schema:
-              type: object
-              properties:
-                task_id:
-                  type: string
-                  example: "task-uuid-123"
           400:
             description: Invalid input
           503:
             description: GPT not available
         """
         if not has_gpt:
-            return jsonify({'error': 'GPT not available'}), 503
+            raise ExternalServiceError('GPT', 'GPT not available')
 
         data = request.json
         world_description = data.get('world_description', '')
@@ -243,9 +238,8 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         story_title = data.get('story_title', '')
         story_genre = data.get('story_genre', '')
 
-        # Check if analyzing world or story
         if not world_description and not story_description:
-            return jsonify({'error': 'Either world_description or story_description is required'}), 400
+            raise APIValidationError('Either world_description or story_description is required')
 
         task_id = str(uuid.uuid4())
         label = story_title or 'thế giới'
@@ -256,32 +250,20 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         }
 
         def on_success(result):
-            gpt_results[task_id] = {
-                'status': 'completed',
-                'result': result
-            }
+            gpt_results[task_id] = {'status': 'completed', 'result': result}
 
         def on_error(error):
-            gpt_results[task_id] = {
-                'status': 'error',
-                'result': str(error)
-            }
+            gpt_results[task_id] = {'status': 'error', 'result': str(error)}
 
-        # Choose analyze method based on input
         if story_description:
             gpt_service.analyze_story_entities(
-                story_description,
-                story_title,
-                story_genre,
-                callback_success=on_success,
-                callback_error=on_error
+                story_description, story_title, story_genre,
+                callback_success=on_success, callback_error=on_error
             )
         else:
             gpt_service.analyze_world_entities(
-                world_description,
-                world_type,
-                callback_success=on_success,
-                callback_error=on_error
+                world_description, world_type,
+                callback_success=on_success, callback_error=on_error
             )
 
         return jsonify({'task_id': task_id})
@@ -301,32 +283,16 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         responses:
           200:
             description: Task result
-            schema:
-              type: object
-              properties:
-                status:
-                  type: string
-                  enum: [pending, completed, error]
-                result:
-                  type: object
-                  properties:
-                    entities:
-                      type: array
-                      items:
-                        type: object
-                    locations:
-                      type: array
-                      items:
-                        type: object
           404:
             description: Task not found
         """
         result = gpt_results.get(task_id)
         if not result:
-            return jsonify({'error': 'Task not found'}), 404
+            raise ResourceNotFoundError('Task', task_id)
         return jsonify(result)
 
     @gpt_bp.route('/api/gpt/batch-analyze-stories', methods=['POST'])
+    @_gpt_limit
     @token_required
     def gpt_batch_analyze_stories():
         """Batch analyze stories with GPT, creating entities and linking them.
@@ -354,37 +320,30 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         responses:
           200:
             description: Batch analysis task created
-            schema:
-              type: object
-              properties:
-                task_id:
-                  type: string
           400:
             description: Invalid input
           503:
             description: GPT not available
         """
         if not has_gpt:
-            return jsonify({'error': 'GPT not available'}), 503
+            raise ExternalServiceError('GPT', 'GPT not available')
         if not storage:
-            return jsonify({'error': 'Storage not configured for batch operations'}), 500
+            raise BusinessRuleError('Storage not configured for batch operations')
 
         data = request.json
         world_id = data.get('world_id')
         story_ids = data.get('story_ids', [])
 
         if not world_id:
-            return jsonify({'error': 'world_id is required'}), 400
+            raise APIValidationError('world_id is required')
 
-        # Limit batch size to 3 stories max
         MAX_BATCH = 3
         if len(story_ids) > MAX_BATCH:
-            return jsonify({'error': f'Tối đa {MAX_BATCH} câu chuyện mỗi lần phân tích'}), 400
+            raise BusinessRuleError(f'Tối đa {MAX_BATCH} câu chuyện mỗi lần phân tích')
 
-        # Validate world exists
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
         task_id = str(uuid.uuid4())
         gpt_results[task_id] = {
@@ -418,16 +377,10 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                 if flush_data:
                     flush_data()
 
-                gpt_results[task_id] = {
-                    'status': 'completed',
-                    'result': result
-                }
+                gpt_results[task_id] = {'status': 'completed', 'result': result}
 
             except Exception as e:
-                gpt_results[task_id] = {
-                    'status': 'error',
-                    'result': str(e)
-                }
+                gpt_results[task_id] = {'status': 'error', 'result': str(e)}
 
         thread = threading.Thread(target=batch_analyze, daemon=True)
         thread.start()
@@ -452,16 +405,10 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         """
         task_ids_param = request.args.get('task_ids', '')
         if task_ids_param:
-            # Check specific tasks (used by frontend on page load)
             task_ids = [t.strip() for t in task_ids_param.split(',') if t.strip()]
-            tasks = []
-            for tid in task_ids:
-                task = gpt_results.get(tid)
-                if task:
-                    tasks.append(task)
+            tasks = [gpt_results[tid] for tid in task_ids if tid in gpt_results]
             return jsonify({'tasks': tasks})
         else:
-            # List all pending/processing tasks from DB
             if hasattr(storage, 'list_pending_gpt_tasks'):
                 tasks = storage.list_pending_gpt_tasks()
                 return jsonify({'tasks': tasks})

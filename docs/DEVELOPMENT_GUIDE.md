@@ -4,730 +4,452 @@
 
 ### Prerequisites
 
-- **Python**: 3.7+ (recommended: 3.11+)
-- **Git**: For version control
-- **VS Code**: Recommended IDE
-- **Virtual Environment**: Isolated Python environment
+- **Python**: 3.9+
+- **Node.js**: 18+
+- **Git**
+- **VS Code** (recommended)
 
 ### Initial Setup
 
 ```bash
-# 1. Clone repository (nếu có)
+# 1. Clone repository
 git clone <repository-url>
 cd story-creator
 
-# 2. Create virtual environment
-python -m venv .venv
+# 2. Install all dependencies
+npm run install:all
 
-# 3. Activate virtual environment
-# Windows PowerShell:
-.venv\Scripts\Activate.ps1
-# Windows CMD:
-.venv\Scripts\activate.bat
+# 3. Create .env file
+cp .env.example .env
+# Edit .env and set OPENAI_API_KEY, GOOGLE_CLIENT_ID, JWT_SECRET, etc.
 
-# 4. Install dependencies
-pip install -r api/requirements.txt
+# 4. Start full stack (recommended)
+npm run dev
 
-# 5. Create .env file for GPT
-# Copy .env.example nếu có, hoặc tạo mới:
-echo OPENAI_API_KEY=your-key-here > .env
-
-# 6. Test installation
-.venv\Scripts\python.exe api/test.py
+# 5. Verify setup
+.venv/Scripts/python.exe api/test.py
 ```
+
+---
 
 ## Project Structure
 
 ```
 story-creator/
-├── .env                        # API keys (DO NOT COMMIT)
-├── .gitignore                  # Git ignore rules
-├── requirements.txt            # Python dependencies
-├── main.py                     # Entry point
-├── README.md                   # Project overview
-├── INSTALLATION.md             # Setup instructions
-├── USAGE.md                    # Usage guide
+├── api/                              # Python Flask backend
+│   ├── app.py                        # Vercel serverless entrypoint
+│   ├── main.py                       # Local development entrypoint
+│   ├── requirements.txt
+│   │
+│   ├── ai/                           # GPT-4o-mini integration
+│   │   ├── gpt_client.py            # OpenAI API wrapper
+│   │   └── prompts.py               # Prompt templates
+│   │
+│   ├── core/                         # Domain layer
+│   │   ├── models/                   # World, Story, Entity, Location, User
+│   │   ├── exceptions.py             # Custom exception hierarchy
+│   │   └── permissions.py           # Role & permission definitions
+│   │
+│   ├── generators/                   # Content generators
+│   │   ├── world_generator.py
+│   │   ├── story_generator.py
+│   │   └── story_linker.py
+│   │
+│   ├── interfaces/                   # HTTP layer
+│   │   ├── api_backend.py           # Flask app factory
+│   │   ├── auth_middleware.py        # JWT decorators
+│   │   ├── error_handlers.py         # Global exception → JSON handlers
+│   │   └── routes/                   # Blueprint route files
+│   │       ├── world_routes.py
+│   │       ├── story_routes.py
+│   │       ├── auth_routes.py
+│   │       ├── gpt_routes.py
+│   │       ├── event_routes.py
+│   │       ├── facebook_routes.py
+│   │       ├── admin_routes.py
+│   │       ├── stats_routes.py
+│   │       └── health_routes.py
+│   │
+│   ├── schemas/                      # Marshmallow validation schemas
+│   │   ├── world_schemas.py
+│   │   ├── story_schemas.py
+│   │   └── auth_schemas.py
+│   │
+│   ├── services/                     # Business logic layer
+│   │   ├── auth_service.py
+│   │   ├── gpt_service.py
+│   │   ├── character_service.py
+│   │   ├── permission_service.py
+│   │   ├── event_service.py
+│   │   └── facebook_service.py
+│   │
+│   ├── storage/                      # Persistence layer
+│   │   ├── nosql_storage.py         # TinyDB (default)
+│   │   └── mongo_storage.py         # MongoDB (optional)
+│   │
+│   └── utils/                        # Shared utilities
+│       ├── responses.py              # Standardized response helpers
+│       └── validation.py            # @validate_request decorator
 │
-├── .venv/                      # Virtual environment (DO NOT COMMIT)
+├── frontend/                         # React + Vite
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── components/              # Reusable UI components
+│   │   ├── containers/              # Data-fetching containers
+│   │   ├── pages/                   # Route pages
+│   │   ├── services/api.js          # Centralized Axios client
+│   │   └── contexts/                # AuthContext, GptTaskContext
+│   ├── vite.config.js
+│   └── package.json
 │
-├── ai/                         # GPT integration
-│   ├── gpt_client.py          # OpenAI API wrapper
-│   ├── prompts.py             # Prompt templates
-│   └── simulation.py          # Simulation logic
-│
-├── core/                       # Core domain models
-│   └── models/
-│       ├── world.py
-│       ├── story.py
-│       ├── entity.py
-│       ├── location.py
-│       └── time_cone.py
-│
-├── generators/                 # Content generators
-│   ├── world_generator.py     # World creation
-│   ├── story_generator.py     # Story creation
-│   └── story_linker.py        # Story linking logic
-│
-├── storage/                    # Data persistence
-│   ├── base_storage.py        # Abstract base
-│   ├── nosql_storage.py       # TinyDB backend
-│   └── json_storage.py        # JSON backend
-│
-├── services/                   # Business logic layer
-│   ├── gpt_service.py         # GPT async service
-│   └── character_service.py   # Character utilities
-│
-├── interfaces/                 # User interfaces
-│   ├── api/interfaces/api_backend.py       # Flask web app
-│   └── simulation_interface.py # Terminal simulation
-│
-├── templates/                  # HTML templates
-│   └── index.html             # Main web UI
-│
-├── static/                     # Static assets
-│   ├── css/
-│   │   └── style.css
-│   └── js/
-│       └── app.js
-│
-├── visualization/              # Visualization tools
-│   └── relationship_diagram.py
-│
-├── docs/                       # Documentation
-│   ├── WEB_INTERFACE_GUIDE.md
-│   ├── GPT_INTEGRATION_GUIDE.md
-│   ├── STORAGE_GUIDE.md
-│   ├── MODELS_GUIDE.md
-│   └── DEVELOPMENT_GUIDE.md    # This file
-│
-└── tests/                      # Test files
-    ├── test.py
-    ├── test_nosql.py
-    └── test_api_key.py
+├── vercel.json                       # Vercel deployment config
+├── package.json                      # Root npm scripts
+├── CLAUDE.md                         # Claude Code instructions
+└── .env                              # OPENAI_API_KEY, JWT_SECRET, etc.
 ```
 
-## Development Workflow
+---
 
-### 1. Create Feature Branch
+## Development Commands
 
 ```bash
-git checkout -b feature/your-feature-name
+# Full stack (recommended)
+npm run dev
+
+# Backend only
+.venv/Scripts/python.exe api/main.py -i api
+
+# Frontend only
+cd frontend && npm run dev
+
+# Tests
+.venv/Scripts/python.exe api/test.py
+.venv/Scripts/python.exe api/test_nosql.py
+.venv/Scripts/python.exe api/test_api.py
+
+# Build for production
+npm run build:frontend
 ```
 
-### 2. Make Changes
+**URLs:**
+- React UI: http://localhost:3000
+- API Swagger: http://localhost:5000/api/docs
 
-Follow coding standards (see below)
+---
 
-### 3. Test Changes
+## Backend Architecture Patterns
 
-```bash
-# Run all tests
-.venv\Scripts\python.exe api/test.py
-.venv\Scripts\python.exe api/test_nosql.py
+### Import Convention
 
-# Test specific feature
-.venv\Scripts\python.exe api/main.py -i api --debug
-```
-
-### 4. Commit & Push
-
-```bash
-git add .
-git commit -m "Add: feature description"
-git push origin feature/your-feature-name
-```
-
-## Coding Standards
-
-### Python Style Guide (PEP 8)
+All backend imports use **bare module names** (never `api.*` prefixed):
 
 ```python
-# ✅ Good: Snake case for variables/functions
-def generate_world_description(world_type: str) -> str:
-    world_data = {}
-    return json.dumps(world_data)
+# ✅ Correct
+from core.models import World, Entity, Story
+from core.exceptions import ResourceNotFoundError, PermissionDeniedError
+from services import CharacterService, PermissionService
+from utils.responses import success_response, created_response
+from utils.validation import validate_request
+from schemas.world_schemas import CreateWorldSchema
 
-# ✅ Good: Pascal case for classes
-class WorldGenerator:
-    def __init__(self):
-        self.templates = {}
-
-# ✅ Good: Type hints
-def create_entity(name: str, entity_type: str) -> Entity:
-    return Entity(name=name, entity_type=entity_type)
-
-# ✅ Good: Docstrings
-def save_world(world: World) -> bool:
-    """
-    Save world to database.
-
-    Args:
-        world: World object to save
-
-    Returns:
-        True if successful, False otherwise
-    """
-    pass
+# ❌ Wrong
+from api.core.models import World
+from api.utils.responses import success_response
 ```
 
-### Naming Conventions
+### Exception-Based Error Handling
 
-| Type | Convention | Example |
-|------|-----------|---------|
-| Variables | snake_case | `world_id`, `entity_list` |
-| Functions | snake_case | `generate_world()`, `save_entity()` |
-| Classes | PascalCase | `WorldGenerator`, `NoSQLStorage` |
-| Constants | UPPER_CASE | `MAX_ENTITIES`, `DEFAULT_WORLD_TYPE` |
-| Private | _leading_underscore | `_internal_method()` |
-
-### File Organization
+Never return manual error `jsonify()` from routes. Always raise typed exceptions:
 
 ```python
-# 1. Imports (grouped)
-# Standard library
-import json
-import uuid
-from datetime import datetime
-
-# Third-party
-from flask import Flask, jsonify
-from tinydb import TinyDB, Query
-
-# Local
-from core.models import World, Story
-from storage import NoSQLStorage
-
-# 2. Constants
-DEFAULT_WORLD_TYPE = "fantasy"
-MAX_ENTITIES = 100
-
-# 3. Classes
-class WorldGenerator:
-    pass
-
-# 4. Functions
-def create_world(name: str) -> World:
-    pass
-
-# 5. Main execution
-if __name__ == "__main__":
-    pass
-```
-
-## Adding New Features
-
-### Add New World Type
-
-**Example**: Add "cyberpunk" world type
-
-1. **Update world_generator.py**:
-```python
-WORLD_TYPES = {
-    # ... existing types ...
-    "cyberpunk": {
-        "themes": ["technology", "corporations", "hackers"],
-        "location_types": ["megacity", "server_farm", "nightclub"],
-        "entity_types": ["hacker", "corporate", "android"]
-    }
-}
-```
-
-2. **Update frontend/src/ (React components)**:
-```html
-<select id="worldType" class="select select-bordered">
-    <option value="fantasy">Fantasy</option>
-    <option value="sci-fi">Sci-Fi</option>
-    <option value="modern">Modern</option>
-    <option value="historical">Historical</option>
-    <option value="cyberpunk">Cyberpunk</option> <!-- NEW -->
-</select>
-```
-
-3. **Test**:
-```python
-world = world_generator.generate(
-    "Neon city with hackers",
-    world_type="cyberpunk"
+from core.exceptions import (
+    ResourceNotFoundError,    # 404
+    PermissionDeniedError,    # 403
+    ValidationError,          # 400
+    QuotaExceededError,       # 429
+    AuthenticationError,      # 401
+    ConflictError,            # 409
+    BusinessRuleError,        # 400
+    ExternalServiceError      # 502
 )
+
+# ✅ Correct
+world = storage.load_world(world_id)
+if not world:
+    raise ResourceNotFoundError('World', world_id)
+
+# ❌ Wrong (old pattern)
+if not world:
+    return jsonify({'error': 'World not found'}), 404
 ```
 
-### Add New API Endpoint
+### Standardized Responses
 
-**Example**: Add endpoint to get random world
-
-1. **Update api/interfaces/api_backend.py** trong `_register_routes()`:
 ```python
-@self.app.route('/api/worlds/random', methods=['GET'])
-def get_random_world():
-    """Get a random world"""
-    import random
+from utils.responses import (
+    success_response,    # 200 { success, data, message? }
+    created_response,    # 201 { success, data, message }
+    deleted_response,    # 200 { success, data: null, message }
+    paginated_response,  # 200 { success, data: [], pagination: {...} }
+    accepted_response,   # 202 for async operations
+)
 
-    worlds = self.storage.list_worlds()
-    if not worlds:
-        return jsonify({'error': 'No worlds found'}), 404
+# ✅ Correct
+return success_response(world_data)
+return created_response(world.to_dict(), "World created successfully")
+return paginated_response(items, page, per_page, total)
+return deleted_response("World deleted successfully")
 
-    random_world = random.choice(worlds)
-    return jsonify(random_world)
+# ❌ Wrong (old pattern)
+return jsonify(world_data)
+return jsonify({'message': 'World deleted'}), 200
 ```
 
-2. **Add frontend function** trong `frontend/src/services/api.js`:
+### Request Validation
+
+```python
+from utils.validation import validate_request, validate_query_params
+from schemas.world_schemas import CreateWorldSchema, ListWorldsQuerySchema
+
+@world_bp.route('/api/worlds', methods=['POST'])
+@token_required
+@validate_request(CreateWorldSchema)          # validates request.json
+def create_world():
+    data = request.validated_data             # already validated dict
+    ...
+
+@world_bp.route('/api/worlds', methods=['GET'])
+@optional_auth
+@validate_query_params(ListWorldsQuerySchema) # validates request.args
+def list_worlds():
+    params = request.validated_data
+    page = params.get('page', 1)
+    ...
+```
+
+### Adding a New Route
+
+Follow this pattern for any new endpoint:
+
+```python
+# 1. Define schema in api/schemas/
+class CreateFooSchema(Schema):
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    type = fields.Str(validate=validate.OneOf(['a', 'b']), load_default='a')
+
+# 2. Write the route in api/interfaces/routes/
+@foo_bp.route('/api/foos', methods=['POST'])
+@token_required
+@validate_request(CreateFooSchema)
+def create_foo():
+    data = request.validated_data
+
+    existing = storage.load_foo(data['name'])
+    if existing:
+        raise ConflictError(f"Foo '{data['name']}' already exists")
+
+    foo = Foo(name=data['name'], foo_type=data['type'])
+    foo.owner_id = g.current_user.user_id
+    storage.save_foo(foo.to_dict())
+
+    return created_response(foo.to_dict(), "Foo created successfully")
+```
+
+### Adding a Validation Schema
+
+```python
+# api/schemas/foo_schemas.py
+from marshmallow import Schema, fields, validate
+
+class CreateFooSchema(Schema):
+    name = fields.Str(
+        required=True,
+        validate=validate.Length(min=1, max=100),
+        error_messages={'required': 'Name is required'}
+    )
+    category = fields.Str(
+        validate=validate.OneOf(['alpha', 'beta']),
+        load_default='alpha'
+    )
+
+class ListFooQuerySchema(Schema):
+    page = fields.Int(validate=validate.Range(min=1), load_default=1)
+    per_page = fields.Int(validate=validate.Range(min=1, max=100), load_default=20)
+```
+
+---
+
+## Frontend Patterns
+
+### API Calls
+
+All HTTP calls go through `frontend/src/services/api.js`. Never use `fetch` or `axios` directly in components:
+
 ```javascript
-async function loadRandomWorld() {
-    const response = await fetch('/api/worlds/random');
-    const world = await response.json();
+// ✅ Correct
+import { worldsAPI, storiesAPI } from '../services/api'
 
-    if (world.error) {
-        showToast(world.error, 'error');
-        return;
-    }
+const response = await worldsAPI.getAll()
+const worlds = response.data.data        // paginated: response.data.data
+const total = response.data.pagination.total
 
-    showWorldDetails(world.world_id);
+const detail = await worldsAPI.getById(id)
+const world = detail.data.data           // success: response.data.data
+
+// ❌ Wrong
+const response = await fetch('/api/worlds')
+```
+
+### Error Handling in Frontend
+
+```javascript
+try {
+  const response = await worldsAPI.create(formData)
+  const world = response.data.data
+  // success
+} catch (error) {
+  const errorData = error.response?.data?.error
+  const message = errorData?.message || 'Unknown error'
+  const code = errorData?.code         // 'validation_error', 'quota_exceeded', etc.
+  const details = errorData?.details   // field-level validation errors
 }
 ```
 
-3. **Add UI button** trong `frontend/src/ (React components)`:
-```html
-<button class="btn btn-primary" onclick="loadRandomWorld()">
-    🎲 Random World
-</button>
-```
-
-### Add New Model Field
-
-**Example**: Add "difficulty" field to Story
-
-1. **Update api/core/models/story.py**:
-```python
-class Story:
-    def __init__(
-        self,
-        title: str,
-        world_id: str,
-        genre: str = "adventure",
-        description: str = "",
-        entities: Optional[List[str]] = None,
-        locations: Optional[List[str]] = None,
-        difficulty: int = 5,  # NEW: 1-10
-        metadata: Optional[dict] = None
-    ):
-        # ... existing code ...
-        self.difficulty = difficulty
-
-    def to_dict(self) -> dict:
-        return {
-            # ... existing fields ...
-            "difficulty": self.difficulty
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict):
-        return cls(
-            # ... existing fields ...
-            difficulty=data.get("difficulty", 5)
-        )
-```
-
-2. **Update story_generator.py**:
-```python
-def generate(self, description, world_id, genre="adventure", difficulty=5, ...):
-    story = Story(
-        # ... existing fields ...
-        difficulty=difficulty
-    )
-```
-
-3. **Update web interface**:
-```html
-<!-- Add slider in story creation form -->
-<div class="form-control">
-    <label class="label">Difficulty: <span id="difficultyValue">5</span></label>
-    <input type="range" id="difficulty" min="1" max="10" value="5"
-           class="range range-primary"
-           oninput="document.getElementById('difficultyValue').textContent = this.value">
-</div>
-```
-
-```javascript
-// Update createStoryForm()
-const difficulty = parseInt(document.getElementById('difficulty').value);
-
-const response = await fetch('/api/stories', {
-    method: 'POST',
-    body: JSON.stringify({
-        // ... existing fields ...
-        difficulty: difficulty
-    })
-});
-```
-
-### Add New GPT Prompt
-
-**Example**: Add "generate location description" prompt
-
-1. **Update api/ai/prompts.py**:
-```python
-LOCATION_DESCRIPTION_PROMPT = """
-Generate a vivid description for this {world_type} location.
-
-Location name: {name}
-World context: {world_context}
-
-Write 2-3 sentences describing the location's appearance, atmosphere, and significance.
-"""
-```
-
-2. **Add method to gpt_client.py**:
-```python
-def generate_location_description(
-    self,
-    location_name: str,
-    world_type: str,
-    world_context: str
-) -> str:
-    """Generate description for a location"""
-    from ai.prompts import LOCATION_DESCRIPTION_PROMPT
-
-    prompt = LOCATION_DESCRIPTION_PROMPT.format(
-        name=location_name,
-        world_type=world_type,
-        world_context=world_context
-    )
-
-    response = self.client.chat.completions.create(
-        model=self.model,
-        messages=[{"role": "user", "content": prompt}],
-        max_completion_tokens=200
-    )
-
-    return response.choices[0].message.content.strip()
-```
-
-3. **Use in generator**:
-```python
-if self.gpt and self.gpt.is_available():
-    description = self.gpt.generate_location_description(
-        location_name=name,
-        world_type=world_type,
-        world_context=world.description
-    )
-else:
-    description = f"A {name} in the world"
-```
+---
 
 ## Testing
 
-### Unit Tests
+```bash
+# Core unit tests
+.venv/Scripts/python.exe api/test.py
 
-```python
-# test_world_generator.py
-import unittest
-from generators import WorldGenerator
+# Storage tests
+.venv/Scripts/python.exe api/test_nosql.py
 
-class TestWorldGenerator(unittest.TestCase):
-    def setUp(self):
-        self.generator = WorldGenerator()
+# API key validation
+.venv/Scripts/python.exe api/test_api_key.py
 
-    def test_generate_world(self):
-        world = self.generator.generate(
-            "Fantasy world",
-            world_type="fantasy"
-        )
+# API integration tests
+.venv/Scripts/python.exe api/test_api.py
 
-        self.assertEqual(world.world_type, "fantasy")
-        self.assertIsNotNone(world.world_id)
-        self.assertTrue(len(world.world_id) > 0)
-
-    def test_generate_entities(self):
-        from core.models import World
-        world = World(name="Test", world_type="fantasy")
-
-        entities = self.generator.generate_entities(world, count=5)
-
-        self.assertEqual(len(entities), 5)
-        for entity in entities:
-            self.assertEqual(entity.world_id, world.world_id)
-
-if __name__ == '__main__':
-    unittest.main()
-```
-
-### Integration Tests
-
-```python
-# test_integration.py
-import unittest
-from storage import NoSQLStorage
-from generators import WorldGenerator, StoryGenerator
-from core.models import World, Story
-
-class TestIntegration(unittest.TestCase):
-    def setUp(self):
-        self.storage = NoSQLStorage("test_integration.db")
-        self.world_gen = WorldGenerator()
-        self.story_gen = StoryGenerator()
-
-    def tearDown(self):
-        import os
-        os.remove("test_integration.db")
-
-    def test_full_workflow(self):
-        # Create world
-        world = self.world_gen.generate("Fantasy", world_type="fantasy")
-        self.storage.save_world(world.to_dict())
-
-        # Create entities
-        entities = self.world_gen.generate_entities(world, count=3)
-        for entity in entities:
-            self.storage.save_entity(entity.to_dict())
-            world.add_entity(entity.entity_id)
-
-        self.storage.save_world(world.to_dict())
-
-        # Create story
-        story = self.story_gen.generate(
-            "Adventure story",
-            world.world_id,
-            entities=[entities[0].entity_id]
-        )
-        self.storage.save_story(story.to_dict())
-
-        # Verify
-        loaded_world = self.storage.load_world(world.world_id)
-        self.assertIsNotNone(loaded_world)
-        self.assertEqual(len(loaded_world['entities']), 3)
+# Permission system
+.venv/Scripts/python.exe api/test_permissions.py
 ```
 
 ### Manual Testing Checklist
 
-- [ ] Web interface loads without errors
-- [ ] Can create world với/không GPT
-- [ ] Can create story with auto character detection
-- [ ] Can view world details (stories, characters, locations)
-- [ ] GPT analysis works (if API key available)
-- [ ] Statistics update correctly
-- [ ] Toast notifications appear
-- [ ] Forms validate input
-- [ ] Responsive design works on mobile
-- [ ] All tabs/sections functional
+- [ ] Register / login / verify token
+- [ ] Create world (with/without GPT)
+- [ ] Create story with selected characters
+- [ ] GPT analyze + batch analyze
+- [ ] Events timeline extraction
+- [ ] World share/unshare
+- [ ] Admin: change role, ban user, toggle Facebook access
+- [ ] Error cases return correct `error.code`
 
-## Debugging
+---
 
-### VS Code Debug Configuration
+## Coding Standards
 
-```json
-// .vscode/launch.json
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Web Interface",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/main.py",
-            "args": ["-i", "web", "--debug"],
-            "console": "integratedTerminal",
-            "python": "${workspaceFolder}/.venv/Scripts/python.exe"
-        },
-        {
-            "name": "Run Tests",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/test.py",
-            "console": "integratedTerminal",
-            "python": "${workspaceFolder}/.venv/Scripts/python.exe"
-        }
-    ]
-}
-```
+### Python
 
-### Logging
+- Follow **PEP 8**
+- Use **snake_case** for variables/functions, **PascalCase** for classes
+- Use **type hints** on public methods
+- Use **exceptions** over manual error returns (see patterns above)
+
+### Import Order
 
 ```python
-# Add logging to debug issues
-import logging
+# 1. Standard library
+import uuid
+import threading
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# 2. Third-party
+from flask import Blueprint, request, g
+from marshmallow import Schema, fields
 
-logger = logging.getLogger(__name__)
-
-# Use in code
-logger.debug(f"Loading world: {world_id}")
-logger.info("World created successfully")
-logger.warning("GPT not available")
-logger.error(f"Failed to save world: {error}")
+# 3. Local (bare module names)
+from core.exceptions import ResourceNotFoundError
+from utils.responses import success_response
+from schemas.world_schemas import CreateWorldSchema
 ```
 
-### Common Issues
-
-#### Import Errors
-```bash
-# Problem: ModuleNotFoundError
-# Solution: Check virtual environment activated
-.venv\Scripts\activate
-
-# Reinstall dependencies
-pip install -r api/requirements.txt
-```
-
-#### Port Already in Use
-```bash
-# Problem: Port 5000 already in use
-# Solution: Kill process or use different port
-.venv\Scripts\python.exe api/main.py -i api --port 8080
-```
-
-#### Database Locked
-```bash
-# Problem: Database is locked
-# Solution: Close all connections and restart
-# Or delete .db file
-del story_creator.db
-```
-
-## Performance Optimization
-
-### Database Queries
-
-```python
-# ❌ Bad: Load all then filter in Python
-all_stories = storage.list_stories()
-fantasy_stories = [s for s in all_stories if s.get('genre') == 'adventure']
-
-# ✅ Good: Use TinyDB query
-from tinydb import Query
-StoryQuery = Query()
-adventure_stories = storage.stories.search(StoryQuery.genre == 'adventure')
-```
-
-### Caching
-
-```python
-# Add simple cache for frequently accessed data
-class CachedStorage:
-    def __init__(self, storage):
-        self.storage = storage
-        self.cache = {}
-
-    def load_world(self, world_id):
-        if world_id not in self.cache:
-            self.cache[world_id] = self.storage.load_world(world_id)
-        return self.cache[world_id]
-
-    def invalidate_cache(self, world_id):
-        if world_id in self.cache:
-            del self.cache[world_id]
-```
-
-### Frontend Optimization
-
-```javascript
-// Debounce character detection
-let detectTimeout;
-function onDescriptionChange() {
-    clearTimeout(detectTimeout);
-    detectTimeout = setTimeout(() => {
-        detectCharactersInDescription();
-    }, 500);  // Wait 500ms after user stops typing
-}
-```
+---
 
 ## Deployment
+
+### Vercel
+
+```bash
+# Preview deploy
+vercel
+
+# Production deploy
+vercel --prod
+```
+
+**Required environment variables** (set in Vercel dashboard):
+- `OPENAI_API_KEY`
+- `GOOGLE_CLIENT_ID`
+- `FACEBOOK_APP_ID`
+- `JWT_SECRET`
+- `MONGODB_URI` (optional, for persistent storage)
 
 ### Local Production
 
 ```bash
-# Use production-ready WSGI server
-pip install gunicorn  # Linux/Mac
-pip install waitress  # Windows
-
-# Run with waitress
-waitress-serve --host=127.0.0.1 --port=5000 --call 'interfaces.web_interface:create_app'
+pip install waitress
+waitress-serve --host=127.0.0.1 --port=5000 --call 'interfaces.api_backend:create_app'
 ```
 
-### Environment Variables
+---
 
-```bash
-# .env for production
-OPENAI_API_KEY=sk-proj-your-key
-FLASK_ENV=production
-SECRET_KEY=generate-strong-random-key
-DATABASE_PATH=production.db
+## Debugging
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| `ModuleNotFoundError` | Activate venv: `source .venv/Scripts/activate` |
+| Port 5000 in use | Kill process or use `--port 8080` |
+| DB locked | Restart server; delete `story_creator.db` if corrupt |
+| GPT 502 error | Check `OPENAI_API_KEY` in `.env` |
+| JWT decode fails | Check `JWT_SECRET` matches between requests |
+
+### Logging
+
+```python
+import logging
+logger = logging.getLogger(__name__)
+
+logger.debug(f"Loading world: {world_id}")
+logger.info("World created successfully")
+logger.warning("GPT not available, using fallback")
+logger.error(f"Storage error: {e}")
 ```
 
-### Security Checklist
+---
 
-- [ ] Change Flask secret key
-- [ ] Add authentication (if public)
-- [ ] Use HTTPS
-- [ ] Validate all user input
-- [ ] Sanitize HTML output
-- [ ] Rate limit API endpoints
+## Security Checklist
+
+- [x] JWT authentication on all protected routes
+- [x] Role-based access control (admin/moderator/user/guest)
+- [x] Input validation via Marshmallow schemas
+- [x] Centralized error handling (no stack traces leaked)
+- [x] Password hashing (never stored plain)
+- [ ] Rate limiting (planned — Phase 4)
+- [ ] HTTPS (enforced by Vercel in production)
 - [ ] Keep dependencies updated
-- [ ] Don't expose debug mode
-- [ ] Secure .env file (never commit)
 
-## Contributing
-
-### Code Review Checklist
-
-- [ ] Code follows PEP 8 style guide
-- [ ] All functions have docstrings
-- [ ] Type hints used where appropriate
-- [ ] Tests added for new features
-- [ ] No hardcoded credentials
-- [ ] Error handling implemented
-- [ ] Logging added for debugging
-- [ ] Documentation updated
-- [ ] No breaking changes (or documented)
-
-### Pull Request Template
-
-```markdown
-## Description
-Brief description of changes
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Testing
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing completed
-
-## Screenshots (if UI changes)
-[Add screenshots]
-
-## Checklist
-- [ ] Code follows style guide
-- [ ] Documentation updated
-- [ ] Tests added/updated
-```
+---
 
 ## Resources
 
-### Documentation
 - [Flask Documentation](https://flask.palletsprojects.com/)
+- [Marshmallow Documentation](https://marshmallow.readthedocs.io/)
 - [TinyDB Documentation](https://tinydb.readthedocs.io/)
 - [OpenAI API Documentation](https://platform.openai.com/docs)
-- [TailwindCSS Documentation](https://tailwindcss.com/docs)
-- [DaisyUI Components](https://daisyui.com/components/)
-
-### Tools
-- [VS Code](https://code.visualstudio.com/)
-- [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
-- [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
-- [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
-
-## Next Steps
-
-1. 📖 Read all guides trong `docs/` folder
-2. 🧪 Run all tests để verify setup
-3. 🎮 Test web interface với sample data
-4. 🔧 Make a small change và test workflow
-5. 📝 Read existing code để understand patterns
+- [React Documentation](https://react.dev/)
+- [TailwindCSS + DaisyUI](https://daisyui.com/components/)
+- [Vite Documentation](https://vitejs.dev/)

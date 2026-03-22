@@ -1,9 +1,26 @@
 """World management routes."""
 
-from flask import Blueprint, request, jsonify, current_app, g
-from core.models import World, Entity, Location, User
+from flask import Blueprint, request, g
+from core.models import World, Entity, Location, User, Story
+from core.exceptions import (
+    ResourceNotFoundError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ValidationError as APIValidationError,
+    BusinessRuleError
+)
 from services import CharacterService, PermissionService
 from interfaces.auth_middleware import token_required, optional_auth
+from utils.responses import success_response, created_response, deleted_response
+from utils.validation import validate_request, validate_query_params, extract_pagination
+from schemas.world_schemas import (
+    CreateWorldSchema,
+    UpdateWorldSchema,
+    ListWorldsQuerySchema,
+    CreateEntitySchema,
+    UpdateEntitySchema
+)
+import random
 
 
 def create_world_bp(storage, world_generator, diagram_generator, flush_data):
@@ -13,6 +30,10 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
     @world_bp.route('/api/worlds', methods=['GET'])
     @optional_auth
+    @validate_query_params(ListWorldsQuerySchema)
+    @extract_pagination(lambda: storage.list_worlds(
+        user_id=g.current_user.user_id if hasattr(g, 'current_user') else None
+    ))
     def list_worlds():
         """List all worlds visible to current user.
         ---
@@ -24,19 +45,23 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             type: string
             required: false
             description: "Bearer {token} (optional, for accessing private worlds)"
+          - in: query
+            name: page
+            type: integer
+            default: 1
+          - in: query
+            name: per_page
+            type: integer
+            default: 20
         responses:
           200:
             description: List of worlds (public + owned + shared)
         """
-        # Get current user ID if authenticated
-        user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
-
-        # Get filtered worlds based on permissions
-        worlds = storage.list_worlds(user_id=user_id)
-        return jsonify(worlds)
+        pass
 
     @world_bp.route('/api/worlds', methods=['POST'])
     @token_required
+    @validate_request(CreateWorldSchema)
     def create_world():
         """Create new world (requires authentication).
         ---
@@ -79,88 +104,34 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
           401:
             description: Unauthorized
         """
-        data = request.json
+        data = request.validated_data
         visibility = data.get('visibility', 'private')
 
-        # Check quota for public worlds
         if visibility == 'public':
             user_data = storage.load_user(g.current_user.user_id)
             user = User.from_dict(user_data)
-
             if not user.can_create_public_world():
-                return jsonify({
-                    'error': 'Bạn đã đạt giới hạn số thế giới công khai',
-                    'current_count': user.metadata.get('public_worlds_count', 0),
-                    'limit': user.metadata.get('public_worlds_limit', 1)
-                }), 400
+                raise QuotaExceededError(
+                    'Bạn đã đạt giới hạn số thế giới công khai',
+                    current_count=user.metadata.get('public_worlds_count', 0),
+                    limit=user.metadata.get('public_worlds_limit', 1)
+                )
 
-        world_type = data.get('world_type', 'fantasy')
-        description = data.get('description', '')
-        name = data.get('name')
-        gpt_entities = data.get('gpt_entities')
+        world = world_generator.generate(data.get('description', ''), world_type=data['world_type'])
+        if data.get('name'):
+            world.name = data['name']
 
-        # Validate: Name required when using GPT
-        if gpt_entities and not name:
-            return jsonify({
-                'error': 'Tên thế giới là bắt buộc khi sử dụng GPT'
-            }), 400
-
-        # Generate world
-        world = world_generator.generate(description, world_type=world_type)
-        if name:
-            world.name = name
-
-        # Set ownership and visibility
         world.owner_id = g.current_user.user_id
         world.visibility = visibility
 
-        # Create entities and locations
+        gpt_entities = data.get('gpt_entities')
         if gpt_entities and 'entities' in gpt_entities and 'locations' in gpt_entities:
-            import random
-            for ent_data in gpt_entities['entities']:
-                entity = Entity(
-                    name=ent_data['name'],
-                    description=ent_data.get('description', ''),
-                    entity_type=ent_data.get('entity_type', 'commoner'),
-                    world_id=world.world_id,
-                    attributes=ent_data.get('attributes', {
-                        'Strength': random.randint(3, 8),
-                        'Intelligence': random.randint(3, 8),
-                        'Charisma': random.randint(3, 8)
-                    })
-                )
-                storage.save_entity(entity.to_dict())
-                world.add_entity(entity.entity_id)
-
-            for loc_data in gpt_entities['locations']:
-                coords = loc_data.get('coordinates', {})
-                location = Location(
-                    name=loc_data['name'],
-                    description=loc_data.get('description', ''),
-                    world_id=world.world_id,
-                    coordinates={
-                        'x': coords.get('x', random.uniform(-100, 100)),
-                        'y': coords.get('y', random.uniform(-100, 100))
-                    }
-                )
-                storage.save_location(location.to_dict())
-                world.add_location(location.location_id)
+            _create_entities_from_gpt(storage, world, gpt_entities)
         else:
-            # Random generation
-            locations = world_generator.generate_locations(world, count=3)
-            for location in locations:
-                storage.save_location(location.to_dict())
-                world.add_location(location.location_id)
+            _create_random_entities(storage, world_generator, world)
 
-            entities = world_generator.generate_entities(world, count=5)
-            for entity in entities:
-                storage.save_entity(entity.to_dict())
-                world.add_entity(entity.entity_id)
-
-        # Save world
         storage.save_world(world.to_dict())
 
-        # Update user quota if public
         if visibility == 'public':
             user_data = storage.load_user(g.current_user.user_id)
             user = User.from_dict(user_data)
@@ -169,7 +140,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
         flush_data()
 
-        return jsonify(world.to_dict()), 201
+        return created_response(world.to_dict(), "World created successfully")
 
     @world_bp.route('/api/worlds/<world_id>', methods=['GET'])
     @optional_auth
@@ -199,17 +170,17 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         """
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
-        # Check view permission
         user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
         if not PermissionService.can_view(user_id, world_data):
-            return jsonify({'error': 'Bạn không có quyền xem thế giới này'}), 403
+            raise PermissionDeniedError('view', 'world')
 
-        return jsonify(world_data)
+        return success_response(world_data)
 
     @world_bp.route('/api/worlds/<world_id>', methods=['PUT'])
     @token_required
+    @validate_request(UpdateWorldSchema)
     def update_world(world_id):
         """Update a specific world (owner only).
         ---
@@ -250,49 +221,44 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         """
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
-        # Check edit permission (owner only)
         if not PermissionService.can_edit(g.current_user.user_id, world_data):
-            return jsonify({'error': 'Chỉ chủ sở hữu mới có thể chỉnh sửa'}), 403
+            raise PermissionDeniedError('edit', 'world')
 
-        data = request.json
-        old_visibility = world_data.get('visibility', 'private')
-        new_visibility = data.get('visibility', old_visibility)
+        data = request.validated_data
 
-        # Handle visibility change
-        if old_visibility != new_visibility:
-            user_data = storage.load_user(g.current_user.user_id)
-            user = User.from_dict(user_data)
+        if 'visibility' in data:
+            old_visibility = world_data.get('visibility', 'private')
+            new_visibility = data['visibility']
 
-            if old_visibility != 'public' and new_visibility == 'public':
-                # Changing to public - check quota
-                if not user.can_create_public_world():
-                    return jsonify({
-                        'error': 'Bạn đã đạt giới hạn số thế giới công khai',
-                        'current_count': user.metadata.get('public_worlds_count', 0),
-                        'limit': user.metadata.get('public_worlds_limit', 1)
-                    }), 400
-                user.increment_public_worlds()
-                storage.save_user(user.to_dict())
+            if old_visibility != new_visibility:
+                user_data = storage.load_user(g.current_user.user_id)
+                user = User.from_dict(user_data)
 
-            elif old_visibility == 'public' and new_visibility != 'public':
-                # Changing from public - decrement quota
-                user.decrement_public_worlds()
-                storage.save_user(user.to_dict())
+                if old_visibility != 'public' and new_visibility == 'public':
+                    if not user.can_create_public_world():
+                        raise QuotaExceededError(
+                            'Bạn đã đạt giới hạn số thế giới công khai',
+                            current_count=user.metadata.get('public_worlds_count', 0),
+                            limit=user.metadata.get('public_worlds_limit', 1)
+                        )
+                    user.increment_public_worlds()
+                    storage.save_user(user.to_dict())
+                elif old_visibility == 'public' and new_visibility != 'public':
+                    user.decrement_public_worlds()
+                    storage.save_user(user.to_dict())
 
-            world_data['visibility'] = new_visibility
+                world_data['visibility'] = new_visibility
 
-        # Update other fields
-        if 'name' in data:
-            world_data['name'] = data['name']
-        if 'description' in data:
-            world_data['description'] = data['description']
+        for field in ['name', 'description', 'world_type']:
+            if field in data:
+                world_data[field] = data[field]
 
         storage.save_world(world_data)
         flush_data()
 
-        return jsonify(world_data), 200
+        return success_response(world_data, "World updated successfully")
 
     @world_bp.route('/api/worlds/<world_id>', methods=['DELETE'])
     @token_required
@@ -320,24 +286,21 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         """
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
-        # Check delete permission
         if not PermissionService.can_delete(g.current_user.user_id, world_data):
-            return jsonify({'error': 'Chỉ chủ sở hữu mới có thể xóa'}), 403
+            raise PermissionDeniedError('delete', 'world')
 
-        # Update quota if deleting public world
         if world_data.get('visibility') == 'public':
             user_data = storage.load_user(g.current_user.user_id)
             user = User.from_dict(user_data)
             user.decrement_public_worlds()
             storage.save_user(user.to_dict())
 
-        # TODO: Implement cascade delete for stories, entities, locations, events
         storage.delete_world(world_id)
         flush_data()
 
-        return jsonify({'message': 'World deleted successfully'}), 200
+        return deleted_response("World deleted successfully")
 
     @world_bp.route('/api/worlds/<world_id>/stories', methods=['GET'])
     @optional_auth
@@ -345,46 +308,46 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         """Get all stories in a world."""
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
+
         user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
         stories = storage.list_stories(world_id, user_id=user_id)
-        return jsonify(stories)
+        return success_response(stories)
 
     @world_bp.route('/api/worlds/<world_id>/characters', methods=['GET'])
     def world_characters(world_id):
         """Get all characters in a world (excluding dangerous creatures)."""
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
         entities = []
         for ent_id in world_data.get('entities', []):
             ent_data = storage.load_entity(ent_id)
-            if ent_data:
-                entity_type = ent_data.get('entity_type', '')
-                if entity_type not in ['dragon', 'demon', 'monster']:
-                    entities.append({
-                        **ent_data,
-                        'display': CharacterService.format_character_display(ent_data)
-                    })
-        return jsonify(entities)
+            if ent_data and ent_data.get('entity_type', '') not in ['dragon', 'demon', 'monster']:
+                entities.append({
+                    **ent_data,
+                    'display': CharacterService.format_character_display(ent_data)
+                })
+        return success_response(entities)
 
     @world_bp.route('/api/worlds/<world_id>/locations', methods=['GET'])
     def world_locations(world_id):
         """Get all locations in a world."""
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
-        locations = []
-        for loc_id in world_data.get('locations', []):
-            loc_data = storage.load_location(loc_id)
-            if loc_data:
-                locations.append(loc_data)
-        return jsonify(locations)
+        locations = [
+            storage.load_location(loc_id)
+            for loc_id in world_data.get('locations', [])
+            if storage.load_location(loc_id)
+        ]
+        return success_response(locations)
 
     @world_bp.route('/api/worlds/<world_id>/entities/<entity_id>', methods=['PUT'])
     @token_required
+    @validate_request(UpdateEntitySchema)
     def update_entity(world_id, entity_id):
         """Update an entity in a world.
         ---
@@ -415,39 +378,35 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         responses:
           200:
             description: Entity updated successfully
+          403:
+            description: Permission denied
           404:
             description: World or entity not found
         """
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
         entity_data = storage.load_entity(entity_id)
         if not entity_data:
-            return jsonify({'error': 'Entity not found'}), 404
+            raise ResourceNotFoundError('Entity', entity_id)
 
-        # Check ownership
         owner_id = world_data.get('owner_id')
         if owner_id and g.current_user.user_id != owner_id and g.current_user.role != 'admin':
-            return jsonify({'error': 'Bạn không có quyền sửa nhân vật này'}), 403
+            raise PermissionDeniedError('edit', 'entity')
 
-        data = request.json
-        # Update allowed fields
-        if 'name' in data:
-            entity_data['name'] = data['name']
-        if 'entity_type' in data:
-            entity_data['entity_type'] = data['entity_type']
-        if 'description' in data:
-            entity_data['description'] = data['description']
-        if 'attributes' in data:
-            entity_data['attributes'] = data['attributes']
+        data = request.validated_data
+        for field in ['name', 'entity_type', 'description', 'attributes']:
+            if field in data:
+                entity_data[field] = data[field]
 
         storage.save_entity(entity_data)
         flush_data()
 
-        return jsonify(entity_data), 200
+        return success_response(entity_data, "Entity updated successfully")
 
     @world_bp.route('/api/worlds/<world_id>/entities/<entity_id>', methods=['DELETE'])
+    @token_required
     def delete_entity(world_id, entity_id):
         """Delete an entity from a world.
         ---
@@ -470,34 +429,28 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         """
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
         entity_data = storage.load_entity(entity_id)
         if not entity_data:
-            return jsonify({'error': 'Entity not found'}), 404
+            raise ResourceNotFoundError('Entity', entity_id)
 
-        # Remove entity from world's entity list
         if entity_id in world_data.get('entities', []):
             world_data['entities'].remove(entity_id)
             storage.save_world(world_data)
 
-        # Remove entity from all stories in this world
-        stories = storage.list_stories(world_id)
-        for story_data in stories:
+        for story_data in storage.list_stories(world_id):
             if entity_id in story_data.get('entities', []):
                 story_data['entities'].remove(entity_id)
                 storage.save_story(story_data)
 
-        # Delete the entity itself
         storage.delete_entity(entity_id)
         flush_data()
 
-        return jsonify({
-            'message': 'Entity deleted successfully',
-            'entity_id': entity_id
-        }), 200
+        return deleted_response("Entity deleted successfully")
 
     @world_bp.route('/api/worlds/<world_id>/locations/<location_id>', methods=['DELETE'])
+    @token_required
     def delete_location(world_id, location_id):
         """Delete a location from a world.
         ---
@@ -520,54 +473,47 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         """
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
         location_data = storage.load_location(location_id)
         if not location_data:
-            return jsonify({'error': 'Location not found'}), 404
+            raise ResourceNotFoundError('Location', location_id)
 
-        # Remove location from world's location list
         if location_id in world_data.get('locations', []):
             world_data['locations'].remove(location_id)
             storage.save_world(world_data)
 
-        # Remove location from all stories in this world
-        stories = storage.list_stories(world_id)
-        for story_data in stories:
+        for story_data in storage.list_stories(world_id):
             if location_id in story_data.get('locations', []):
                 story_data['locations'].remove(location_id)
                 storage.save_story(story_data)
 
-        # Delete the location itself
         storage.delete_location(location_id)
         flush_data()
 
-        return jsonify({
-            'message': 'Location deleted successfully',
-            'location_id': location_id
-        }), 200
+        return deleted_response("Location deleted successfully")
 
     @world_bp.route('/api/worlds/<world_id>/relationships', methods=['GET'])
     def world_relationships(world_id):
         """Get relationship diagram for a world."""
-        from core.models import Story, Entity as EntityModel
+        from core.models import Entity as EntityModel
 
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
         stories = storage.list_stories(world_id)
-        entities = []
-        for ent_id in world_data.get('entities', []):
-            ent_data = storage.load_entity(ent_id)
-            if ent_data:
-                entities.append(EntityModel.from_dict(ent_data))
+        entities = [
+            EntityModel.from_dict(storage.load_entity(ent_id))
+            for ent_id in world_data.get('entities', [])
+            if storage.load_entity(ent_id)
+        ]
 
         svg_content = diagram_generator.generate_svg(
             entities=entities,
             stories=[Story.from_dict(s) for s in stories]
         )
-        return jsonify({'svg': svg_content})
+        return success_response({'svg': svg_content})
 
     @world_bp.route('/api/worlds/<world_id>/auto-link-stories', methods=['POST'])
     @optional_auth
@@ -588,41 +534,32 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
           404:
             description: World not found
         """
-        from core.models import Story
         from generators import StoryLinker
 
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
-        # Load all stories in this world (with user context for permission filtering)
         user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
         stories_data = storage.list_stories(world_id, user_id=user_id)
+
         if len(stories_data) < 2:
-            return jsonify({
-                'message': 'Cần ít nhất 2 câu chuyện để liên kết',
-                'linked_count': 0,
-                'links': []
-            })
+            return success_response(
+                {'linked_count': 0, 'links': [], 'unlinked_stories': []},
+                'Cần ít nhất 2 câu chuyện để liên kết'
+            )
 
-        # Convert to Story objects
         stories = [Story.from_dict(s) for s in stories_data]
-
-        # Use StoryLinker to find and create links
         linker = StoryLinker()
         linker.link_stories(stories, link_by_entities=True, link_by_locations=True, link_by_time=False)
 
-        # Collect all links and save stories
         all_links = []
         linked_count = 0
 
         for story in stories:
             if story.linked_stories:
                 linked_count += 1
-                # Save updated story
                 storage.save_story(story.to_dict())
-
-                # Record links for response
                 for linked_id in story.linked_stories:
                     linked_story = next((s for s in stories if s.story_id == linked_id), None)
                     if linked_story:
@@ -632,7 +569,6 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                             'to_id': linked_id,
                             'to_title': linked_story.title
                         }
-                        # Avoid duplicate links (A->B and B->A)
                         reverse_exists = any(
                             l['from_id'] == linked_id and l['to_id'] == story.story_id
                             for l in all_links
@@ -642,26 +578,24 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
         flush_data()
 
-        # Identify unlinked stories (no entities AND no locations)
-        unlinked_stories = []
-        for story in stories:
-            if not story.entities and not story.locations:
-                unlinked_stories.append({
-                    'story_id': story.story_id,
-                    'title': story.title,
-                    'time_index': story.metadata.get('world_time', {}).get('year', 0) if story.metadata else 0,
-                    'description': story.content[:200] if story.content else ''
-                })
+        unlinked_stories = sorted(
+            [
+                {
+                    'story_id': s.story_id,
+                    'title': s.title,
+                    'time_index': s.metadata.get('world_time', {}).get('year', 0) if s.metadata else 0,
+                    'description': s.content[:200] if s.content else ''
+                }
+                for s in stories if not s.entities and not s.locations
+            ],
+            key=lambda s: s['time_index']
+        )
 
-        # Sort unlinked stories by time_index
-        unlinked_stories.sort(key=lambda s: s['time_index'])
-
-        return jsonify({
-            'message': f'Đã liên kết {linked_count} câu chuyện',
+        return success_response({
             'linked_count': linked_count,
             'links': all_links,
             'unlinked_stories': unlinked_stories
-        })
+        }, f'Đã liên kết {linked_count} câu chuyện')
 
     @world_bp.route('/api/worlds/<world_id>/share', methods=['POST'])
     @token_required
@@ -702,25 +636,21 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         """
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
-        # Check share permission (owner only)
         if not PermissionService.can_share(g.current_user.user_id, world_data):
-            return jsonify({'error': 'Chỉ chủ sở hữu mới có thể chia sẻ'}), 403
+            raise PermissionDeniedError('share', 'world')
 
-        # Can only share private worlds
         if world_data.get('visibility') == 'public':
-            return jsonify({'error': 'Thế giới công khai không cần chia sẻ'}), 400
+            raise BusinessRuleError('Thế giới công khai không cần chia sẻ')
 
         data = request.json
         user_ids = data.get('user_ids', [])
 
-        # Validate user IDs exist
         for user_id in user_ids:
             if not storage.load_user(user_id):
-                return jsonify({'error': f'User {user_id} không tồn tại'}), 400
+                raise APIValidationError(f'User {user_id} không tồn tại')
 
-        # Update shared_with list (avoid duplicates)
         current_shared = world_data.get('shared_with', [])
         for user_id in user_ids:
             if user_id not in current_shared:
@@ -730,10 +660,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.save_world(world_data)
         flush_data()
 
-        return jsonify({
-            'message': 'Đã chia sẻ thế giới',
-            'shared_with': current_shared
-        })
+        return success_response({'shared_with': current_shared}, 'Đã chia sẻ thế giới')
 
     @world_bp.route('/api/worlds/<world_id>/unshare', methods=['POST'])
     @token_required
@@ -771,25 +698,64 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         """
         world_data = storage.load_world(world_id)
         if not world_data:
-            return jsonify({'error': 'World not found'}), 404
+            raise ResourceNotFoundError('World', world_id)
 
-        # Check permission
         if not PermissionService.can_share(g.current_user.user_id, world_data):
-            return jsonify({'error': 'Chỉ chủ sở hữu mới có thể quản lý quyền truy cập'}), 403
+            raise PermissionDeniedError('manage access for', 'world')
 
         data = request.json
         user_ids = data.get('user_ids', [])
-
-        # Remove from shared_with list
         current_shared = world_data.get('shared_with', [])
         world_data['shared_with'] = [uid for uid in current_shared if uid not in user_ids]
 
         storage.save_world(world_data)
         flush_data()
 
-        return jsonify({
-            'message': 'Đã xóa quyền truy cập',
-            'shared_with': world_data['shared_with']
-        })
+        return success_response({'shared_with': world_data['shared_with']}, 'Đã xóa quyền truy cập')
 
     return world_bp
+
+
+# Helper functions
+
+def _create_entities_from_gpt(storage, world, gpt_entities):
+    """Create entities and locations from GPT analysis."""
+    for ent_data in gpt_entities['entities']:
+        entity = Entity(
+            name=ent_data['name'],
+            description=ent_data.get('description', ''),
+            entity_type=ent_data.get('entity_type', 'commoner'),
+            world_id=world.world_id,
+            attributes=ent_data.get('attributes', {
+                'Strength': random.randint(3, 8),
+                'Intelligence': random.randint(3, 8),
+                'Charisma': random.randint(3, 8)
+            })
+        )
+        storage.save_entity(entity.to_dict())
+        world.add_entity(entity.entity_id)
+
+    for loc_data in gpt_entities['locations']:
+        coords = loc_data.get('coordinates', {})
+        location = Location(
+            name=loc_data['name'],
+            description=loc_data.get('description', ''),
+            world_id=world.world_id,
+            coordinates={
+                'x': coords.get('x', random.uniform(-100, 100)),
+                'y': coords.get('y', random.uniform(-100, 100))
+            }
+        )
+        storage.save_location(location.to_dict())
+        world.add_location(location.location_id)
+
+
+def _create_random_entities(storage, world_generator, world):
+    """Create random entities and locations for world."""
+    for location in world_generator.generate_locations(world, count=3):
+        storage.save_location(location.to_dict())
+        world.add_location(location.location_id)
+
+    for entity in world_generator.generate_entities(world, count=5):
+        storage.save_entity(entity.to_dict())
+        world.add_entity(entity.entity_id)

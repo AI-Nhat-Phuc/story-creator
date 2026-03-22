@@ -13,11 +13,16 @@ from interfaces.api_backend import APIBackend
 
 
 def _create_test_app():
-    """Create a test APIBackend with a temporary database."""
+    """Create a test APIBackend with a temporary TinyDB database.
+
+    MONGODB_URI is removed after imports (load_dotenv runs at import time)
+    so that tests never connect to the production database.
+    """
+    os.environ.pop('MONGODB_URI', None)
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
     temp_db_path = temp_db.name
     temp_db.close()
-    backend = APIBackend(db_path=temp_db_path)
+    backend = APIBackend(storage_type='nosql', db_path=temp_db_path)
     return backend, temp_db_path
 
 
@@ -92,7 +97,7 @@ def test_auth_register_and_login(client):
     )
     assert resp.status_code == 401
 
-    # Duplicate registration
+    # Duplicate registration returns 409 ConflictError
     resp = client.post(
         '/api/auth/register',
         json={
@@ -102,7 +107,7 @@ def test_auth_register_and_login(client):
         },
         content_type='application/json'
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 409
 
     print("✅ Auth register and login passed")
 
@@ -154,7 +159,7 @@ def test_worlds_crud(client):
     resp = client.get('/api/worlds')
     assert resp.status_code == 200
     worlds_before = resp.get_json()
-    assert isinstance(worlds_before, list)
+    assert isinstance(worlds_before['data'], list)
 
     # Create a private world
     resp = client.post(
@@ -169,14 +174,14 @@ def test_worlds_crud(client):
         content_type='application/json'
     )
     assert resp.status_code == 201, f"Create world failed: {resp.data}"
-    world = resp.get_json()
+    world = resp.get_json()['data']
     assert world['name'] == 'Test World'
     world_id = world['world_id']
 
     # Get the world detail (as owner)
     resp = client.get(f'/api/worlds/{world_id}', headers=headers)
     assert resp.status_code == 200
-    detail = resp.get_json()
+    detail = resp.get_json()['data']
     assert detail['world_id'] == world_id
 
     # Unauthenticated access to private world should be denied
@@ -186,7 +191,7 @@ def test_worlds_crud(client):
     # List worlds as authenticated admin should include new world
     resp = client.get('/api/worlds', headers=headers)
     assert resp.status_code == 200
-    worlds_after = resp.get_json()
+    worlds_after = resp.get_json()['data']
     ids = [w['world_id'] for w in worlds_after]
     assert world_id in ids
 
@@ -229,12 +234,12 @@ def test_stories_crud(client):
         content_type='application/json'
     )
     assert resp.status_code == 201
-    world_id = resp.get_json()['world_id']
+    world_id = resp.get_json()['data']['world_id']
 
     # List stories
     resp = client.get('/api/stories')
     assert resp.status_code == 200
-    assert isinstance(resp.get_json(), list)
+    assert isinstance(resp.get_json()['data'], list)
 
     # Create a story
     resp = client.post(
@@ -250,14 +255,14 @@ def test_stories_crud(client):
         content_type='application/json'
     )
     assert resp.status_code == 201, f"Create story failed: {resp.data}"
-    story = resp.get_json()['story']
+    story = resp.get_json()['data']['story']
     assert story['title'] == 'Test Story'
     story_id = story['story_id']
 
     # Get the story detail
     resp = client.get(f'/api/stories/{story_id}', headers=headers)
     assert resp.status_code == 200
-    assert resp.get_json()['story_id'] == story_id
+    assert resp.get_json()['data']['story_id'] == story_id
 
     # Create story without auth
     resp = client.post(
@@ -290,7 +295,7 @@ def test_stats(client):
     # Anonymous access
     resp = client.get('/api/stats')
     assert resp.status_code == 200
-    data = resp.get_json()
+    data = resp.get_json()['data']
     assert 'total_worlds' in data
     assert 'total_stories' in data
     assert 'has_gpt' in data
@@ -301,7 +306,7 @@ def test_stats(client):
     token = _login_admin(client)
     resp = client.get('/api/stats', headers={'Authorization': f'Bearer {token}'})
     assert resp.status_code == 200
-    auth_data = resp.get_json()
+    auth_data = resp.get_json()['data']
     assert 'breakdown' in auth_data
     assert 'worlds' in auth_data['breakdown']
     assert 'stories' in auth_data['breakdown']
@@ -323,34 +328,22 @@ def test_gpt_results_not_found(client):
     print("✅ GPT results not found passed")
 
 
-def test_gpt_unavailable(client):
-    """GPT endpoints return 503 when GPT is not configured."""
-    print("\nTesting GPT unavailable responses...")
+def test_gpt_requires_auth(client):
+    """All GPT endpoints require authentication and return 401 without a token."""
+    print("\nTesting GPT auth requirements...")
 
-    # generate-description
-    resp = client.post(
-        '/api/gpt/generate-description',
-        json={'type': 'world', 'world_name': 'Test', 'world_type': 'fantasy'},
-        content_type='application/json'
-    )
-    assert resp.status_code == 503
-    assert resp.get_json()['error'] == 'GPT not available'
-
-    # analyze
-    resp = client.post(
-        '/api/gpt/analyze',
-        json={'world_description': 'A kingdom with three kings'},
-        content_type='application/json'
-    )
-    assert resp.status_code == 503
-
-    # batch-analyze-stories
-    resp = client.post(
-        '/api/gpt/batch-analyze-stories',
-        json={'world_id': 'some-world-id'},
-        content_type='application/json'
-    )
-    assert resp.status_code == 503
+    for endpoint, payload in [
+        ('/api/gpt/generate-description',
+         {'type': 'world', 'world_name': 'Test', 'world_type': 'fantasy'}),
+        ('/api/gpt/analyze',
+         {'world_description': 'A kingdom'}),
+        ('/api/gpt/batch-analyze-stories',
+         {'world_id': 'some-world-id'}),
+    ]:
+        resp = client.post(endpoint, json=payload, content_type='application/json')
+        assert resp.status_code == 401, (
+            f"{endpoint} should return 401 without token, got {resp.status_code}"
+        )
 
     print("✅ GPT unavailable responses passed")
 
@@ -376,7 +369,7 @@ def main():
             test_stories_crud(client)
             test_stats(client)
             test_gpt_results_not_found(client)
-            test_gpt_unavailable(client)
+            test_gpt_requires_auth(client)
 
         print("\n" + "=" * 70)
         print("  ✅ ALL API TESTS PASSED")

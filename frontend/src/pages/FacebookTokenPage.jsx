@@ -16,7 +16,7 @@ export default function FacebookTokenPage() {
   const [copied, setCopied] = useState(false)
   const [token, setToken] = useState('')
 
-  const appId = import.meta.env.VITE_FACEBOOK_APP_ID || ''
+  const appId = import.meta.env.FACEBOOK_APP_ID || ''
 
   const graphExplorerUrl = 'https://developers.facebook.com/tools/explorer/'
   const oauthUrl = appId
@@ -35,7 +35,7 @@ export default function FacebookTokenPage() {
   const oauthCode = urlParams.get('code')
 
   return (
-    <div className="flex justify-center items-center p-4 min-h-screen bg-base-200">
+    <div className="flex justify-center items-center bg-base-200 p-4 min-h-screen">
       <div className="bg-base-100 shadow-xl w-full max-w-2xl card">
         <div className="card-body">
           <div className="text-center">
@@ -70,10 +70,10 @@ export default function FacebookTokenPage() {
                 Click <strong>"Generate Access Token"</strong>
               </li>
               <li>
-                Cấp quyền: <code className="badge badge-sm badge-outline">pages_show_list</code>{' '}
-                <code className="badge badge-sm badge-outline">pages_read_engagement</code>{' '}
-                <code className="badge badge-sm badge-outline">pages_manage_posts</code>{' '}
-                <code className="badge badge-sm badge-outline">pages_read_user_content</code>
+                Cấp quyền: <code className="badge-outline badge badge-sm">pages_show_list</code>{' '}
+                <code className="badge-outline badge badge-sm">pages_read_engagement</code>{' '}
+                <code className="badge-outline badge badge-sm">pages_manage_posts</code>{' '}
+                <code className="badge-outline badge badge-sm">pages_read_user_content</code>
               </li>
               <li>Copy token và dán vào ô bên dưới</li>
             </ol>
@@ -97,18 +97,18 @@ export default function FacebookTokenPage() {
                 </p>
                 <a
                   href={oauthUrl}
-                  className="btn btn-outline btn-sm"
+                  className="btn-outline btn btn-sm"
                 >
                   <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                   Đăng nhập Facebook &amp; cấp quyền
                 </a>
                 {oauthCode && (
-                  <div className="p-3 rounded-lg bg-success/10">
-                    <p className="text-sm font-semibold text-success">
+                  <div className="bg-success/10 p-3 rounded-lg">
+                    <p className="font-semibold text-success text-sm">
                       <CheckCircleIcon className="inline mr-1 w-4 h-4" />
                       Đã nhận authorization code!
                     </p>
-                    <p className="mt-1 text-xs break-all text-base-content/60">
+                    <p className="mt-1 text-xs text-base-content/60 break-all">
                       Code: <code>{oauthCode}</code>
                     </p>
                     <p className="mt-1 text-xs text-base-content/50">
@@ -144,7 +144,7 @@ export default function FacebookTokenPage() {
               </button>
             </div>
             {token && (
-              <p className="text-xs text-success">
+              <p className="text-success text-xs">
                 <CheckCircleIcon className="inline mr-1 w-3 h-3" />
                 Token đã sẵn sàng. Copy và dán vào trang{' '}
                 <a href={`/facebook?key=story-creator-fb-2024`} className="link link-primary">
@@ -155,12 +155,12 @@ export default function FacebookTokenPage() {
             )}
           </div>
 
-          <div className="mt-6 p-4 rounded-lg bg-warning/10">
-            <p className="font-semibold text-sm text-warning">
+          <div className="bg-warning/10 mt-6 p-4 rounded-lg">
+            <p className="font-semibold text-warning text-sm">
               <KeyIcon className="inline mr-1 w-4 h-4" />
               Lưu ý bảo mật
             </p>
-            <ul className="mt-1 pl-4 text-xs list-disc text-base-content/60">
+            <ul className="mt-1 pl-4 text-xs text-base-content/60 list-disc">
               <li>Không chia sẻ Access Token cho người khác</li>
               <li>Token có thời hạn — hãy lấy lại khi hết hạn</li>
               <li>Chỉ cấp quyền cần thiết cho ứng dụng</li>

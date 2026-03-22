@@ -1,6 +1,13 @@
 """Facebook API routes for the Story Creator backend."""
 
 from flask import Blueprint, request, jsonify, g
+from core.exceptions import (
+    PermissionDeniedError,
+    ValidationError as APIValidationError,
+    ExternalServiceError,
+    BusinessRuleError
+)
+from utils.responses import success_response
 from interfaces.auth_middleware import token_required
 import uuid
 import threading
@@ -9,22 +16,21 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _extract_fb_error(result):
-    """Extract error message from a Facebook Graph API error response."""
-    err = result.get('error', '')
-    if isinstance(err, dict):
-        return err.get('message', str(err))
-    return str(err)
-
-
-def _check_facebook_access(current_user):
-    """Return 403 response if user does not have facebook_access permission."""
+def _require_facebook_access(current_user):
+    """Raise PermissionDeniedError if user lacks facebook_access."""
     if not current_user.metadata.get('facebook_access', False):
-        return jsonify({
-            'error': 'Bạn không có quyền truy cập tính năng quản lý Facebook',
-            'code': 'FACEBOOK_ACCESS_DENIED'
-        }), 403
-    return None
+        raise PermissionDeniedError(
+            'access Facebook management features',
+            'this account'
+        )
+
+
+def _check_fb_result(result):
+    """Raise ExternalServiceError if Facebook API returned an error."""
+    if 'error' in result:
+        err = result['error']
+        message = err.get('message', str(err)) if isinstance(err, dict) else str(err)
+        raise ExternalServiceError('Facebook Graph API', message)
 
 
 def create_facebook_bp(facebook_service, gpt_results, has_gpt):
@@ -69,18 +75,16 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        denied = _check_facebook_access(g.current_user)
-        if denied:
-            return denied
+        _require_facebook_access(g.current_user)
+
         data = request.json or {}
         short_token = data.get('short_token', '').strip()
         if not short_token:
-            return jsonify({'error': 'short_token is required'}), 400
+            raise APIValidationError('short_token is required')
 
         result = facebook_service.exchange_short_token(short_token)
-        if 'error' in result:
-            return jsonify({'error': _extract_fb_error(result)}), 400
-        return jsonify(result)
+        _check_fb_result(result)
+        return success_response(result)
 
     @fb_bp.route('/api/facebook/pages', methods=['GET'])
     @token_required
@@ -103,17 +107,15 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        denied = _check_facebook_access(g.current_user)
-        if denied:
-            return denied
+        _require_facebook_access(g.current_user)
+
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
-            return jsonify({'error': 'fb_token query parameter is required'}), 400
+            raise APIValidationError('fb_token query parameter is required')
 
         result = facebook_service.get_page_tokens(fb_token)
-        if 'error' in result:
-            return jsonify({'error': _extract_fb_error(result)}), 400
-        return jsonify(result)
+        _check_fb_result(result)
+        return success_response(result)
 
     # ------------------------------------------------------------------
     # User info
@@ -137,17 +139,15 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        denied = _check_facebook_access(g.current_user)
-        if denied:
-            return denied
+        _require_facebook_access(g.current_user)
+
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
-            return jsonify({'error': 'fb_token is required'}), 400
+            raise APIValidationError('fb_token is required')
 
         result = facebook_service.get_user_info(fb_token)
-        if 'error' in result:
-            return jsonify({'error': _extract_fb_error(result)}), 400
-        return jsonify(result)
+        _check_fb_result(result)
+        return success_response(result)
 
     # ------------------------------------------------------------------
     # Posts
@@ -179,18 +179,16 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        denied = _check_facebook_access(g.current_user)
-        if denied:
-            return denied
+        _require_facebook_access(g.current_user)
+
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
-            return jsonify({'error': 'fb_token is required'}), 400
+            raise APIValidationError('fb_token is required')
 
         limit = request.args.get('limit', 10, type=int)
         result = facebook_service.get_page_posts(page_id, fb_token, limit=limit)
-        if 'error' in result:
-            return jsonify({'error': _extract_fb_error(result)}), 400
-        return jsonify(result)
+        _check_fb_result(result)
+        return success_response(result)
 
     @fb_bp.route('/api/facebook/posts/<post_id>', methods=['GET'])
     @token_required
@@ -214,17 +212,15 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        denied = _check_facebook_access(g.current_user)
-        if denied:
-            return denied
+        _require_facebook_access(g.current_user)
+
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
-            return jsonify({'error': 'fb_token is required'}), 400
+            raise APIValidationError('fb_token is required')
 
         result = facebook_service.get_post_detail(post_id, fb_token)
-        if 'error' in result:
-            return jsonify({'error': _extract_fb_error(result)}), 400
-        return jsonify(result)
+        _check_fb_result(result)
+        return success_response(result)
 
     @fb_bp.route('/api/facebook/posts/<post_id>/comments', methods=['GET'])
     @token_required
@@ -252,18 +248,16 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        denied = _check_facebook_access(g.current_user)
-        if denied:
-            return denied
+        _require_facebook_access(g.current_user)
+
         fb_token = request.args.get('fb_token', '').strip()
         if not fb_token:
-            return jsonify({'error': 'fb_token is required'}), 400
+            raise APIValidationError('fb_token is required')
 
         limit = request.args.get('limit', 25, type=int)
         result = facebook_service.get_post_comments(post_id, fb_token, limit=limit)
-        if 'error' in result:
-            return jsonify({'error': _extract_fb_error(result)}), 400
-        return jsonify(result)
+        _check_fb_result(result)
+        return success_response(result)
 
     # ------------------------------------------------------------------
     # Publish
@@ -304,28 +298,26 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        denied = _check_facebook_access(g.current_user)
-        if denied:
-            return denied
+        _require_facebook_access(g.current_user)
+
         data = request.json or {}
         fb_token = data.get('fb_token', '').strip()
         if not fb_token:
-            return jsonify({'error': 'fb_token is required'}), 400
+            raise APIValidationError('fb_token is required')
 
         message = data.get('message', '').strip()
         link = data.get('link', '').strip()
         image_url = data.get('image_url', '').strip()
 
         if not message and not link and not image_url:
-            return jsonify({'error': 'At least message, link, or image_url is required'}), 400
+            raise APIValidationError('At least message, link, or image_url is required')
 
         result = facebook_service.create_post(
             page_id, fb_token,
             message=message, link=link, image_url=image_url
         )
-        if 'error' in result:
-            return jsonify({'error': _extract_fb_error(result)}), 400
-        return jsonify(result)
+        _check_fb_result(result)
+        return success_response(result)
 
     # ------------------------------------------------------------------
     # Search
@@ -363,21 +355,20 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           403:
             description: Facebook access not granted
         """
-        denied = _check_facebook_access(g.current_user)
-        if denied:
-            return denied
+        _require_facebook_access(g.current_user)
+
         fb_token = request.args.get('fb_token', '').strip()
         keyword = request.args.get('keyword', '').strip()
+
         if not fb_token:
-            return jsonify({'error': 'fb_token is required'}), 400
+            raise APIValidationError('fb_token is required')
         if not keyword:
-            return jsonify({'error': 'keyword is required'}), 400
+            raise APIValidationError('keyword is required')
 
         limit = request.args.get('limit', 25, type=int)
         result = facebook_service.search_page_posts(page_id, fb_token, keyword, limit=limit)
-        if 'error' in result:
-            return jsonify({'error': _extract_fb_error(result)}), 400
-        return jsonify(result)
+        _check_fb_result(result)
+        return success_response(result)
 
     # ------------------------------------------------------------------
     # GPT content generation
@@ -419,16 +410,15 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
           503:
             description: GPT not available
         """
-        denied = _check_facebook_access(g.current_user)
-        if denied:
-            return denied
+        _require_facebook_access(g.current_user)
+
         if not has_gpt:
-            return jsonify({'error': 'GPT not available'}), 503
+            raise ExternalServiceError('GPT', 'GPT not available')
 
         data = request.json or {}
         topic = data.get('topic', '').strip()
         if not topic:
-            return jsonify({'error': 'topic is required'}), 400
+            raise APIValidationError('topic is required')
 
         requirements = data.get('requirements', '')
         tone = data.get('tone', 'professional')
@@ -453,10 +443,7 @@ def create_facebook_bp(facebook_service, gpt_results, has_gpt):
                     })
             except Exception as e:
                 logger.error(f"GPT generate content error: {e}")
-                gpt_results.set(task_id, {
-                    'status': 'error',
-                    'result': str(e)
-                })
+                gpt_results.set(task_id, {'status': 'error', 'result': str(e)})
 
         thread = threading.Thread(target=background_generate, daemon=True)
         thread.start()

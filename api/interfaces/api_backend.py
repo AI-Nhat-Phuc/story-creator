@@ -104,6 +104,18 @@ class APIBackend:
 
         self.swagger = Swagger(self.app, config=swagger_config, template=swagger_template)
 
+        # Register global error handlers
+        from interfaces.error_handlers import register_error_handlers
+        register_error_handlers(self.app)
+
+        # Register request/response logging middleware
+        from interfaces.logging_middleware import register_logging_middleware
+        register_logging_middleware(self.app)
+
+        # Initialize rate limiter (no-op if flask-limiter not installed)
+        from interfaces.rate_limiter import create_limiter
+        self.limiter = create_limiter(self.app)
+
         # Initialize storage
         # Priority: MongoDB (if MONGODB_URI set) → NoSQL (TinyDB) → JSON files
         mongodb_uri = os.environ.get('MONGODB_URI')
@@ -256,7 +268,8 @@ class APIBackend:
             gpt_results=self.gpt_results,
             has_gpt=self.has_gpt,
             storage=self.storage,
-            flush_data=self._flush_data
+            flush_data=self._flush_data,
+            limiter=self.limiter
         )
         self.app.register_blueprint(gpt_bp)
 
@@ -279,7 +292,8 @@ class APIBackend:
         # Auth routes
         auth_bp = create_auth_bp(
             storage=self.storage,
-            auth_service=self.auth_service
+            auth_service=self.auth_service,
+            limiter=self.limiter
         )
         self.app.register_blueprint(auth_bp)
 

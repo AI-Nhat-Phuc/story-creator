@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { BookOpenIcon } from '@heroicons/react/24/solid'
 
-const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID
+const FACEBOOK_APP_ID = import.meta.env.FACEBOOK_APP_ID
 
 export default function RegisterPage() {
   const navigate = useNavigate()

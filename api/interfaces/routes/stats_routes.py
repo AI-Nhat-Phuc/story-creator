@@ -1,7 +1,8 @@
 """Stats routes for the API backend."""
 
-from flask import Blueprint, jsonify, g
+from flask import Blueprint, g
 from interfaces.auth_middleware import optional_auth
+from utils.responses import success_response
 
 
 def create_stats_bp(storage, has_gpt):
@@ -129,6 +130,6 @@ def create_stats_bp(storage, has_gpt):
                 }
             }
 
-        return jsonify(result)
+        return success_response(result)
 
     return stats_bp

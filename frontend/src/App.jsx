@@ -20,7 +20,7 @@ const FacebookPage = lazy(() => import('./pages/FacebookPage'))
 const FacebookTokenPage = lazy(() => import('./pages/FacebookTokenPage'))
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'))
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID
 
 function App() {
   const [toast, setToast] = useState(null)

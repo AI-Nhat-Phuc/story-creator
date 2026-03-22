@@ -3,23 +3,37 @@
 from flask import Blueprint, request, jsonify
 import requests
 import logging
+from core.exceptions import (
+    ValidationError as APIValidationError,
+    AuthenticationError,
+    ExternalServiceError,
+    ConflictError
+)
+from utils.validation import validate_request
+from schemas.auth_schemas import RegisterSchema, LoginSchema, ChangePasswordSchema
 
 logger = logging.getLogger(__name__)
 
 
-def create_auth_bp(storage, auth_service):
+def create_auth_bp(storage, auth_service, limiter=None):
     """Create authentication blueprint with injected dependencies.
 
     Args:
         storage: Storage instance for user data persistence
         auth_service: AuthService instance for authentication operations
+        limiter: Optional Flask-Limiter instance for rate limiting
 
     Returns:
         Blueprint: Configured Flask blueprint for auth routes
     """
     auth_bp = Blueprint('auth', __name__)
 
+    # Tighter limit on auth endpoints (brute-force protection)
+    _auth_limit = limiter.limit("5 per minute") if limiter else (lambda f: f)
+
     @auth_bp.route('/api/auth/register', methods=['POST'])
+    @_auth_limit
+    @validate_request(RegisterSchema)
     def register():
         """Register a new user.
         ---
@@ -44,43 +58,27 @@ def create_auth_bp(storage, auth_service):
                   description: User email address
                 password:
                   type: string
-                  description: Password (min 6 characters)
+                  description: Password (min 8 characters)
                 role:
                   type: string
                   description: User role (optional, defaults to 'user')
         responses:
           201:
             description: User registered successfully
-            schema:
-              type: object
-              properties:
-                success:
-                  type: boolean
-                message:
-                  type: string
-                user:
-                  type: object
-                token:
-                  type: string
           400:
             description: Invalid input or user already exists
         """
-        data = request.get_json()
-
-        username = data.get('username', '').strip()
-        email = data.get('email', '').strip()
-        password = data.get('password', '')
-        role = data.get('role', 'user')
+        data = request.validated_data
 
         success, message, user = auth_service.register_user(
-            username=username,
-            email=email,
-            password=password,
-            role=role
+            username=data['username'],
+            email=data['email'],
+            password=data['password'],
+            role=data.get('role', 'user')
         )
 
         if not success:
-            return jsonify({'success': False, 'message': message}), 400
+            raise ConflictError(message)
 
         token = auth_service.generate_token(user)
 
@@ -92,6 +90,8 @@ def create_auth_bp(storage, auth_service):
         }), 201
 
     @auth_bp.route('/api/auth/login', methods=['POST'])
+    @_auth_limit
+    @validate_request(LoginSchema)
     def login():
         """Login with username and password.
         ---
@@ -114,35 +114,17 @@ def create_auth_bp(storage, auth_service):
         responses:
           200:
             description: Login successful
-            schema:
-              type: object
-              properties:
-                success:
-                  type: boolean
-                message:
-                  type: string
-                user:
-                  type: object
-                token:
-                  type: string
           401:
             description: Invalid credentials
         """
-        data = request.get_json()
+        data = request.validated_data
 
-        username = data.get('username', '').strip()
-        password = data.get('password', '')
-
-        if not username or not password:
-            return jsonify({
-                'success': False,
-                'message': 'Username and password are required'
-            }), 400
-
-        success, message, token, user = auth_service.login(username, password)
+        success, message, token, user = auth_service.login(
+            data['username'], data['password']
+        )
 
         if not success:
-            return jsonify({'success': False, 'message': message}), 401
+            raise AuthenticationError(message)
 
         return jsonify({
             'success': True,
@@ -166,36 +148,14 @@ def create_auth_bp(storage, auth_service):
         responses:
           200:
             description: Token is valid
-            schema:
-              type: object
-              properties:
-                success:
-                  type: boolean
-                user:
-                  type: object
           401:
             description: Invalid or expired token
         """
-        auth_header = request.headers.get('Authorization', '')
-
-        if not auth_header.startswith('Bearer '):
-            return jsonify({
-                'success': False,
-                'message': 'Missing or invalid Authorization header'
-            }), 401
-
-        token = auth_header[7:]
-        user = auth_service.get_user_from_token(token)
-
-        if not user:
-            return jsonify({
-                'success': False,
-                'message': 'Token is invalid or expired'
-            }), 401
-
+        user = _get_user_from_auth_header(request, auth_service)
         return jsonify({'success': True, 'user': user.to_safe_dict()})
 
     @auth_bp.route('/api/auth/change-password', methods=['POST'])
+    @validate_request(ChangePasswordSchema)
     def change_password():
         """Change user password (requires valid token).
         ---
@@ -213,10 +173,10 @@ def create_auth_bp(storage, auth_service):
             schema:
               type: object
               required:
-                - old_password
+                - current_password
                 - new_password
               properties:
-                old_password:
+                current_password:
                   type: string
                 new_password:
                   type: string
@@ -226,26 +186,17 @@ def create_auth_bp(storage, auth_service):
           401:
             description: Unauthorized or invalid old password
         """
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+        user = _get_user_from_auth_header(request, auth_service)
 
-        token = auth_header[7:]
-        user = auth_service.get_user_from_token(token)
-
-        if not user:
-            return jsonify({'success': False, 'message': 'Invalid token'}), 401
-
-        data = request.get_json()
-        old_password = data.get('old_password', '')
-        new_password = data.get('new_password', '')
-
+        data = request.validated_data
         success, message = auth_service.change_password(
-            user.user_id, old_password, new_password
+            user.user_id,
+            data['current_password'],
+            data['new_password']
         )
 
         if not success:
-            return jsonify({'success': False, 'message': message}), 400
+            raise APIValidationError(message)
 
         return jsonify({'success': True, 'message': message})
 
@@ -267,16 +218,7 @@ def create_auth_bp(storage, auth_service):
           401:
             description: Unauthorized
         """
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
-
-        token = auth_header[7:]
-        user = auth_service.get_user_from_token(token)
-
-        if not user:
-            return jsonify({'success': False, 'message': 'Invalid token'}), 401
-
+        user = _get_user_from_auth_header(request, auth_service)
         return jsonify({'success': True, 'user': user.to_safe_dict()})
 
     # ==================== OAuth Routes ====================
@@ -306,10 +248,10 @@ def create_auth_bp(storage, auth_service):
             description: Invalid token
         """
         data = request.get_json()
-        google_token = data.get('token', '')
+        google_token = data.get('token', '') if data else ''
 
         if not google_token:
-            return jsonify({'success': False, 'message': 'Missing Google token'}), 400
+            raise APIValidationError('Missing Google token')
 
         try:
             response = requests.get(
@@ -319,7 +261,7 @@ def create_auth_bp(storage, auth_service):
             )
 
             if response.status_code != 200:
-                return jsonify({'success': False, 'message': 'Invalid Google token'}), 400
+                raise APIValidationError('Invalid Google token')
 
             user_info = response.json()
 
@@ -332,7 +274,7 @@ def create_auth_bp(storage, auth_service):
             )
 
             if not success:
-                return jsonify({'success': False, 'message': message}), 400
+                raise APIValidationError(message)
 
             token = auth_service.generate_token(user)
 
@@ -343,9 +285,11 @@ def create_auth_bp(storage, auth_service):
                 'token': token
             })
 
+        except APIValidationError:
+            raise
         except Exception as e:
             logger.error(f"Error verifying Google token: {e}")
-            return jsonify({'success': False, 'message': 'Google authentication error'}), 500
+            raise ExternalServiceError('Google', 'Google authentication error', e)
 
     @auth_bp.route('/api/auth/oauth/facebook', methods=['POST'])
     def oauth_facebook():
@@ -372,10 +316,10 @@ def create_auth_bp(storage, auth_service):
             description: Invalid token
         """
         data = request.get_json()
-        fb_token = data.get('token', '')
+        fb_token = data.get('token', '') if data else ''
 
         if not fb_token:
-            return jsonify({'success': False, 'message': 'Missing Facebook token'}), 400
+            raise APIValidationError('Missing Facebook token')
 
         try:
             response = requests.get(
@@ -388,7 +332,7 @@ def create_auth_bp(storage, auth_service):
             )
 
             if response.status_code != 200:
-                return jsonify({'success': False, 'message': 'Invalid Facebook token'}), 400
+                raise APIValidationError('Invalid Facebook token')
 
             user_info = response.json()
 
@@ -401,7 +345,7 @@ def create_auth_bp(storage, auth_service):
             )
 
             if not success:
-                return jsonify({'success': False, 'message': message}), 400
+                raise APIValidationError(message)
 
             token = auth_service.generate_token(user)
 
@@ -412,8 +356,30 @@ def create_auth_bp(storage, auth_service):
                 'token': token
             })
 
+        except APIValidationError:
+            raise
         except Exception as e:
             logger.error(f"Error verifying Facebook token: {e}")
-            return jsonify({'success': False, 'message': 'Facebook authentication error'}), 500
+            raise ExternalServiceError('Facebook', 'Facebook authentication error', e)
 
     return auth_bp
+
+
+# Helper function
+
+def _get_user_from_auth_header(request, auth_service):
+    """Extract and validate user from Authorization header.
+
+    Raises AuthenticationError if token is missing or invalid.
+    """
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        raise AuthenticationError('Missing or invalid Authorization header')
+
+    token = auth_header[7:]
+    user = auth_service.get_user_from_token(token)
+
+    if not user:
+        raise AuthenticationError('Token is invalid or expired')
+
+    return user

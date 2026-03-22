@@ -1,8 +1,9 @@
 """Authentication middleware and decorators for protecting routes."""
 
 from functools import wraps
-from flask import request, jsonify
+from flask import request, jsonify, g
 import logging
+from core.exceptions import AuthenticationError, PermissionDeniedError
 
 logger = logging.getLogger(__name__)
 
@@ -36,26 +37,18 @@ def token_required(f):
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-        from flask import g
-
         # Extract token from Authorization header
         auth_header = request.headers.get('Authorization', '')
 
         if not auth_header.startswith('Bearer '):
-            return jsonify({
-                'success': False,
-                'message': 'Missing or invalid Authorization header'
-            }), 401
+            raise AuthenticationError('Missing or invalid Authorization header')
 
         token = auth_header[7:]  # Remove 'Bearer ' prefix
 
         # Verify token and get user
         if not _auth_service:
             logger.error("Auth service not initialized")
-            return jsonify({
-                'success': False,
-                'message': 'Server configuration error'
-            }), 500
+            raise RuntimeError('Server configuration error: Auth service not initialized')
 
         try:
             user = _auth_service.get_user_from_token(token)
@@ -75,16 +68,12 @@ def token_required(f):
                     )
                     logger.info(f"Using token payload fallback for user: {payload.get('username')}")
                 else:
-                    return jsonify({
-                        'success': False,
-                        'message': 'Token không hợp lệ hoặc đã hết hạn'
-                    }), 401
+                    raise AuthenticationError('Token không hợp lệ hoặc đã hết hạn')
+        except AuthenticationError:
+            raise  # Re-raise our custom exceptions
         except Exception as e:
             logger.error(f"Error during token verification: {e}")
-            return jsonify({
-                'success': False,
-                'message': 'Token không hợp lệ hoặc đã hết hạn'
-            }), 401
+            raise AuthenticationError('Token không hợp lệ hoặc đã hết hạn')
 
         # Store user in Flask g for access in route
         g.current_user = user
@@ -109,21 +98,13 @@ def admin_required(f):
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-        from flask import g
-
         # Check if current_user exists (should be set by token_required)
         if not hasattr(g, 'current_user'):
-            return jsonify({
-                'success': False,
-                'message': 'Unauthorized'
-            }), 401
+            raise AuthenticationError('Unauthorized')
 
         # Check if user has admin role
         if g.current_user.role != 'admin':
-            return jsonify({
-                'success': False,
-                'message': 'Yêu cầu quyền admin'
-            }), 403
+            raise PermissionDeniedError('admin access', 'admin panel')
 
         return f(*args, **kwargs)
 
@@ -213,15 +194,11 @@ def permission_required(*permissions):
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            from flask import g
             from core.permissions import has_permission
 
             # Check if current_user exists (should be set by token_required)
             if not hasattr(g, 'current_user'):
-                return jsonify({
-                    'success': False,
-                    'message': 'Unauthorized'
-                }), 401
+                raise AuthenticationError('Unauthorized')
 
             user_role = g.current_user.role
 
@@ -232,11 +209,9 @@ def permission_required(*permissions):
                     missing_permissions.append(perm.value)
 
             if missing_permissions:
-                return jsonify({
-                    'success': False,
-                    'message': 'Không đủ quyền truy cập',
-                    'required_permissions': missing_permissions
-                }), 403
+                error = PermissionDeniedError('access', 'protected resource')
+                error.details['required_permissions'] = missing_permissions
+                raise error
 
             return f(*args, **kwargs)
 
@@ -265,26 +240,21 @@ def role_required(*roles):
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            from flask import g
             from core.permissions import Role
 
             # Check if current_user exists
             if not hasattr(g, 'current_user'):
-                return jsonify({
-                    'success': False,
-                    'message': 'Unauthorized'
-                }), 401
+                raise AuthenticationError('Unauthorized')
 
             user_role = g.current_user.role
 
             # Check if user has ONE of the required roles
             allowed_roles = [r.value for r in roles]
             if user_role not in allowed_roles:
-                return jsonify({
-                    'success': False,
-                    'message': f'Yêu cầu vai trò: {", ".join(allowed_roles)}',
-                    'current_role': user_role
-                }), 403
+                error = PermissionDeniedError('access', 'role-protected resource')
+                error.details['required_roles'] = allowed_roles
+                error.details['current_role'] = user_role
+                raise error
 
             return f(*args, **kwargs)
 
@@ -307,20 +277,12 @@ def moderator_required(f):
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-        from flask import g
-
         if not hasattr(g, 'current_user'):
-            return jsonify({
-                'success': False,
-                'message': 'Unauthorized'
-            }), 401
+            raise AuthenticationError('Unauthorized')
 
         user_role = g.current_user.role
         if user_role not in ['admin', 'moderator']:
-            return jsonify({
-                'success': False,
-                'message': 'Yêu cầu quyền moderator hoặc admin'
-            }), 403
+            raise PermissionDeniedError('moderator or admin access')
 
         return f(*args, **kwargs)
 
