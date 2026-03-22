@@ -76,7 +76,8 @@ function applyTheme(mode, palette) {
     html.setAttribute('data-theme', 'sc-dark')
     clearCustomVars()
   } else {
-    html.setAttribute('data-theme', 'sc-light')
+    const base = relativeLuminance(palette.base100) > 0.179 ? 'sc-light' : 'sc-dark'
+    html.setAttribute('data-theme', base)
     injectCustomVars(palette)
   }
 }

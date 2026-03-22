@@ -74,7 +74,7 @@ export function relativeLuminance(hex) {
 export function deriveCustomPalette(primaryHex) {
   const { h, s, l } = hexToHsl(primaryHex)
   const secondary = hslToHex(h, Math.max(0, s - 20), Math.min(100, l + 15))
-  const accent = hslToHex((h + 30) % 360, s, l)
+  const accent = hslToHex((h + 30) % 360, Math.min(100, s + 15), l)
   const lum = relativeLuminance(primaryHex)
   const base100 = lum < 0.5 ? '#FFFFFF' : '#1E293B'
   const base200 = lum < 0.5 ? hslToHex(h, 20, 95) : hslToHex(h, 20, 10)
