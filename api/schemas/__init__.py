@@ -15,8 +15,7 @@ from .story_schemas import (
 from .auth_schemas import (
     RegisterSchema,
     LoginSchema,
-    GoogleAuthSchema,
-    FacebookAuthSchema
+    GoogleAuthSchema
 )
 
 __all__ = [
@@ -32,5 +31,4 @@ __all__ = [
     'RegisterSchema',
     'LoginSchema',
     'GoogleAuthSchema',
-    'FacebookAuthSchema',
 ]

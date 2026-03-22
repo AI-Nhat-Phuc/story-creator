@@ -5,7 +5,6 @@
   "private": true,
   "description": "React frontend for Story Creator",
   "dependencies": {
-    "@greatsumini/react-facebook-login": "^3.4.0",
     "@heroicons/react": "^2.2.0",
     "@react-oauth/google": "^0.13.4",
     "@xyflow/react": "^12.10.0",
