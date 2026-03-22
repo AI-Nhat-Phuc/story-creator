@@ -89,7 +89,6 @@ export const authAPI = {
   getCurrentUser: () => api.get('/auth/me'),
   // OAuth
   googleLogin: (token) => api.post('/auth/oauth/google', { token }),
-  facebookLogin: (token) => api.post('/auth/oauth/facebook', { token }),
 }
 
 // Admin API
@@ -99,29 +98,9 @@ export const adminAPI = {
   getUserDetail: (userId) => api.get(`/admin/users/${userId}`),
   changeUserRole: (userId, role) => api.put(`/admin/users/${userId}/role`, { role }),
   banUser: (userId, banned, reason) => api.post(`/admin/users/${userId}/ban`, { banned, reason }),
-  setFacebookAccess: (userId, facebook_access) => api.put(`/admin/users/${userId}/facebook-access`, { facebook_access }),
-
   // System info
   getRoles: () => api.get('/admin/roles'),
   getAdminStats: () => api.get('/admin/stats')
-}
-
-// Facebook API
-export const facebookAPI = {
-  exchangeToken: (shortToken) => api.post('/facebook/token/exchange', { short_token: shortToken }),
-  getPages: (fbToken) => api.get('/facebook/pages', { params: { fb_token: fbToken } }),
-  getMe: (fbToken) => api.get('/facebook/me', { params: { fb_token: fbToken } }),
-  getPagePosts: (pageId, fbToken, limit = 10) =>
-    api.get(`/facebook/pages/${pageId}/posts`, { params: { fb_token: fbToken, limit } }),
-  getPostDetail: (postId, fbToken) =>
-    api.get(`/facebook/posts/${postId}`, { params: { fb_token: fbToken } }),
-  getPostComments: (postId, fbToken, limit = 25) =>
-    api.get(`/facebook/posts/${postId}/comments`, { params: { fb_token: fbToken, limit } }),
-  createPost: (pageId, data) =>
-    api.post(`/facebook/pages/${pageId}/posts`, data),
-  searchPosts: (pageId, fbToken, keyword, limit = 25) =>
-    api.get(`/facebook/pages/${pageId}/search`, { params: { fb_token: fbToken, keyword, limit } }),
-  generateContent: (data) => api.post('/facebook/generate-content', data),
 }
 
 export default api

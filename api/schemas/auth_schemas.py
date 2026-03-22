@@ -83,20 +83,6 @@ class GoogleAuthSchema(Schema):
     )
 
 
-class FacebookAuthSchema(Schema):
-    """Schema for POST /api/auth/facebook - Facebook OAuth."""
-
-    accessToken = fields.Str(
-        required=True,
-        error_messages={'required': 'Facebook access token is required'}
-    )
-
-    userID = fields.Str(
-        required=True,
-        error_messages={'required': 'Facebook user ID is required'}
-    )
-
-
 class ChangePasswordSchema(Schema):
     """Schema for POST /api/auth/change-password - Change user password."""
 

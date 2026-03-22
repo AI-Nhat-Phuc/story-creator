@@ -143,25 +143,6 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const facebookLogin = async (accessToken) => {
-    try {
-      const response = await authAPI.facebookLogin(accessToken)
-      if (response.data.success) {
-        const { token: newToken, user: userData } = response.data
-        localStorage.setItem('auth_token', newToken)
-        setToken(newToken)
-        setUser(userData)
-        return { success: true, message: response.data.message }
-      }
-      return { success: false, message: response.data.message }
-    } catch (error) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Lỗi khi đăng nhập với Facebook',
-      }
-    }
-  }
-
   const value = {
     user,
     token,
@@ -172,7 +153,6 @@ export const AuthProvider = ({ children }) => {
     logout,
     changePassword,
     googleLogin,
-    facebookLogin,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
