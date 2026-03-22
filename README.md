@@ -234,6 +234,60 @@ Dự án cung cấp sẵn các tasks trong `.vscode/tasks.json`:
 - `Build React` — Production build
 - `Install Backend Deps` / `Install Frontend Deps`
 
+## SDD — Specification-Driven Development
+
+This project uses a structured SDD workflow enforced by Claude Code hooks.
+Each feature follows 6 gated phases: **ANALYZE → SPEC → DESIGN → TEST → IMPLEMENT → REVIEW**.
+Hooks in `.claude/settings.local.json` automatically block out-of-phase file edits.
+
+### Quick start
+
+```bash
+# Begin a new feature
+python .sdd/sdd.py start "Feature name"
+
+# Check current phase and rules
+python .sdd/sdd.py status
+```
+
+### Phase transitions
+
+| Command | Transition |
+| ------- | ---------- |
+| `python .sdd/sdd.py approve spec` | SPEC → DESIGN |
+| `python .sdd/sdd.py approve design` | DESIGN → TEST |
+| `python .sdd/sdd.py phase IMPLEMENT` | TEST → IMPLEMENT (after red-state confirmed) |
+| `python .sdd/sdd.py approve flow <file>` | Unlock one service/route file for editing |
+| `python .sdd/sdd.py phase REVIEW` | IMPLEMENT → REVIEW (after all tests pass) |
+| `python .sdd/sdd.py done` | Mark feature complete |
+
+### Flow summary (required in IMPLEMENT)
+
+Before Claude edits any file in `api/services/` or `api/interfaces/routes/`, it must:
+
+1. Read the entire file
+2. Write a summary to `.sdd/flow_summary.md` (current logic + planned changes)
+3. Show the summary and wait for confirmation
+4. Run `python .sdd/sdd.py approve flow <file>` to unlock
+
+The hook will block the edit until step 4 is complete.
+
+### Files
+
+| Path | Purpose |
+| ---- | ------- |
+| `.sdd/sdd.py` | Phase manager CLI |
+| `.sdd/state.json` | Current phase state |
+| `.sdd/hooks/guard_phase.py` | Pre-edit guard (enforces phase rules) |
+| `.sdd/hooks/log_change.py` | Post-edit change logger |
+| `.sdd/PHASES.md` | Full rules for each phase |
+| `.sdd/spec.md` | Specification template |
+| `.sdd/design.md` | Design / interface template |
+| `.sdd/flow_summary.md` | Flow summary template |
+| `.sdd/changelog.log` | Auto-generated change log |
+
+See [.sdd/PHASES.md](.sdd/PHASES.md) for the complete rule set.
+
 ## License
 
 MIT

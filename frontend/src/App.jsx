@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from './contexts/AuthContext'
 import { GptTaskProvider } from './contexts/GptTaskContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import MainLayout from './layouts/MainLayout'
 import Toast from './components/Toast'
 import LoadingSpinner from './components/LoadingSpinner'
@@ -31,6 +32,7 @@ function App() {
   }, [])
 
   return (
+    <ThemeProvider>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>
         <GptTaskProvider showToast={showToast}>
@@ -55,6 +57,7 @@ function App() {
         </GptTaskProvider>
       </AuthProvider>
     </GoogleOAuthProvider>
+    </ThemeProvider>
   )
 }
 

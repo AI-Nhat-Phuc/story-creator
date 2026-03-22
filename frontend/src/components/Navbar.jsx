@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import ThemeSelector from './ThemeSelector'
 import {
   BookOpenIcon,
   ShieldCheckIcon,
   StarIcon,
   UserIcon,
   Bars3Icon,
+  SwatchIcon,
 } from '@heroicons/react/24/solid'
 
 function Navbar() {
@@ -81,6 +83,16 @@ function Navbar() {
           {navLinks}
         </ul>
 
+        {/* Theme selector - desktop */}
+        <div className="dropdown dropdown-end ml-1">
+          <label tabIndex={0} className="btn btn-ghost btn-circle">
+            <SwatchIcon className="w-5 h-5" />
+          </label>
+          <div tabIndex={0} className="dropdown-content bg-base-100 shadow rounded-box z-50 mt-3 w-48 text-base-content">
+            <ThemeSelector />
+          </div>
+        </div>
+
         {/* User menu - desktop */}
         {authLoading ? (
           <div className="ml-2 btn btn-ghost btn-circle">
@@ -131,6 +143,10 @@ function Navbar() {
             </label>
             <ul tabIndex={0} className="bg-base-100 shadow mt-3 p-2 rounded-box w-56 text-base-content menu dropdown-content z-50">
               {navLinks}
+              <div className="divider my-1"></div>
+              <div className="px-1 pb-1">
+                <ThemeSelector />
+              </div>
               <div className="divider my-1"></div>
               {isAuthenticated ? (
                 <>

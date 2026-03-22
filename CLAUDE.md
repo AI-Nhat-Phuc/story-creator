@@ -2,6 +2,95 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## SDD Workflow (MANDATORY for all implementation tasks)
+
+Every implementation request MUST follow the SDD framework. Read `.sdd/PHASES.md` for full rules.
+
+### Step 0 — Check state before anything else
+
+```bash
+python .sdd/sdd.py status
+```
+
+- If `phase == NONE`: start SDD with `python .sdd/sdd.py start "feature name"`
+- If `phase != NONE`: read current phase rules before proceeding
+- Never skip phase transitions — hooks will block out-of-phase edits
+
+### Step 1 — ANALYZE
+
+Score the request complexity 1–10. Output:
+
+- Affected files (impact analysis)
+- If score ≥ 6: breakdown into ordered sub-tasks
+- If score < 5: proceed directly to SPEC
+
+Then offer the user options before moving to SPEC.
+
+### Step 2 — SPEC
+
+Write the specification to `.task/[slug]/task_spec.md` (NOT `.sdd/spec.md` — that is a template).
+
+Must include: **Behavior**, **API Contract**, **Business Rules**, **Edge Cases**, **Out of Scope**.
+
+Present the spec and offer options:
+
+- `[A] Approve spec` → runs `python .sdd/sdd.py approve spec`
+- `[B] Edit spec` → revise and present again
+- `[C] Reduce scope` → remove items from Out of Scope
+
+### Step 3 — DESIGN
+
+Write interface changes to `.task/[slug]/task_design.md`.
+Only modify `api/schemas/` and `api/core/models/` — no business logic yet.
+Every change must reference a spec clause.
+
+Present diff and offer options:
+
+- `[A] Approve design` → runs `python .sdd/sdd.py approve design`
+- `[B] Discuss a change`
+
+### Step 4 — TEST
+
+Write `api/test_*.py` covering every spec clause. Run tests and confirm they FAIL.
+Report: `X tests written, 0 passing (red state)`.
+
+Offer:
+
+- `[A] Red state confirmed — move to IMPLEMENT` → runs `python .sdd/sdd.py phase IMPLEMENT`
+- `[B] Add more test cases`
+
+### Step 5 — IMPLEMENT
+
+Before editing any file in `api/services/` or `api/interfaces/routes/`:
+
+1. Read the entire file
+2. Write a flow summary to `.task/[slug]/task_flow_summary.md`:
+   - Current input/output
+   - Numbered execution steps
+   - Observed issues (do NOT fix unless asked)
+   - Exact planned changes (what changes, what stays)
+3. Present the summary and WAIT for user confirmation
+4. Only after user runs `python .sdd/sdd.py approve flow <file>` → proceed with edits
+
+Run tests after each file. When 100% pass → offer `python .sdd/sdd.py phase REVIEW`.
+
+### Step 6 — REVIEW
+
+Run `/simplify` on all changed files. Output:
+
+- Compliance checklist against CLAUDE.md patterns
+- Issues labeled **critical** / **minor**
+- Code examples for each suggestion
+
+Only apply changes after user approval. Finish with `python .sdd/sdd.py done`.
+
+### Key rules
+
+- NEVER write to `.sdd/spec.md`, `.sdd/design.md`, `.sdd/flow_summary.md` — those are templates
+- NEVER skip the flow summary step before editing a service or route
+- NEVER move to next phase without user confirmation
+- Task files always live in `.task/[slug]/`
+
 ## Project Overview
 
 Interactive storytelling system with React frontend and Flask API backend, deployed as a Vercel monorepo. Features GPT-4o-mini integration for character simulation and content generation, TinyDB storage, and Facebook Graph API integration.
