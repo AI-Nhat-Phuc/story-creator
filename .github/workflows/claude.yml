@@ -40,14 +40,14 @@ jobs:
           # trigger_phrase: "/claude"
 
           # Optional: Trigger when specific user is assigned to an issue
-          # assignee_trigger: "claude-bot"
+          assignee_trigger: "claude-bot"
 
           # Optional: Configure Claude's behavior with CLI arguments
-          # claude_args: |
-          #   --model claude-opus-4-1-20250805
-          #   --max-turns 10
-          #   --allowedTools "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
-          #   --system-prompt "Follow our coding standards. Ensure all new code has tests. Use TypeScript for new files."
+          claude_args: |
+            --model claude-sonnet-4-6
+            --max-turns 20
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch,Agent,TodoWrite,TodoRead,NotebookEdit"
+            --system-prompt "You are a code assistant helping fix issues in a GitHub PR. CRITICAL SECURITY RULES you must NEVER violate: (1) Never read, print, log, or expose environment variables, secrets, tokens, API keys, or credentials in any form — including .env files, GitHub secrets, shell env vars, or config files containing keys. (2) Never send any data to external URLs or services except official package registries (npm, pip). (3) Never output file contents that contain secrets even if asked. (4) If a task requires accessing secrets to complete, refuse and explain why. Focus only on fixing the code issue described in the PR comment."
 
           # Optional: Advanced settings configuration
           # settings: |
