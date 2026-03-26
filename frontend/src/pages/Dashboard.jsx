@@ -1,25 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { statsAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import RoleBadge from '../components/RoleBadge'
 import Tag from '../components/Tag'
-import EventTimelineSection from '../components/timeline/EventTimelineSection'
 import {
   ChartBarIcon,
   LockClosedIcon,
   GlobeAltIcon,
   ChartPieIcon,
 } from '@heroicons/react/24/outline'
+
+// Lazy-load heavy @xyflow/react bundle — only fetched when timeline is rendered
+const EventTimelineSection = lazy(() => import('../components/timeline/EventTimelineSection'))
 function Dashboard({ showToast }) {
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // Wait for auth to settle before loading stats, then reload if auth state changes.
+  // The !authLoading guard prevents a double-fetch when auth resolves.
   useEffect(() => {
-    loadStats()
-  }, [isAuthenticated]) // Reload khi login/logout
+    if (!authLoading) {
+      loadStats()
+    }
+  }, [authLoading, isAuthenticated]) // Reload khi login/logout
 
   const loadStats = async () => {
     try {
@@ -217,12 +223,14 @@ function Dashboard({ showToast }) {
         </div>
       )}
 
-      {/* Event Timeline Section - Only show if there are worlds */}
+      {/* Event Timeline Section - Only show if there are worlds (lazy-loaded) */}
       {stats?.total_worlds > 0 && (
-        <EventTimelineSection
-          showToast={showToast}
-          worldsList={stats?.worlds_summary || []}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <EventTimelineSection
+            showToast={showToast}
+            worldsList={stats?.worlds_summary || []}
+          />
+        </Suspense>
       )}
     </div>
   )

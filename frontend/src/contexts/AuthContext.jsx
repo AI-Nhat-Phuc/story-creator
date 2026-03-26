@@ -14,7 +14,9 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // Start with loading=false so the UI renders immediately without blocking.
+  // Token verification happens in the background; the UI updates once it resolves.
+  const [loading, setLoading] = useState(false)
   const [token, setToken] = useState(localStorage.getItem('auth_token'))
 
   // Setup axios response interceptor to handle 401 errors
