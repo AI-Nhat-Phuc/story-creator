@@ -10,8 +10,8 @@ export default defineConfig({
   plugins: [react()],
   // Đọc .env từ root project thay vì frontend/
   envDir: '../',
-  // Expose GOOGLE_* và FACEBOOK_* env vars cho frontend (ngoài VITE_ mặc định)
-  envPrefix: ['VITE_', 'GOOGLE_', 'FACEBOOK_'],
+  // Expose GOOGLE_* env vars cho frontend (ngoài VITE_ mặc định)
+  envPrefix: ['VITE_', 'GOOGLE_'],
   server: {
     port: 3000,
     proxy: {

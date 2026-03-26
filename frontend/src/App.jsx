@@ -17,9 +17,6 @@ const StoryDetailPage = lazy(() => import('./pages/StoryDetailPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
-const FacebookPage = lazy(() => import('./pages/FacebookPage'))
-const FacebookTokenPage = lazy(() => import('./pages/FacebookTokenPage'))
-const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'))
 
 const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID
 
@@ -40,8 +37,6 @@ function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route path="/facebook-token" element={<FacebookTokenPage />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Dashboard showToast={showToast} />} />
                 <Route path="/worlds" element={<WorldsPage showToast={showToast} />} />
@@ -49,7 +44,6 @@ function App() {
                 <Route path="/stories" element={<StoriesPage showToast={showToast} />} />
                 <Route path="/stories/:storyId" element={<StoryDetailPage showToast={showToast} />} />
                 <Route path="/admin" element={<AdminPanel showToast={showToast} />} />
-                <Route path="/facebook" element={<FacebookPage showToast={showToast} />} />
               </Route>
             </Routes>
           </Suspense>

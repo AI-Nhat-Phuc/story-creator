@@ -259,54 +259,6 @@ def create_admin_bp(storage, auth_service):
 
         return success_response({'roles': roles_data})
 
-    @admin_bp.route('/api/admin/users/<user_id>/facebook-access', methods=['PUT'])
-    @token_required
-    @admin_required
-    def toggle_facebook_access(user_id):
-        """Toggle Facebook page access for a user (admin only).
-        ---
-        tags:
-          - Admin
-        parameters:
-          - in: path
-            name: user_id
-            type: string
-            required: true
-          - in: header
-            name: Authorization
-            type: string
-            required: true
-          - in: body
-            name: body
-            required: true
-            schema:
-              type: object
-              properties:
-                facebook_access:
-                  type: boolean
-        responses:
-          200:
-            description: Facebook access updated
-          404:
-            description: User not found
-        """
-        data = request.json or {}
-        facebook_access = bool(data.get('facebook_access', False))
-
-        user_data = storage.load_user(user_id)
-        if not user_data:
-            raise ResourceNotFoundError('User', user_id)
-
-        user_data.setdefault('metadata', {})
-        user_data['metadata']['facebook_access'] = facebook_access
-        storage.save_user(user_data)
-
-        action = 'bật' if facebook_access else 'tắt'
-        return success_response(
-            {'facebook_access': facebook_access},
-            f'Đã {action} quyền Facebook cho {user_data.get("username")}'
-        )
-
     @admin_bp.route('/api/admin/stats', methods=['GET'])
     @token_required
     @moderator_required
