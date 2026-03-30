@@ -3,6 +3,12 @@
   "outputDirectory": "frontend/dist",
   "installCommand": "echo skip",
   "framework": null,
+  "crons": [
+    {
+      "path": "/api/health",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
