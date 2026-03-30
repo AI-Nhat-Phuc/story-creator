@@ -21,6 +21,23 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+// Unwrap standard API response envelope: { success: true, data: X } → response.data = X
+// GPT endpoints use jsonify() directly (no envelope) so they are unaffected.
+api.interceptors.response.use(
+  (response) => {
+    if (
+      response.data &&
+      typeof response.data === 'object' &&
+      'success' in response.data &&
+      'data' in response.data
+    ) {
+      response.data = response.data.data
+    }
+    return response
+  },
+  (error) => Promise.reject(error)
+)
+
 // Worlds API
 export const worldsAPI = {
   getAll: () => api.get('/worlds'),

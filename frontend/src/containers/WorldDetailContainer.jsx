@@ -120,10 +120,10 @@ function WorldDetailContainer({ showToast }) {
     try {
       setAutoLinking(true)
       const response = await worldsAPI.autoLinkStories(worldId)
-      const { message, linked_count, links, unlinked_stories } = response.data
+      const { linked_count, links, unlinked_stories } = response.data
 
       if (linked_count > 0) {
-        showToast(`${message}. Tìm thấy ${links.length} liên kết mới!`, 'success')
+        showToast(`Đã liên kết ${linked_count} câu chuyện. Tìm thấy ${links.length} liên kết mới!`, 'success')
         loadWorldDetails() // Reload to show updated links
       } else if (unlinked_stories && unlinked_stories.length > 0) {
         // Show unlinked stories modal for batch analysis
@@ -132,7 +132,7 @@ function WorldDetailContainer({ showToast }) {
         setBatchProgress(null)
         setShowUnlinkedModal(true)
       } else {
-        showToast(message || 'Không tìm thấy liên kết nào', 'info')
+        showToast('Không tìm thấy liên kết nào', 'info')
       }
     } catch (error) {
       showToast('Lỗi khi liên kết câu chuyện: ' + (error.response?.data?.error || error.message), 'error')
