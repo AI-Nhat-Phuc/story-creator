@@ -8,8 +8,10 @@ from core.exceptions import (
     BusinessRuleError
 )
 from utils.responses import success_response
+from utils.validation import validate_request
 from interfaces.auth_middleware import token_required
 from services import BatchAnalyzeService
+from schemas.gpt_schemas import GptParaphraseSchema
 import uuid
 import threading
 
@@ -413,5 +415,97 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                 tasks = storage.list_pending_gpt_tasks()
                 return jsonify({'tasks': tasks})
             return jsonify({'tasks': []})
+
+    @gpt_bp.route('/api/gpt/paraphrase', methods=['POST'])
+    @_gpt_limit
+    @token_required
+    @validate_request(GptParaphraseSchema)
+    def gpt_paraphrase():
+        """Paraphrase or expand a text selection using GPT.
+        ---
+        tags:
+          - GPT
+        parameters:
+          - in: header
+            name: Authorization
+            type: string
+            required: true
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  example: "He walked into the room."
+                mode:
+                  type: string
+                  enum: [paraphrase, expand]
+                  default: paraphrase
+        responses:
+          200:
+            description: Three suggestions returned
+          400:
+            description: Invalid input
+          401:
+            description: Authentication required
+          429:
+            description: Quota exceeded
+        """
+        data = request.validated_data
+        text = data['text']
+        mode = data.get('mode', 'paraphrase')
+
+        if not has_gpt:
+            # Deterministic mock for tests without an API key
+            suggestions = [
+                f"[mock {mode} 1] {text}",
+                f"[mock {mode} 2] {text}",
+                f"[mock {mode} 3] {text}",
+            ]
+            return success_response({'suggestions': suggestions})
+
+        if mode == 'expand':
+            system_prompt = (
+                "You are a creative writing assistant. "
+                "Expand the given text into a richer, more detailed version. "
+                "Return exactly 3 numbered alternatives, one per line."
+            )
+            user_prompt = f"Expand this passage into 3 longer alternatives:\n\n{text}"
+        else:
+            system_prompt = (
+                "You are a creative writing assistant. "
+                "Paraphrase the given text in different ways while preserving meaning. "
+                "Return exactly 3 numbered alternatives, one per line."
+            )
+            user_prompt = f"Paraphrase this passage in 3 different ways:\n\n{text}"
+
+        try:
+            response = gpt.client.chat.completions.create(
+                model=gpt.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_completion_tokens=600
+            )
+            raw = response.choices[0].message.content.strip()
+            # Parse numbered lines: "1. ...", "2. ...", "3. ..."
+            lines = [l.strip() for l in raw.splitlines() if l.strip()]
+            suggestions = []
+            for line in lines:
+                # Strip leading number+dot
+                cleaned = line.lstrip('0123456789').lstrip('.').lstrip(')').strip()
+                if cleaned:
+                    suggestions.append(cleaned)
+            # Ensure exactly 3
+            suggestions = (suggestions + [raw, raw, raw])[:3]
+        except Exception as e:
+            raise ExternalServiceError('GPT', str(e))
+
+        return success_response({'suggestions': suggestions})
 
     return gpt_bp

@@ -7,5 +7,6 @@ from .entity import Entity
 from .time_cone import TimeCone
 from .event import Event
 from .user import User
+from .invitation import Invitation
 
-__all__ = ['World', 'Story', 'Location', 'Entity', 'TimeCone', 'Event', 'User']
+__all__ = ['World', 'Story', 'Location', 'Entity', 'TimeCone', 'Event', 'User', 'Invitation']

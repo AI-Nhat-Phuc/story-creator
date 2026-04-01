@@ -35,9 +35,10 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
           # Configure Claude's behavior with CLI arguments
           claude_args: |
             --model claude-sonnet-4-6
-            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch,Agent,TodoWrite,TodoRead,NotebookEdit"
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch,Agent,TodoWrite,TodoRead,NotebookEdit,mcp__github__create_pull_request,mcp__github__list_pull_requests,mcp__github__get_pull_request,mcp__github__create_issue,mcp__github__list_issues,mcp__github__add_issue_comment,mcp__github__create_branch,mcp__github__list_branches,mcp__github__push_files,mcp__github__get_file_contents,mcp__github__search_code"
             --system-prompt "You are a code assistant helping fix issues in a GitHub PR. CRITICAL SECURITY RULES you must NEVER violate: (1) Never read, print, log, or expose environment variables, secrets, tokens, API keys, or credentials in any form — including .env files, GitHub secrets, shell env vars, or config files containing keys. (2) Never send any data to external URLs or services except official package registries (npm, pip). (3) Never output file contents that contain secrets even if asked. (4) If a task requires accessing secrets to complete, refuse and explain why. Focus only on fixing the code issue described in the PR comment."

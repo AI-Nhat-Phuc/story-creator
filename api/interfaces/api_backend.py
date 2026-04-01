@@ -20,6 +20,7 @@ from interfaces.routes import (
     create_event_bp,
     create_auth_bp,
     create_admin_bp,
+    create_collaborator_bp,
 )
 import os
 import signal
@@ -295,6 +296,12 @@ class APIBackend:
             auth_service=self.auth_service
         )
         self.app.register_blueprint(admin_bp)
+
+        collaborator_bp = create_collaborator_bp(
+            storage=self.storage,
+            flush_data=self._flush_data
+        )
+        self.app.register_blueprint(collaborator_bp)
 
     def _kill_existing_server(self, port=5000):
         """Kill any existing process using the specified port."""

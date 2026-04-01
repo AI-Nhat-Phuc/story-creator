@@ -117,6 +117,11 @@ class UpdateProfileSchema(Schema):
         error_messages={'invalid': 'Invalid email address'}
     )
 
+    signature = fields.Str(
+        validate=validate.Length(max=200),
+        allow_none=True
+    )
+
     @validates('username')
     def validate_username(self, value):
         """Validate username contains only allowed characters."""

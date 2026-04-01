@@ -1,6 +1,6 @@
 """Authentication routes for user registration, login, and token verification."""
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 import requests
 import logging
 from core.exceptions import (
@@ -10,7 +10,9 @@ from core.exceptions import (
     ConflictError
 )
 from utils.validation import validate_request
-from schemas.auth_schemas import RegisterSchema, LoginSchema, ChangePasswordSchema
+from utils.responses import success_response
+from interfaces.auth_middleware import token_required
+from schemas.auth_schemas import RegisterSchema, LoginSchema, ChangePasswordSchema, UpdateProfileSchema
 
 logger = logging.getLogger(__name__)
 
@@ -219,7 +221,54 @@ def create_auth_bp(storage, auth_service, limiter=None):
             description: Unauthorized
         """
         user = _get_user_from_auth_header(request, auth_service)
-        return jsonify({'success': True, 'user': user.to_safe_dict()})
+        return success_response(user.to_safe_dict())
+
+    @auth_bp.route('/api/auth/profile', methods=['PUT'])
+    @token_required
+    @validate_request(UpdateProfileSchema)
+    def update_profile():
+        """Update current user's profile.
+        ---
+        tags:
+          - Authentication
+        parameters:
+          - in: header
+            name: Authorization
+            type: string
+            required: true
+          - in: body
+            name: body
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                signature:
+                  type: string
+                  description: Author signature (max 200 chars)
+        responses:
+          200:
+            description: Profile updated
+          400:
+            description: Validation error
+          401:
+            description: Unauthorized
+        """
+        data = request.validated_data
+        user_data = g.current_user.to_dict()
+
+        if 'username' in data:
+            user_data['username'] = data['username']
+        if 'email' in data:
+            user_data['email'] = data['email']
+        if 'signature' in data:
+            user_data.setdefault('metadata', {})['signature'] = data['signature']
+
+        storage.save_user(user_data)
+        user_data.pop('password_hash', None)
+        return success_response({'user': user_data})
 
     # ==================== OAuth Routes ====================
 

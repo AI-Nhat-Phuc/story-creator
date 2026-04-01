@@ -138,3 +138,45 @@ class UpdateEntitySchema(Schema):
         """Ensure at least one field is being updated."""
         if not data:
             raise ValidationError('At least one field must be provided for update')
+
+
+class AddCollaboratorSchema(Schema):
+    """Schema for POST /api/worlds/{world_id}/collaborators — SUB-2."""
+
+    username_or_email = fields.Str(
+        required=True,
+        validate=validate.Length(min=1, max=200),
+        error_messages={'required': 'Username or email is required'}
+    )
+
+    role = fields.Str(
+        validate=validate.OneOf(['co_author']),
+        load_default='co_author'
+    )
+
+
+class UpdateNovelSchema(Schema):
+    """Schema for PUT /api/worlds/{world_id}/novel — SUB-4."""
+
+    title = fields.Str(
+        validate=validate.Length(min=1, max=200)
+    )
+
+    description = fields.Str(
+        validate=validate.Length(max=2000)
+    )
+
+    @validates_schema
+    def validate_not_empty(self, data, **kwargs):
+        if not data:
+            raise ValidationError('At least one field must be provided')
+
+
+class ReorderChaptersSchema(Schema):
+    """Schema for PATCH /api/worlds/{world_id}/novel/chapters — SUB-4."""
+
+    order = fields.List(
+        fields.Str(),
+        required=True,
+        error_messages={'required': 'Chapter order list is required'}
+    )

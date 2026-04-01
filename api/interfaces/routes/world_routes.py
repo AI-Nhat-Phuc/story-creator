@@ -18,7 +18,9 @@ from schemas.world_schemas import (
     UpdateWorldSchema,
     ListWorldsQuerySchema,
     CreateEntitySchema,
-    UpdateEntitySchema
+    UpdateEntitySchema,
+    UpdateNovelSchema,
+    ReorderChaptersSchema,
 )
 import random
 
@@ -713,10 +715,196 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
         return success_response({'shared_with': world_data['shared_with']}, 'Đã xóa quyền truy cập')
 
+    # ------------------------------------------------------------------
+    # SUB-4 — Novel Structure
+    # ------------------------------------------------------------------
+
+    @world_bp.route('/api/worlds/<world_id>/novel', methods=['GET'])
+    @token_required
+    def get_novel(world_id):
+        """Get novel metadata and ordered chapter list for a world.
+        ---
+        tags:
+          - Novel
+        parameters:
+          - name: world_id
+            in: path
+            type: string
+            required: true
+        responses:
+          200:
+            description: Novel metadata with chapters
+          404:
+            description: World not found
+        """
+        world_data = storage.load_world(world_id)
+        if not world_data:
+            raise ResourceNotFoundError('World', world_id)
+
+        novel = world_data.get('novel') or {}
+        chapter_order = novel.get('chapter_order', [])
+
+        all_stories = storage.list_stories(world_id=world_id, user_id=g.current_user.user_id)
+        stories_by_id = {s['story_id']: s for s in all_stories}
+
+        if chapter_order:
+            story_ids_to_load = chapter_order
+        else:
+            numbered = sorted(
+                [s for s in all_stories if s.get('chapter_number') is not None],
+                key=lambda s: s.get('chapter_number', 0)
+            )
+            story_ids_to_load = [s['story_id'] for s in numbered]
+
+        chapters = []
+        total_word_count = 0
+        for story_id in story_ids_to_load:
+            story = stories_by_id.get(story_id)
+            if not story:
+                continue
+            content = story.get('content') or ''
+            word_count = len(content.split()) if content.strip() else 0
+            total_word_count += word_count
+            chapters.append({
+                'story_id': story_id,
+                'chapter_number': story.get('chapter_number'),
+                'title': story.get('title'),
+                'word_count': word_count,
+                'updated_at': story.get('updated_at')
+            })
+
+        return success_response({
+            'title': novel.get('title', world_data.get('name')),
+            'description': novel.get('description', ''),
+            'chapters': chapters,
+            'total_word_count': total_word_count
+        })
+
+    @world_bp.route('/api/worlds/<world_id>/novel', methods=['PUT'])
+    @token_required
+    @validate_request(UpdateNovelSchema)
+    def upsert_novel(world_id):
+        """Create or update novel metadata for a world.
+        ---
+        tags:
+          - Novel
+        parameters:
+          - name: world_id
+            in: path
+            type: string
+            required: true
+          - in: body
+            name: body
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+        responses:
+          200:
+            description: Novel metadata saved
+          403:
+            description: Permission denied
+          404:
+            description: World not found
+        """
+        world_data = storage.load_world(world_id)
+        if not world_data:
+            raise ResourceNotFoundError('World', world_id)
+
+        if not PermissionService.is_world_coauthor(g.current_user.user_id, world_data):
+            raise PermissionDeniedError('manage novel for', 'world')
+
+        novel = _get_or_create_novel(world_data)
+
+        data = request.validated_data
+        if 'title' in data:
+            novel['title'] = data['title']
+        if 'description' in data:
+            novel['description'] = data['description']
+
+        world_data['novel'] = novel
+        storage.save_world(world_data)
+        flush_data()
+
+        return success_response({
+            'title': novel['title'],
+            'description': novel['description']
+        }, "Novel updated")
+
+    @world_bp.route('/api/worlds/<world_id>/novel/chapters', methods=['PATCH'])
+    @token_required
+    @validate_request(ReorderChaptersSchema)
+    def reorder_chapters(world_id):
+        """Reorder chapters in the novel.
+        ---
+        tags:
+          - Novel
+        parameters:
+          - name: world_id
+            in: path
+            type: string
+            required: true
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              required: [order]
+              properties:
+                order:
+                  type: array
+                  items:
+                    type: string
+        responses:
+          200:
+            description: Chapters reordered
+          403:
+            description: Permission denied
+          404:
+            description: World not found
+        """
+        world_data = storage.load_world(world_id)
+        if not world_data:
+            raise ResourceNotFoundError('World', world_id)
+
+        if not PermissionService.is_world_coauthor(g.current_user.user_id, world_data):
+            raise PermissionDeniedError('reorder chapters for', 'world')
+
+        order = request.validated_data['order']
+
+        # Update chapter_number on each story (1-based, contiguous)
+        updated_chapters = []
+        for idx, story_id in enumerate(order, start=1):
+            story = storage.load_story(story_id)
+            if story:
+                story['chapter_number'] = idx
+                storage.save_story(story)
+                updated_chapters.append({'story_id': story_id, 'chapter_number': idx})
+
+        novel = _get_or_create_novel(world_data)
+        novel['chapter_order'] = order
+        world_data['novel'] = novel
+        storage.save_world(world_data)
+        flush_data()
+
+        return success_response({'chapters': updated_chapters}, "Chapters reordered")
+
     return world_bp
 
 
 # Helper functions
+
+def _get_or_create_novel(world_data):
+    """Return existing novel block or a fresh default dict (not yet persisted)."""
+    return world_data.get('novel') or {
+        'title': world_data.get('name'),
+        'description': '',
+        'chapter_order': []
+    }
+
 
 def _create_entities_from_gpt(storage, world, gpt_entities):
     """Create entities and locations from GPT analysis."""

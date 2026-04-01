@@ -18,7 +18,9 @@ class World:
         metadata: Optional[Dict[str, Any]] = None,
         visibility: str = 'private',
         owner_id: Optional[str] = None,
-        shared_with: Optional[List[str]] = None
+        shared_with: Optional[List[str]] = None,
+        co_authors: Optional[List[str]] = None,
+        novel: Optional[Dict[str, Any]] = None
     ):
         """
         Initialize a World.
@@ -41,6 +43,8 @@ class World:
         self.visibility = visibility
         self.owner_id = owner_id
         self.shared_with = shared_with or []
+        self.co_authors = co_authors or []
+        self.novel = novel
         # Initialize calendar system if not exists
         if 'calendar' not in self.metadata:
             self.metadata['calendar'] = {
@@ -68,6 +72,8 @@ class World:
             "visibility": self.visibility,
             "owner_id": self.owner_id,
             "shared_with": self.shared_with,
+            "co_authors": self.co_authors,
+            "novel": self.novel,
             "stories": self.stories,
             "locations": self.locations,
             "entities": self.entities
@@ -88,7 +94,9 @@ class World:
             metadata=data.get("metadata", {}),
             visibility=data.get("visibility", "private"),
             owner_id=data.get("owner_id"),
-            shared_with=data.get("shared_with", [])
+            shared_with=data.get("shared_with", []),
+            co_authors=data.get("co_authors", []),
+            novel=data.get("novel")
         )
         world.stories = data.get("stories", [])
         world.locations = data.get("locations", [])

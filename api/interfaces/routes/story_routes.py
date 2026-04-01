@@ -1,5 +1,6 @@
 """Story routes for the API backend."""
 
+from datetime import datetime
 from flask import Blueprint, request, g
 from core.models.world import World
 from core.models.entity import Entity
@@ -9,7 +10,8 @@ from core.exceptions import (
     ResourceNotFoundError,
     PermissionDeniedError,
     QuotaExceededError,
-    BusinessRuleError
+    BusinessRuleError,
+    ConflictError
 )
 from services import CharacterService, PermissionService
 from interfaces.auth_middleware import token_required, optional_auth
@@ -163,6 +165,10 @@ def create_story_bp(storage, story_generator, flush_data):
 
         story.owner_id = g.current_user.user_id
         story.visibility = visibility
+        story.format = data['format']
+
+        if visibility == 'draft' and _get_user_drafts(storage, g.current_user.user_id):
+                raise ConflictError('You already have a draft story. Finish or publish it first.')
 
         _set_world_time(story, world, time_index)
 
@@ -186,9 +192,31 @@ def create_story_bp(storage, story_generator, flush_data):
         flush_data()
 
         return created_response(
-            {'story': story.to_dict(), 'time_cone': time_cone.to_dict()},
+            {'story_id': story.story_id, 'story': story.to_dict(), 'time_cone': time_cone.to_dict()},
             "Story created successfully"
         )
+
+    @story_bp.route('/api/stories/my-draft', methods=['GET'])
+    @token_required
+    def get_my_draft():
+        """Get the current user's draft story (if any).
+        ---
+        tags:
+          - Stories
+        parameters:
+          - in: header
+            name: Authorization
+            type: string
+            required: true
+        responses:
+          200:
+            description: Draft story or null
+          401:
+            description: Unauthorized
+        """
+        drafts = _get_user_drafts(storage, g.current_user.user_id)
+        story = drafts[0] if drafts else None
+        return success_response({'story': story})
 
     @story_bp.route('/api/stories/<story_id>', methods=['GET'])
     @optional_auth
@@ -292,9 +320,13 @@ def create_story_bp(storage, story_generator, flush_data):
                 user.decrement_public_stories()
                 storage.save_user(user.to_dict())
 
+            if new_visibility == 'draft' and old_visibility != 'draft' and \
+                    _get_user_drafts(storage, g.current_user.user_id, exclude_story_id=story_id):
+                    raise ConflictError('You already have a draft story. Finish or publish it first.')
+
             story_data['visibility'] = new_visibility
 
-        for field in ['title', 'content']:
+        for field in ['title', 'content', 'format']:
             if field in data:
                 story_data[field] = data[field]
 
@@ -302,6 +334,66 @@ def create_story_bp(storage, story_generator, flush_data):
         flush_data()
 
         return success_response(story_data, "Story updated successfully")
+
+    @story_bp.route('/api/stories/<story_id>', methods=['PATCH'])
+    @token_required
+    @validate_request(UpdateStorySchema)
+    def patch_story(story_id):
+        """Auto-save story content or update chapter number.
+        ---
+        tags:
+          - Stories
+        parameters:
+          - name: story_id
+            in: path
+            type: string
+            required: true
+          - in: header
+            name: Authorization
+            type: string
+            required: true
+          - in: body
+            name: body
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                chapter_number:
+                  type: integer
+                  minimum: 1
+        responses:
+          200:
+            description: Story saved, returns story_id and updated_at
+          403:
+            description: Permission denied
+          404:
+            description: Story not found
+        """
+        story_data = storage.load_story(story_id)
+        if not story_data:
+            raise ResourceNotFoundError('Story', story_id)
+
+        user_id = g.current_user.user_id
+        if not PermissionService.can_edit(user_id, story_data):
+            world_data = storage.load_world(story_data.get('world_id'))
+            if not world_data or not PermissionService.is_world_coauthor(user_id, world_data):
+                raise PermissionDeniedError('edit', 'story')
+
+        data = request.validated_data
+        if data.get('content') is not None:
+            story_data['content'] = data['content']
+        if data.get('chapter_number') is not None:
+            story_data['chapter_number'] = data['chapter_number']
+
+        story_data['updated_at'] = datetime.now().isoformat()
+        storage.save_story(story_data)
+        flush_data()
+
+        return success_response(
+            {'story_id': story_id, 'updated_at': story_data['updated_at']},
+            "Story saved"
+        )
 
     @story_bp.route('/api/stories/<story_id>', methods=['DELETE'])
     @token_required
@@ -543,6 +635,15 @@ def create_story_bp(storage, story_generator, flush_data):
 
 
 # Helper functions
+
+def _get_user_drafts(storage, user_id, exclude_story_id=None):
+    """Return draft stories owned by user_id, optionally excluding one story."""
+    stories = storage.list_stories(user_id=user_id)
+    drafts = [s for s in stories if s.get('visibility') == 'draft' and s.get('owner_id') == user_id]
+    if exclude_story_id:
+        drafts = [s for s in drafts if s['story_id'] != exclude_story_id]
+    return drafts
+
 
 def _resolve_linked_entities(storage, world, world_id, selected_characters, description):
     """Resolve entity IDs from selected characters or auto-detect from description."""

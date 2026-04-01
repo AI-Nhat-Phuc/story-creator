@@ -65,6 +65,7 @@ class NoSQLStorage:
         self.event_analysis_cache = self.db.table('event_analysis_cache')
         self.users = self.db.table('users')
         self.gpt_tasks = self.db.table('gpt_tasks')
+        self.invitations = self.db.table('invitations')
 
         logger.info(f"NoSQLStorage initialized: {db_path}")
 
@@ -837,4 +838,48 @@ class NoSQLStorage:
         UserQuery = Query()
         removed = self.users.remove(UserQuery.user_id == user_id)
         return len(removed) > 0
+
+    def save_invitation(self, invitation_data: Dict[str, Any]) -> str:
+        """Save or update an invitation."""
+        invitation_id = invitation_data.get('invitation_id')
+        InvQuery = Query()
+        existing = self._safe_read(
+            self.invitations,
+            lambda: self.invitations.search(InvQuery.invitation_id == invitation_id)
+        )
+        if existing:
+            self.invitations.update(invitation_data, InvQuery.invitation_id == invitation_id)
+        else:
+            self.invitations.insert(invitation_data)
+        return invitation_id
+
+    def load_invitation(self, invitation_id: str) -> Optional[Dict[str, Any]]:
+        """Load an invitation by invitation_id."""
+        InvQuery = Query()
+        results = self._safe_read(
+            self.invitations,
+            lambda: self.invitations.search(InvQuery.invitation_id == invitation_id)
+        )
+        return results[0] if results else None
+
+    def list_invitations_for_user(self, invitee_id: str) -> List[Dict[str, Any]]:
+        """List all pending invitations for a user."""
+        InvQuery = Query()
+        return self._safe_read(
+            self.invitations,
+            lambda: self.invitations.search(
+                (InvQuery.invitee_id == invitee_id) & (InvQuery.status == 'pending')
+            )
+        ) or []
+
+    def find_invitation(self, world_id: str, invitee_id: str) -> Optional[Dict[str, Any]]:
+        """Find an existing invitation for a user to a world."""
+        InvQuery = Query()
+        results = self._safe_read(
+            self.invitations,
+            lambda: self.invitations.search(
+                (InvQuery.world_id == world_id) & (InvQuery.invitee_id == invitee_id)
+            )
+        )
+        return results[0] if results else None
 

@@ -8,6 +8,7 @@ from .stats_routes import create_stats_bp
 from .event_routes import create_event_bp
 from .auth_routes import create_auth_bp
 from .admin_routes import create_admin_bp
+from .collaborator_routes import create_collaborator_bp
 
 __all__ = [
     'create_health_bp',
@@ -18,4 +19,5 @@ __all__ = [
     'create_event_bp',
     'create_auth_bp',
     'create_admin_bp',
+    'create_collaborator_bp',
 ]

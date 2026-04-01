@@ -48,6 +48,11 @@ class CreateStorySchema(Schema):
         allow_none=True
     )
 
+    format = fields.Str(
+        validate=validate.OneOf(['plain', 'markdown']),
+        load_default='plain'
+    )
+
     use_gpt = fields.Bool(load_default=False)
 
     gpt_result = fields.Dict(
@@ -79,6 +84,21 @@ class UpdateStorySchema(Schema):
 
     tags = fields.List(
         fields.Str(validate=validate.Length(max=50))
+    )
+
+    content = fields.Str(
+        load_default=None,
+        allow_none=True
+    )
+
+    chapter_number = fields.Int(
+        validate=validate.Range(min=1),
+        load_default=None,
+        allow_none=True
+    )
+
+    format = fields.Str(
+        validate=validate.OneOf(['plain', 'markdown'])
     )
 
     @validates_schema

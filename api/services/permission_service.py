@@ -132,6 +132,13 @@ class PermissionService:
         return [item for item in items if item.get('owner_id') == user_id]
 
     @staticmethod
+    def is_world_coauthor(user_id: str, world_data: Dict[str, Any]) -> bool:
+        """Check if user is the owner or an accepted co-author of a world."""
+        if world_data.get('owner_id') == user_id:
+            return True
+        return user_id in world_data.get('co_authors', [])
+
+    @staticmethod
     def get_shared_with_user(user_id: str, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Get all items shared with a specific user.
