@@ -26,8 +26,9 @@ export const AuthProvider = ({ children }) => {
     const responseInterceptor = api.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
-          // Token expired or invalid - logout
+        // Skip auto-logout for auth endpoints (e.g. login with wrong credentials returns 401)
+        const isAuthEndpoint = error.config?.url?.includes('/auth/')
+        if (error.response?.status === 401 && !isAuthEndpoint) {
           logout()
         }
         return Promise.reject(error)
@@ -78,7 +79,8 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Lỗi khi đăng nhập',
+        message: error.response?.data?.error?.message
+          || (error.response ? 'Đăng nhập thất bại. Vui lòng thử lại.' : 'Không thể kết nối đến server.'),
       }
     }
   }
@@ -97,7 +99,8 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Lỗi khi đăng ký',
+        message: error.response?.data?.error?.message
+          || (error.response ? 'Đăng ký thất bại. Vui lòng thử lại.' : 'Không thể kết nối đến server.'),
       }
     }
   }
@@ -121,7 +124,8 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Lỗi khi đổi mật khẩu',
+        message: error.response?.data?.error?.message
+          || (error.response ? 'Đổi mật khẩu thất bại. Vui lòng thử lại.' : 'Không thể kết nối đến server.'),
       }
     }
   }
@@ -140,7 +144,8 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Lỗi khi đăng nhập với Google',
+        message: error.response?.data?.error?.message
+          || (error.response ? 'Đăng nhập Google thất bại. Vui lòng thử lại.' : 'Không thể kết nối đến server.'),
       }
     }
   }
