@@ -133,6 +133,13 @@ export const collaboratorsAPI = {
   remove: (worldId, userId)    => api.delete(`/worlds/${worldId}/collaborators/${userId}`),
 }
 
+// Novel API
+export const novelAPI = {
+  get:             (worldId)        => api.get(`/worlds/${worldId}/novel`),
+  update:          (worldId, data)  => api.put(`/worlds/${worldId}/novel`, data),
+  reorderChapters: (worldId, order) => api.patch(`/worlds/${worldId}/novel/chapters`, { order }),
+}
+
 // Invitations API
 export const invitationsAPI = {
   list:    ()    => api.get('/users/me/invitations'),

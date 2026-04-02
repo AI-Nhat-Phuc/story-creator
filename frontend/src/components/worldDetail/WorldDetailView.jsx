@@ -163,11 +163,16 @@ function WorldDetailView({
           <>
             <div className="flex justify-between items-start mb-2">
               <h1 className="font-bold text-3xl">{world.name}</h1>
-              {canEdit && (
-                <button onClick={onEdit} className="btn btn-sm btn-ghost">
-                  <PencilIcon className="inline w-4 h-4" /> Sửa
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                <Link to={`/worlds/${world.world_id}/novel`} className="btn btn-outline btn-sm gap-1">
+                  <BookOpenIcon className="w-4 h-4" /> Novel
+                </Link>
+                {canEdit && (
+                  <button onClick={onEdit} className="btn btn-sm btn-ghost">
+                    <PencilIcon className="inline w-4 h-4" /> Sửa
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
               <Tag color="primary">{world.world_type}</Tag>
