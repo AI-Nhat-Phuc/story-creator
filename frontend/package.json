@@ -36,9 +36,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright playwright test --config=playwright.config.cjs",
-    "test:e2e:report": "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright playwright test --config=playwright.config.cjs --reporter=html",
-    "test:e2e:local": "BASE_URL=http://localhost:3000 PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright playwright test --config=playwright.config.cjs",
-    "test:e2e:prod": "BASE_URL=https://story-creator-cyan.vercel.app PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright playwright test --config=playwright.config.cjs"
+    "test:e2e:report": "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright playwright test --config=playwright.config.cjs --reporter=html"
   },
   "proxy": "http://localhost:5000"
 }

@@ -1,12 +1,10 @@
 // @ts-check
 const { defineConfig, devices } = require('@playwright/test')
 
-// BASE_URL must be provided — no fallback to avoid silently targeting a
-// protected preview URL and getting confusing auth/timeout failures.
+// In CI BASE_URL must be set explicitly (the deployed Vercel URL).
+// In local dev it defaults to localhost so you can run without extra config.
 const baseURL = process.env.BASE_URL
-if (!baseURL) {
-  throw new Error('BASE_URL environment variable is required. Example: BASE_URL=https://your-deploy.vercel.app')
-}
+  || (process.env.CI ? (() => { throw new Error('BASE_URL is required in CI') })() : 'http://localhost:3000')
 
 // Optional: set VERCEL_BYPASS_SECRET to bypass Vercel Deployment Protection.
 // https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection
