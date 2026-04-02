@@ -30,7 +30,7 @@ module.exports = defineConfig({
     ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
       ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
       : !process.env.CI
-        ? { launchOptions: { executablePath: '/root/.cache/ms-playwright/chromium-1194/chrome-linux/chrome' } }
+        ? {} // let Playwright resolve the local binary automatically
         : {}),
   },
   projects: [

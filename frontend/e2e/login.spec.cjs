@@ -6,7 +6,7 @@ const { test, expect } = require('@playwright/test')
 
 // Test credentials (from api/test_api.py)
 const ADMIN = { username: 'admin', password: 'Admin@123' }
-const TEST_USER = { username: 'testuser', password: 'Test@1234' }
+const TEST_USER = { username: 'testuser', password: 'Test@123' }
 
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
@@ -25,7 +25,7 @@ test.describe('Login Page', () => {
   })
 
   test('shows Google OAuth button', async ({ page }) => {
-    await expect(page.locator('button', { hasText: /đăng nhập/ }).first()).toBeVisible()
+    await expect(page.locator('button', { hasText: /đăng nhập/i }).first()).toBeVisible()
   })
 
   // ── Validation ────────────────────────────────────────────────────────────
