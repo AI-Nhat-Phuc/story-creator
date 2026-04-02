@@ -1,32 +1,60 @@
 # DESIGN — Story Export PDF
 
-> **Status**: DRAFT
-> **Phase**: DESIGN
-> **Date**: 2026-03-22
-
 ---
 
 ## Changed Files
 
-| File | Change Type  | Maps to Spec Clause  |
-| ---- | ------------ | -------------------- |
-|      | NEW / MODIFY |                      |
+| File | Change | Spec Clause |
+|------|--------|-------------|
+| `frontend/src/App.jsx` | MODIFY — add `/stories/:storyId/print` route (outside MainLayout) | Behavior |
+| `frontend/src/pages/StoryPrintPage.jsx` | NEW — loads story, renders clean print view, triggers window.print() | Behavior |
+| `frontend/src/components/storyDetail/StoryDetailView.jsx` | MODIFY — add "Export PDF" button | Behavior |
+| `frontend/src/index.css` | MODIFY — add `@media print` rules | BR-1 |
 
-## Schema / Interface Changes
+---
 
-```python
-# api/schemas/...
+## Route placement
+
+The print route must be **outside** `<MainLayout>` so the navbar is not rendered at all:
+```jsx
+// In App.jsx — outside the <Route element={<MainLayout />}> wrapper
+<Route path="/stories/:storyId/print" element={<StoryPrintPage />} />
 ```
 
-## Model Changes
+---
 
-```python
-# api/core/models/...
+## `StoryPrintPage` design
+
+```jsx
+// On mount: fetch story, then window.print()
+// Renders: <head><title>{story.title}</title>, clean prose layout
+// Content rendering same as StoryDetailView (html/markdown/plain)
+// No imports of Navbar, MainLayout, or any interactive UI
 ```
 
-## New Method Signatures
+---
 
-```python
-def new_method(arg1: type, arg2: type) -> ReturnType:
-    raise NotImplementedError
+## Print CSS (`index.css` addition)
+
+```css
+@media print {
+  /* Hide all navigation and interactive chrome */
+  nav, .navbar, .btn, .modal, .toast, .dropdown { display: none !important; }
+  /* Ensure full-width clean layout */
+  body { background: white !important; color: black !important; }
+  .prose { max-width: 100% !important; }
+}
 ```
+
+---
+
+## "Export PDF" button placement
+
+In `StoryDetailView`, alongside the existing Edit/Analyze buttons — opens in new tab:
+```jsx
+<a href={`/stories/${story.story_id}/print`} target="_blank" rel="noopener noreferrer"
+   className="btn btn-outline btn-sm gap-1">
+  <ArrowDownTrayIcon className="w-4 h-4" /> Export PDF
+</a>
+```
+`ArrowDownTrayIcon` is already imported in `StoryDetailView`.

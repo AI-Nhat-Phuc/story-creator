@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { worldsAPI, storiesAPI, gptAPI } from '../services/api'
+import { worldsAPI, gptAPI, collaboratorsAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import WorldDetailView from '../components/worldDetail/WorldDetailView'
 import { useAuth } from '../contexts/AuthContext'
 import { useGptTasks } from '../contexts/GptTaskContext'
-
-const initialStoryForm = {
-  title: '',
-  description: '',
-  genre: 'adventure',
-  time_index: 0,
-  visibility: ''
-}
 
 function WorldDetailContainer({ showToast }) {
   const { worldId } = useParams()
@@ -26,15 +18,11 @@ function WorldDetailContainer({ showToast }) {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', description: '', visibility: '' })
-
-  // Story creation state
-  const [showStoryModal, setShowStoryModal] = useState(false)
-  const [storyForm, setStoryForm] = useState(initialStoryForm)
-  const [gptGenerating, setGptGenerating] = useState(false)
-  const [gptAnalyzing, setGptAnalyzing] = useState(false)
-  const [analyzedEntities, setAnalyzedEntities] = useState(null)
-  const [showAnalyzedModal, setShowAnalyzedModal] = useState(false)
   const [autoLinking, setAutoLinking] = useState(false)
+
+  // Collaborators state
+  const [collaborators, setCollaborators] = useState([])
+  const [inviteLoading, setInviteLoading] = useState(false)
 
   // Unlinked stories modal state
   const [showUnlinkedModal, setShowUnlinkedModal] = useState(false)
@@ -50,17 +38,19 @@ function WorldDetailContainer({ showToast }) {
   const loadWorldDetails = async () => {
     try {
       setLoading(true)
-      const [worldRes, storiesRes, charsRes, locsRes] = await Promise.all([
+      const [worldRes, storiesRes, charsRes, locsRes, collabRes] = await Promise.all([
         worldsAPI.getById(worldId),
         worldsAPI.getStories(worldId),
         worldsAPI.getCharacters(worldId),
-        worldsAPI.getLocations(worldId)
+        worldsAPI.getLocations(worldId),
+        collaboratorsAPI.list(worldId).catch(() => ({ data: [] })),
       ])
 
       setWorld(worldRes.data)
       setStories(storiesRes.data)
       setCharacters(charsRes.data)
       setLocations(locsRes.data)
+      setCollaborators(collabRes.data || [])
       setEditForm({ name: worldRes.data.name, description: worldRes.data.description, visibility: worldRes.data.visibility || 'private' })
     } catch (error) {
       showToast('Không thể tải chi tiết thế giới', 'error')
@@ -267,173 +257,32 @@ function WorldDetailContainer({ showToast }) {
     }
   }
 
-  // Story creation handlers
-  const handleOpenStoryModal = () => {
-    if (!user) {
-      showToast('Vui lòng đăng nhập để tạo câu chuyện', 'warning')
-      return
-    }
-    setShowStoryModal(true)
-  }
-
-  const handleCloseStoryModal = () => {
-    setShowStoryModal(false)
-    setStoryForm(initialStoryForm)
-    setAnalyzedEntities(null)
-    setShowAnalyzedModal(false)
-    setGptGenerating(false)
-    setGptAnalyzing(false)
-  }
-
-  const handleStoryFormChange = (e) => {
-    const { name, value } = e.target
-    setStoryForm(prev => ({
-      ...prev,
-      [name]: name === 'time_index' ? Number(value) : value
-    }))
-  }
-
-  const handleGenerateStoryDescription = async () => {
-    if (!user) {
-      showToast('Vui lòng đăng nhập để sử dụng tính năng GPT', 'warning')
-      return
-    }
-    if (!storyForm.title) {
-      showToast('Vui lòng nhập tiêu đề trước', 'warning')
-      return
-    }
-
+  const handleInviteCollaborator = async (usernameOrEmail) => {
+    setInviteLoading(true)
     try {
-      setGptGenerating(true)
-      const response = await gptAPI.generateDescription({
-        type: 'story',
-        story_title: storyForm.title,
-        story_genre: storyForm.genre,
-        world_description: world.description,
-        characters: characters?.map(c => c.name).join(', ') || ''
-      })
-
-      const taskId = response.data.task_id
-
-      registerTask(taskId, {
-        label: `Tạo mô tả: ${storyForm.title}`,
-        task_type: 'generate_story_description',
-        onComplete: (taskData) => {
-          if (taskData.status === 'completed') {
-            const resultData = taskData.result
-            const generatedDesc = 'story_description' in resultData
-              ? resultData.story_description
-              : (typeof resultData === 'string' ? resultData : '')
-            setStoryForm(prev => ({ ...prev, description: generatedDesc }))
-          }
-          setGptGenerating(false)
-        }
-      })
-    } catch (error) {
-      showToast('Lỗi tạo mô tả GPT', 'error')
-      setGptGenerating(false)
-    }
-  }
-
-  const handleAnalyzeStory = async () => {
-    if (!user) {
-      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
-      return
-    }
-    if (!storyForm.description) {
-      showToast('Vui lòng nhập mô tả câu chuyện', 'warning')
-      return
-    }
-
-    try {
-      setGptAnalyzing(true)
-      const response = await gptAPI.analyze({
-        story_description: storyForm.description,
-        story_title: storyForm.title,
-        story_genre: storyForm.genre
-      })
-
-      const taskId = response.data.task_id
-
-      registerTask(taskId, {
-        label: `Phân tích: ${storyForm.title}`,
-        task_type: 'analyze_entities',
-        onComplete: (taskData) => {
-          if (taskData.status === 'completed') {
-            setAnalyzedEntities(taskData.result)
-            setShowAnalyzedModal(true)
-          }
-          setGptAnalyzing(false)
-        }
-      })
-    } catch (error) {
-      showToast('Lỗi phân tích GPT', 'error')
-      setGptAnalyzing(false)
-    }
-  }
-
-  const handleClearAnalyzedEntities = () => {
-    setAnalyzedEntities(null)
-    setShowAnalyzedModal(false)
-  }
-
-  const handleCloseAnalyzedModal = () => {
-    setShowAnalyzedModal(false)
-  }
-
-  const handleOpenAnalyzedModal = () => {
-    setShowAnalyzedModal(true)
-  }
-
-  const handleUpdateAnalyzedEntities = (updated) => {
-    setAnalyzedEntities(updated)
-  }
-
-  const handleCreateStory = async (e) => {
-    e.preventDefault()
-
-    if (!user) {
-      showToast('Vui lòng đăng nhập để tạo câu chuyện', 'warning')
-      return
-    }
-
-    if (!storyForm.title || !storyForm.description) {
-      showToast('Vui lòng điền đầy đủ thông tin', 'warning')
-      return
-    }
-
-    try {
-      const submitData = { ...storyForm, world_id: worldId }
-      if (!submitData.visibility) delete submitData.visibility
-      const response = await storiesAPI.create(submitData)
-      const createdStory = response.data.story
-
-      // If we have analyzed entities, link them
-      if (analyzedEntities && createdStory?.story_id) {
-        const hasEntities = analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0
-        if (hasEntities) {
-          const linkRes = await storiesAPI.linkEntities(createdStory.story_id, {
-            characters: analyzedEntities.characters || [],
-            locations: analyzedEntities.locations || [],
-            auto_create: true
-          })
-          const createdCount = (linkRes.data.created_entities?.length || 0) + (linkRes.data.created_locations?.length || 0)
-          if (createdCount > 0) {
-            showToast(`Tạo câu chuyện, liên kết và tạo mới ${linkRes.data.created_entities?.length || 0} nhân vật, ${linkRes.data.created_locations?.length || 0} địa điểm!`, 'success')
-          } else {
-            showToast('Tạo câu chuyện và liên kết thành công!', 'success')
-          }
-        } else {
-          showToast('Tạo câu chuyện thành công!', 'success')
-        }
-      } else {
-        showToast('Tạo câu chuyện thành công!', 'success')
+      const res = await collaboratorsAPI.invite(worldId, usernameOrEmail)
+      const newCollaborator = res.data?.collaborator
+      if (newCollaborator) {
+        setCollaborators(prev => [...prev, newCollaborator])
       }
+      showToast(`Invitation sent to ${usernameOrEmail}`, 'success')
+    } catch (err) {
+      const status = err.response?.status
+      if (status === 404) showToast('User not found', 'error')
+      else if (status === 409) showToast('Already a co-author or invitation pending', 'warning')
+      else showToast('Failed to send invitation', 'error')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
 
-      handleCloseStoryModal()
-      loadWorldDetails() // Reload to show new story
-    } catch (error) {
-      showToast('Không thể tạo câu chuyện: ' + (error.message || error), 'error')
+  const handleRemoveCollaborator = async (userId) => {
+    try {
+      await collaboratorsAPI.remove(worldId, userId)
+      setCollaborators(prev => prev.filter(c => c.user_id !== userId))
+      showToast('Co-author removed', 'success')
+    } catch {
+      showToast('Failed to remove co-author', 'error')
     }
   }
 
@@ -477,23 +326,11 @@ function WorldDetailContainer({ showToast }) {
       onUpdateEntity={handleUpdateEntity}
       onDeleteLocation={handleDeleteLocation}
       onDeleteStory={handleDeleteStory}
-      // Story creation props
-      showStoryModal={showStoryModal}
-      storyForm={storyForm}
-      gptGenerating={gptGenerating}
-      gptAnalyzing={gptAnalyzing}
-      analyzedEntities={analyzedEntities}
-      onOpenStoryModal={handleOpenStoryModal}
-      onCloseStoryModal={handleCloseStoryModal}
-      onStoryFormChange={handleStoryFormChange}
-      onGenerateStoryDescription={handleGenerateStoryDescription}
-      onAnalyzeStory={handleAnalyzeStory}
-      showAnalyzedModal={showAnalyzedModal}
-      onCloseAnalyzedModal={handleCloseAnalyzedModal}
-      onOpenAnalyzedModal={handleOpenAnalyzedModal}
-      onClearAnalyzedEntities={handleClearAnalyzedEntities}
-      onUpdateAnalyzedEntities={handleUpdateAnalyzedEntities}
-      onCreateStory={handleCreateStory}
+      // Collaborators props
+      collaborators={collaborators}
+      inviteLoading={inviteLoading}
+      onInviteCollaborator={handleInviteCollaborator}
+      onRemoveCollaborator={handleRemoveCollaborator}
     />
   )
 }

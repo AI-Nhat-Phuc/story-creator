@@ -1,18 +1,12 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import GptButton from '../GptButton'
+import { Link, useNavigate } from 'react-router-dom'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
-import Tag from '../Tag'
 import { STORY_TEMPLATES } from '../storyTemplates'
 import {
   BookOpenIcon,
   GlobeAltIcon,
-  UserIcon,
-  PlusIcon,
   ClockIcon,
   DocumentTextIcon,
-  MapPinIcon,
-  CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 
 function StoriesView({
@@ -43,6 +37,16 @@ function StoriesView({
   selectedCharacters = [],
   setSelectedCharacters = () => {},
 }) {
+    const navigate = useNavigate()
+
+    const handleCreateStoryClick = () => {
+      if (worlds.length === 1) {
+        navigate(`/stories/new?worldId=${worlds[0].world_id}`)
+      } else {
+        onOpenModal()
+      }
+    }
+
     // Checkbox state for character selection
     const [createNewCharacter, setCreateNewCharacter] = useState(false);
 
@@ -98,7 +102,7 @@ function StoriesView({
               <span className="loading loading-spinner loading-xs"></span>
             </button>
           ) : user ? (
-            <button onClick={onOpenModal} className="btn btn-primary">
+            <button onClick={handleCreateStoryClick} className="btn btn-primary">
               + Tạo câu chuyện mới
             </button>
           ) : (
@@ -213,227 +217,33 @@ function StoriesView({
 
       {showCreateModal && (
         <div className="modal modal-open">
-          <div className="max-w-2xl modal-box">
-            <h3 className="mb-4 font-bold text-lg">Tạo câu chuyện mới</h3>
-            <form onSubmit={onSubmit}>
-              {/* Character selection group */}
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Chọn nhân vật tham gia</span>
-                </label>
-                <div className="flex flex-col gap-2">
-                  {availableCharacters.map((char) => (
-                    <label key={char.entity_id} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        value={char.entity_id}
-                        checked={selectedCharacters.includes(char.entity_id)}
-                        onChange={handleCharacterCheckbox}
-                        className="checkbox checkbox-sm"
-                      />
-                      <span><UserIcon className="inline w-3.5 h-3.5" /> {char.name}</span>
-                    </label>
-                  ))}
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="__new__"
-                      checked={selectedCharacters.includes('__new__')}
-                      onChange={handleCharacterCheckbox}
-                      className="checkbox checkbox-sm"
-                    />
-                    <span><PlusIcon className="inline w-3.5 h-3.5" /> Tạo nhân vật mới (GPT sẽ đặt tên)</span>
-                  </label>
-                </div>
-              {/* END character selection group */}
-                <label className="label">
-                  <span className="label-text">Thế giới *</span>
-                </label>
-                <select
-                  name="world_id"
-                  value={formData.world_id}
-                  onChange={onInputChange}
-                  className="select-bordered select"
-                  required
+          <div className="modal-box max-w-sm">
+            <h3 className="mb-4 font-bold text-lg">Chọn thế giới</h3>
+            <p className="mb-4 text-sm text-base-content/70">Câu chuyện sẽ được tạo trong thế giới nào?</p>
+            <div className="flex flex-col gap-2">
+              {worlds.map(world => (
+                <Link
+                  key={world.world_id}
+                  to={`/stories/new?worldId=${world.world_id}`}
+                  className="btn btn-outline justify-start"
+                  onClick={onCloseModal}
                 >
-                  <option value="">-- Chọn thế giới --</option>
-                  {worlds.map(world => (
-                    <option key={world.world_id} value={world.world_id}>
-                      {world.name} ({world.world_type})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Tiêu đề *</span>
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={onInputChange}
-                  className="input input-bordered"
-                  required
-                />
-              </div>
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Thể loại</span>
-                </label>
-                <select
-                  name="genre"
-                  value={formData.genre}
-                  onChange={onInputChange}
-                  className="select-bordered select"
-                >
-                  <option value="adventure">Phiêu lưu</option>
-                  <option value="mystery">Bí ẩn</option>
-                  <option value="conflict">Xung đột</option>
-                  <option value="discovery">Khám phá</option>
-                </select>
-              </div>
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Chế độ hiển thị</span>
-                </label>
-                <select
-                  name="visibility"
-                  value={formData.visibility}
-                  onChange={onInputChange}
-                  className="select-bordered select"
-                >
-                  <option value="">Mặc định (theo thế giới)</option>
-                  <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
-                  <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
-                  <option value="public">Công khai - Mọi người có thể xem</option>
-                </select>
-              </div>
-
-              <div className="mb-4 form-control">
-                <div className='flex justify-between'>
-                  <label className="label">
-                    <span className="label-text">Mô tả *</span>
-                  </label>
-                  <div className="flex gap-2 mb-2">
-                    <GptButton
-                      // onClick={handleOpenTemplateModal}
-                      loading={gptGenerating}
-                      loadingText="Đang tạo..."
-                      disabled={!formData.world_id || !formData.title}
-                      variant="secondary"
-                      size="xs"
-                    >
-                      Tạo Mô tả
-                    </GptButton>
-                  </div>
-                </div>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={onInputChange}
-                  className="h-32 textarea textarea-bordered"
-                  placeholder="Nhập mô tả hoặc dùng GPT để tự động tạo..."
-                  required
-                />
-                <label className="label">
-                  <span className="label-text-alt">
-                    {formData.description.length > 0
-                      ? `${formData.description.length} ký tự`
-                      : <span className="px-2 py-1 rounded font-semibold text-gray-400">Click nút GPT để tự động tạo mô tả</span>}
-                  </span>
-                </label>
-              </div>
-
-              {/* Analyze Button */}
-              {formData.description && !analyzedEntities && (
-                <div className="mb-4">
-                  <GptButton
-                    onClick={onAnalyzeStory}
-                    loading={gptAnalyzing}
-                    loadingText="Đang phân tích..."
-                    variant="primary"
-                    size="sm"
-                  >
-                    Phân tích nhân vật & địa điểm
-                  </GptButton>
-                </div>
-              )}
-
-              {/* Analyzed entities indicator */}
-              {analyzedEntities && (analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0) && (
-                <div className="flex items-center gap-2 bg-success/10 mb-4 px-3 py-2 border border-success/30 rounded-lg text-sm">
-                  <CheckCircleIcon className="w-4 h-4 text-success shrink-0" />
-                  <span>
-                    Đã phân tích: {analyzedEntities.characters?.length || 0} nhân vật, {analyzedEntities.locations?.length || 0} địa điểm
-                  </span>
-                  <button
-                    type="button"
-                    className="ml-auto text-xs link link-primary"
-                    onClick={onOpenAnalyzedModal}
-                  >
-                    Xem / Sửa
-                  </button>
-                </div>
-              )}
-
-              {gptGenerating && (
-                <div className="mb-4 alert alert-info">
-                  <div>
-                    <span className="loading loading-spinner"></span>
-                    <span>Đang tạo mô tả với GPT...</span>
-                  </div>
-                </div>
-              )}
-
-              {detectedCharacters.length > 0 && (
-                <div className="mb-4 alert alert-info">
-                  <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0 stroke-current w-6 h-6" fill="none" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <div className="font-bold">Đã phát hiện {detectedCharacters.length} nhân vật:</div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {detectedCharacters.map(char => (
-                          <Tag key={char.entity_id} color="primary" icon={UserIcon}>
-                            {char.name}
-                          </Tag>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Thời điểm (0-100): {formData.time_index}</span>
-                </label>
-                <input
-                  type="range"
-                  name="time_index"
-                  min="0"
-                  max="100"
-                  value={formData.time_index}
-                  onChange={onInputChange}
-                  className="range"
-                />
-              </div>
-
-              <div className="modal-action">
-                <button type="submit" className="btn btn-primary" disabled={gptGenerating}>
-                  Tạo câu chuyện
-                </button>
-                <button type="button" onClick={onCloseModal} className="btn" disabled={gptGenerating}>Hủy</button>
-              </div>
-            </form>
+                  <GlobeAltIcon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{world.name}</span>
+                  <span className="ml-auto text-xs opacity-50">{world.world_type}</span>
+                </Link>
+              ))}
+            </div>
+            <div className="modal-action mt-6">
+              <button type="button" onClick={onCloseModal} className="btn btn-ghost">Hủy</button>
+            </div>
           </div>
+          <div className="modal-backdrop" onClick={onCloseModal}></div>
         </div>
       )}
+
+
+
 
       {/* GPT Analyzed Entities Modal */}
       <AnalyzedEntitiesEditor
