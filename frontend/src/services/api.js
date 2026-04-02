@@ -60,9 +60,11 @@ export const storiesAPI = {
   getById: (id) => api.get(`/stories/${id}`),
   create: (data) => api.post('/stories', data),
   update: (id, data) => api.put(`/stories/${id}`, data),
+  patch: (id, data) => api.patch(`/stories/${id}`, data),
   delete: (id) => api.delete(`/stories/${id}`),
   linkEntities: (id, data) => api.post(`/stories/${id}/link-entities`, data),
   clearLinks: (id) => api.post(`/stories/${id}/clear-links`),
+  getMyDraft: () => api.get('/stories/my-draft'),
 }
 
 // GPT API
@@ -72,6 +74,7 @@ export const gptAPI = {
   getResults: (taskId) => api.get(`/gpt/results/${taskId}`),
   batchAnalyzeStories: (data) => api.post('/gpt/batch-analyze-stories', data),
   getTasks: (taskIds) => api.get('/gpt/tasks', { params: { task_ids: taskIds.join(',') } }),
+  paraphrase: (text, mode) => api.post('/gpt/paraphrase', { text, mode }),
 }
 
 // Stats API
@@ -104,6 +107,7 @@ export const authAPI = {
   verify: () => api.get('/auth/verify'),
   changePassword: (data) => api.post('/auth/change-password', data),
   getCurrentUser: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/auth/profile', data),
   // OAuth
   googleLogin: (token) => api.post('/auth/oauth/google', { token }),
 }

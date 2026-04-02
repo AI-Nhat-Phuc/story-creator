@@ -14,6 +14,7 @@ const WorldsPage = lazy(() => import('./pages/WorldsPage'))
 const StoriesPage = lazy(() => import('./pages/StoriesPage'))
 const WorldDetailPage = lazy(() => import('./pages/WorldDetailPage'))
 const StoryDetailPage = lazy(() => import('./pages/StoryDetailPage'))
+const StoryEditorPage = lazy(() => import('./pages/StoryEditorPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
@@ -42,6 +43,8 @@ function App() {
                 <Route path="/worlds" element={<WorldsPage showToast={showToast} />} />
                 <Route path="/worlds/:worldId" element={<WorldDetailPage showToast={showToast} />} />
                 <Route path="/stories" element={<StoriesPage showToast={showToast} />} />
+                <Route path="/stories/new" element={<StoryEditorPage showToast={showToast} />} />
+                <Route path="/stories/:storyId/edit" element={<StoryEditorPage showToast={showToast} />} />
                 <Route path="/stories/:storyId" element={<StoryDetailPage showToast={showToast} />} />
                 <Route path="/admin" element={<AdminPanel showToast={showToast} />} />
               </Route>

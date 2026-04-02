@@ -55,13 +55,24 @@ function StoryDetailView({
 
   const renderStoryContent = () => {
     if (!story.content) return null
+
+    // HTML format — rendered by novel/TipTap editor
+    if (story.format === 'html') {
+      return (
+        <div
+          className="prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: story.content }}
+        />
+      )
+    }
+
+    // Plain/markdown: paragraph-by-paragraph with highlight support
     const paragraphs = story.content.split('\n')
 
     // Resolve highlight: if target paragraph is empty, find nearest non-empty one
     let effectiveHighlight = highlightPosition
     if (effectiveHighlight >= 0) {
       if (effectiveHighlight >= paragraphs.length || !paragraphs[effectiveHighlight]?.trim()) {
-        // Find nearest non-empty paragraph
         let closest = -1
         let minDist = Infinity
         paragraphs.forEach((p, i) => {
