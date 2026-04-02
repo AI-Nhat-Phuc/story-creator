@@ -162,6 +162,12 @@ function EventTimelineSection({ showToast, worldsList = [] }) {
                 worldId={selectedWorldId}
                 direction={effectiveDirection}
                 showToast={showToast}
+                onWorldNotFound={() => {
+                  // World no longer exists — clear stale localStorage entry
+                  // and reset selection so the auto-select picks a valid world.
+                  localStorage.removeItem('lastViewedWorldId')
+                  setSelectedWorldId('')
+                }}
               />
             ) : (
               <div className="flex justify-center items-center h-64 text-base-content/50">

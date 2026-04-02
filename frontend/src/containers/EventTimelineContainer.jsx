@@ -12,7 +12,7 @@ import { useGptTasks } from '../contexts/GptTaskContext'
  * EventTimelineContainer - Data fetching and state management
  * for the event timeline section on Dashboard.
  */
-function EventTimelineContainer({ worldId, direction, showToast }) {
+function EventTimelineContainer({ worldId, direction, showToast, onWorldNotFound }) {
   const navigate = useNavigate()
   const { registerTask } = useGptTasks()
   const [timeline, setTimeline] = useState(null)
@@ -34,8 +34,11 @@ function EventTimelineContainer({ worldId, direction, showToast }) {
       setTimeline(response.data?.timeline || null)
     } catch (error) {
       console.error('Error loading timeline:', error)
-      // Don't show error toast on initial load — world may not have events yet
-      if (!silent) {
+      if (error.response?.status === 404) {
+        // World no longer exists (e.g. ephemeral Vercel DB reset) — notify parent
+        // so it can clear the stale selection and pick a valid world.
+        onWorldNotFound?.()
+      } else if (!silent) {
         showToastRef.current?.('Không thể tải timeline sự kiện', 'error')
       }
       setTimeline(null)
