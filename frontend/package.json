@@ -18,6 +18,7 @@
     "tailwindcss": "^3.4.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.51.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^4.2.1",
@@ -33,7 +34,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright playwright test --config=playwright.config.cjs",
+    "test:e2e:report": "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright playwright test --config=playwright.config.cjs --reporter=html",
+    "test:e2e:local": "BASE_URL=http://localhost:3000 PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright playwright test --config=playwright.config.cjs"
   },
   "proxy": "http://localhost:5000"
 }
