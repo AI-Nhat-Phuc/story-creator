@@ -20,17 +20,11 @@ function StoryDetailView({
   world,
   linkedCharacters = [],
   linkedLocations = [],
-  editing,
-  editForm,
   formattedWorldTime,
   displayWorldTime,
   normalizedTimelineIndex,
   gptAnalyzing,
   analyzedEntities,
-  onEdit,
-  onCancelEdit,
-  onSaveEdit,
-  onChangeForm,
   onAnalyzeStory,
   onClearAnalyzedEntities,
   onUpdateAnalyzedEntities,
@@ -124,46 +118,7 @@ function StoryDetailView({
       </div>
 
       <div className="bg-base-100 shadow-xl mb-6 p-6 rounded-box">
-        {editing ? (
-          <>
-            <input
-              type="text"
-              value={editForm.title}
-              onChange={(e) => onChangeForm('title', e.target.value)}
-              className="mb-4 w-full font-bold text-3xl input input-bordered"
-              placeholder="Tiêu đề câu chuyện"
-            />
-            <textarea
-              value={editForm.content}
-              onChange={(e) => onChangeForm('content', e.target.value)}
-              className="mb-4 w-full min-h-[200px] textarea textarea-bordered"
-              placeholder="Mô tả câu chuyện"
-            />
-            <div className="mb-4 form-control">
-              <label className="label">
-                <span className="font-semibold label-text">Chế độ hiển thị</span>
-              </label>
-              <select
-                value={editForm.visibility}
-                onChange={(e) => onChangeForm('visibility', e.target.value)}
-                className="w-full max-w-xs select-bordered select"
-              >
-                <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
-                <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
-                <option value="public">Công khai - Mọi người có thể xem</option>
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={onSaveEdit} className="btn btn-primary">
-                <ArrowDownTrayIcon className="inline w-4 h-4" /> Lưu
-              </button>
-              <button onClick={onCancelEdit} className="btn btn-ghost">
-                <XMarkIcon className="inline w-4 h-4" /> Hủy
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
+        <>
             <div className="flex justify-between items-start mb-2">
               <h1 className="font-bold text-3xl">{story.title}</h1>
               <div className="flex gap-1 items-center">
@@ -177,9 +132,9 @@ function StoryDetailView({
                 </a>
                 {canEdit && (
                   <>
-                    <button onClick={onEdit} className="btn btn-sm btn-ghost">
+                    <Link to={`/stories/${story.story_id}/edit`} className="btn btn-sm btn-ghost">
                       <PencilIcon className="inline w-4 h-4" /> Sửa
-                    </button>
+                    </Link>
                     {onDeleteStory && (
                       <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost">
                         <TrashIcon className="inline w-4 h-4" /> Xóa
