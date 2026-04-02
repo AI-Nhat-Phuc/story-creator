@@ -2,6 +2,11 @@ name: Playwright E2E Tests
 
 # Runs automatically after every successful Vercel deployment.
 # BASE_URL is taken from the deployment_status event — no hardcoded URL.
+#
+# REQUIRED secret (repo Settings → Secrets and variables → Actions):
+#   VERCEL_AUTOMATION_BYPASS_SECRET
+#   → Vercel dashboard → Project → Settings → Deployment Protection
+#     → Enable "Protection Bypass for Automation" → copy the secret
 on:
   deployment_status:
 
@@ -17,7 +22,6 @@ jobs:
       - name: Checkout the deployed commit
         uses: actions/checkout@v4
         with:
-          # Check out the exact commit that was deployed, not just HEAD
           ref: ${{ github.event.deployment.sha }}
 
       - name: Set up Node.js
@@ -35,33 +39,39 @@ jobs:
         working-directory: frontend
         run: npx playwright install chromium --with-deps
 
-      # Wait for the deployment URL to actually respond before running tests.
-      # Vercel can mark a deployment "success" a few seconds before it's routable.
+      # Wait until the deployment URL returns 2xx WITH the bypass header.
+      # A 401 means Vercel Deployment Protection is blocking — treat as not ready.
       - name: Wait for deployment to be reachable
         env:
           DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
+          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          echo "Waiting for $DEPLOY_URL ..."
-          for i in $(seq 1 12); do
+          echo "Target URL: $DEPLOY_URL"
+          for i in $(seq 1 18); do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              -H "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}" \
+              -H "x-vercel-protection-bypass: ${BYPASS_SECRET}" \
+              -L --max-time 10 \
               "$DEPLOY_URL")
             echo "Attempt $i: HTTP $STATUS"
-            if [ "$STATUS" -lt 500 ] && [ "$STATUS" -ne 0 ]; then
-              echo "Deployment is reachable."
+            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+              echo "Deployment is reachable (HTTP $STATUS)."
               exit 0
+            fi
+            if [ "$STATUS" -eq 401 ] || [ "$STATUS" -eq 403 ]; then
+              echo "::error::Deployment returned HTTP $STATUS — Vercel Deployment Protection is active."
+              echo "::error::Set the VERCEL_AUTOMATION_BYPASS_SECRET secret in repo Settings → Secrets."
+              echo "::error::See: https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection"
+              exit 1
             fi
             sleep 5
           done
-          echo "Deployment did not become reachable in time." && exit 1
+          echo "::error::Deployment did not become reachable after 90 s." && exit 1
 
       - name: Run Playwright login tests
         working-directory: frontend
         env:
           CI: 'true'
           BASE_URL: ${{ github.event.deployment_status.target_url }}
-          # Set VERCEL_AUTOMATION_BYPASS_SECRET in repo Settings → Secrets
-          # to bypass Vercel Deployment Protection on preview URLs.
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: npx playwright test --config=playwright.config.cjs --reporter=list
 
