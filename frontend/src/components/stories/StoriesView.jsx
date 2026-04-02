@@ -1,7 +1,5 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
-import { STORY_TEMPLATES } from '../storyTemplates'
 import {
   BookOpenIcon,
   GlobeAltIcon,
@@ -14,84 +12,20 @@ function StoriesView({
   worlds,
   user,
   authLoading,
-  showCreateModal,
-  formData,
-  detectedCharacters,
-  analyzedEntities,
-  gptGenerating,
-  gptAnalyzing,
-  onOpenModal,
-  onCloseModal,
-  onInputChange,
-  onSubmit,
-  onGenerateDescription,
-  onAnalyzeStory,
-  onClearAnalyzedEntities,
-  onUpdateAnalyzedEntities,
-  showAnalyzedModal,
-  onCloseAnalyzedModal,
-  onOpenAnalyzedModal,
   formatWorldTime,
   getWorldName,
-  availableCharacters = [],
-  selectedCharacters = [],
-  setSelectedCharacters = () => {},
 }) {
-    const navigate = useNavigate()
+  const navigate = useNavigate()
+  const [showWorldPicker, setShowWorldPicker] = useState(false)
 
-    const handleCreateStoryClick = () => {
-      if (worlds.length === 1) {
-        navigate(`/stories/new?worldId=${worlds[0].world_id}`)
-      } else {
-        onOpenModal()
-      }
+  const handleCreateStoryClick = () => {
+    if (worlds.length === 1) {
+      navigate(`/stories/new?worldId=${worlds[0].world_id}`)
+    } else {
+      setShowWorldPicker(true)
     }
-
-    // Checkbox state for character selection
-    const [createNewCharacter, setCreateNewCharacter] = useState(false);
-
-    // Handle checkbox change
-    const handleCharacterCheckbox = (e) => {
-      const { value, checked } = e.target;
-      if (value === '__new__') {
-        setCreateNewCharacter(checked);
-        if (checked) {
-          setSelectedCharacters((prev) => prev.filter((id) => id !== '__new__').concat(['__new__']));
-        } else {
-          setSelectedCharacters((prev) => prev.filter((id) => id !== '__new__'));
-        }
-        return;
-      }
-      if (checked) {
-        setSelectedCharacters((prev) => prev.concat([value]));
-      } else {
-        setSelectedCharacters((prev) => prev.filter((id) => id !== value));
-      }
-    };
-  // Popup state for template selection
-  const [selectedTemplate, setSelectedTemplate] = useState('')
-  const [selectedGenre, setSelectedGenre] = useState('adventure')
-
-  // Open template modal
-  // const handleOpenTemplateModal = () => {
-  //   setSelectedGenre(formData.genre || 'adventure')
-  //   setShowTemplateModal(true)
-  // }
-
-  // Handle template select and trigger GPT
-  const handleSelectTemplate = (template) => {
-    setSelectedTemplate(template)
-    // Pass template to GPT handler
-    onGenerateDescription(template)
   }
 
-  // Change genre in modal
-  const handleChangeGenre = (e) => {
-    setSelectedGenre(e.target.value)
-  }
-
-  // Get templates for selected genre
-  const genreTemplates = STORY_TEMPLATES.find(t => t.genre === selectedGenre)
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -123,10 +57,7 @@ function StoriesView({
 
       <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {stories.map(story => {
-          // Get world name for scroll color
           const worldName = getWorldName(story.world_id)
-
-          // Generate color based on world name hash
           const colorPalettes = [
             { rod: 'from-amber-600 via-amber-500 to-amber-600', rodEdge: 'from-amber-700 to-amber-800', text: 'text-amber-100' },
             { rod: 'from-cyan-600 via-cyan-500 to-cyan-600', rodEdge: 'from-cyan-700 to-cyan-800', text: 'text-cyan-100' },
@@ -139,18 +70,13 @@ function StoriesView({
             { rod: 'from-indigo-600 via-indigo-500 to-indigo-600', rodEdge: 'from-indigo-700 to-indigo-800', text: 'text-indigo-100' },
             { rod: 'from-pink-600 via-pink-500 to-pink-600', rodEdge: 'from-pink-700 to-pink-800', text: 'text-pink-100' },
           ]
-
-          // Simple hash from world name
           const hash = worldName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
           const colors = colorPalettes[hash % colorPalettes.length]
 
           return (
             <Link key={story.story_id} to={`/stories/${story.story_id}`} className="group block">
-              {/* Scroll Container */}
               <div className="flex h-[220px]">
-                {/* Left Scroll Rod */}
                 <div className={`relative bg-gradient-to-r ${colors.rod} shadow-md rounded-l-sm w-7`}>
-                  {/* World name vertical text */}
                   <div className="absolute inset-0 flex justify-center items-center">
                     <span
                       className={`font-bold text-[16px] ${colors.text} whitespace-nowrap origin-center drop-shadow-sm`}
@@ -160,8 +86,6 @@ function StoriesView({
                     </span>
                   </div>
                 </div>
-
-                {/* Scroll Paper */}
                 <div className="relative flex-1 bg-white shadow-xl group-hover:shadow-2xl border border-gray-200 border-l-0 rounded-r-sm overflow-hidden transition-all">
                   <div className="z-10 relative flex flex-col p-4 h-full">
                     <h2 className="mb-2 font-bold text-gray-900 text-lg line-clamp-2 leading-tight">
@@ -169,7 +93,7 @@ function StoriesView({
                     </h2>
                     <div className="flex flex-wrap gap-1 mb-2">
                       <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-700 text-xs">
-                                                <ClockIcon className="inline w-3.5 h-3.5" /> {formatWorldTime(story)}
+                        <ClockIcon className="inline w-3.5 h-3.5" /> {formatWorldTime(story)}
                       </span>
                     </div>
                     <div className="flex-1 overflow-hidden">
@@ -178,9 +102,7 @@ function StoriesView({
                           {story.content}
                         </p>
                       ) : (
-                        <p className="text-gray-400 text-sm italic">
-                          Chưa có mô tả...
-                        </p>
+                        <p className="text-gray-400 text-sm italic">Chưa có mô tả...</p>
                       )}
                     </div>
                     <div className="mt-2 pt-2 border-gray-300 border-t border-dashed">
@@ -209,13 +131,14 @@ function StoriesView({
             <p className="opacity-60 mt-4 text-xl">Chưa có thế giới nào!</p>
             <p className="opacity-50 mt-2">Bạn cần tạo thế giới trước khi tạo câu chuyện.</p>
             <Link to="/worlds" className="mt-4 btn btn-primary">
-                            <GlobeAltIcon className="inline w-4 h-4" /> Tạo thế giới mới
+              <GlobeAltIcon className="inline w-4 h-4" /> Tạo thế giới mới
             </Link>
           </div>
         </div>
       )}
 
-      {showCreateModal && (
+      {/* World picker modal — shown when user has multiple worlds */}
+      {showWorldPicker && (
         <div className="modal modal-open">
           <div className="modal-box max-w-sm">
             <h3 className="mb-4 font-bold text-lg">Chọn thế giới</h3>
@@ -226,7 +149,7 @@ function StoriesView({
                   key={world.world_id}
                   to={`/stories/new?worldId=${world.world_id}`}
                   className="btn btn-outline justify-start"
-                  onClick={onCloseModal}
+                  onClick={() => setShowWorldPicker(false)}
                 >
                   <GlobeAltIcon className="w-4 h-4 shrink-0" />
                   <span className="truncate">{world.name}</span>
@@ -235,25 +158,12 @@ function StoriesView({
               ))}
             </div>
             <div className="modal-action mt-6">
-              <button type="button" onClick={onCloseModal} className="btn btn-ghost">Hủy</button>
+              <button type="button" onClick={() => setShowWorldPicker(false)} className="btn btn-ghost">Hủy</button>
             </div>
           </div>
-          <div className="modal-backdrop" onClick={onCloseModal}></div>
+          <div className="modal-backdrop" onClick={() => setShowWorldPicker(false)}></div>
         </div>
       )}
-
-
-
-
-      {/* GPT Analyzed Entities Modal */}
-      <AnalyzedEntitiesEditor
-        open={showAnalyzedModal}
-        analyzedEntities={analyzedEntities}
-        onUpdate={onUpdateAnalyzedEntities}
-        onClose={onCloseAnalyzedModal}
-        onClear={onClearAnalyzedEntities}
-        linkLabel="Xác nhận"
-      />
     </div>
   )
 }
