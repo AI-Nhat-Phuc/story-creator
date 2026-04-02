@@ -125,3 +125,17 @@ export const adminAPI = {
 }
 
 export default api
+
+// Collaborators API
+export const collaboratorsAPI = {
+  list:   (worldId)            => api.get(`/worlds/${worldId}/collaborators`),
+  invite: (worldId, usernameOrEmail) => api.post(`/worlds/${worldId}/collaborators`, { username_or_email: usernameOrEmail, role: 'co_author' }),
+  remove: (worldId, userId)    => api.delete(`/worlds/${worldId}/collaborators/${userId}`),
+}
+
+// Invitations API
+export const invitationsAPI = {
+  list:    ()    => api.get('/users/me/invitations'),
+  accept:  (id)  => api.post(`/users/me/invitations/${id}/accept`),
+  decline: (id)  => api.post(`/users/me/invitations/${id}/decline`),
+}

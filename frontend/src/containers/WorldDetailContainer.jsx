@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { worldsAPI, storiesAPI, gptAPI } from '../services/api'
+import { worldsAPI, storiesAPI, gptAPI, collaboratorsAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import WorldDetailView from '../components/worldDetail/WorldDetailView'
 import { useAuth } from '../contexts/AuthContext'
@@ -36,6 +36,10 @@ function WorldDetailContainer({ showToast }) {
   const [showAnalyzedModal, setShowAnalyzedModal] = useState(false)
   const [autoLinking, setAutoLinking] = useState(false)
 
+  // Collaborators state
+  const [collaborators, setCollaborators] = useState([])
+  const [inviteLoading, setInviteLoading] = useState(false)
+
   // Unlinked stories modal state
   const [showUnlinkedModal, setShowUnlinkedModal] = useState(false)
   const [unlinkedStories, setUnlinkedStories] = useState([])
@@ -50,17 +54,19 @@ function WorldDetailContainer({ showToast }) {
   const loadWorldDetails = async () => {
     try {
       setLoading(true)
-      const [worldRes, storiesRes, charsRes, locsRes] = await Promise.all([
+      const [worldRes, storiesRes, charsRes, locsRes, collabRes] = await Promise.all([
         worldsAPI.getById(worldId),
         worldsAPI.getStories(worldId),
         worldsAPI.getCharacters(worldId),
-        worldsAPI.getLocations(worldId)
+        worldsAPI.getLocations(worldId),
+        collaboratorsAPI.list(worldId).catch(() => ({ data: [] })),
       ])
 
       setWorld(worldRes.data)
       setStories(storiesRes.data)
       setCharacters(charsRes.data)
       setLocations(locsRes.data)
+      setCollaborators(collabRes.data || [])
       setEditForm({ name: worldRes.data.name, description: worldRes.data.description, visibility: worldRes.data.visibility || 'private' })
     } catch (error) {
       showToast('Không thể tải chi tiết thế giới', 'error')
@@ -440,6 +446,33 @@ function WorldDetailContainer({ showToast }) {
   if (loading) return <LoadingSpinner />
   if (!world) return <div>Không tìm thấy thế giới</div>
 
+  const handleInviteCollaborator = async (usernameOrEmail) => {
+    setInviteLoading(true)
+    try {
+      await collaboratorsAPI.invite(worldId, usernameOrEmail)
+      showToast(`Invitation sent to ${usernameOrEmail}`, 'success')
+      const res = await collaboratorsAPI.list(worldId)
+      setCollaborators(res.data || [])
+    } catch (err) {
+      const status = err.response?.status
+      if (status === 404) showToast('User not found', 'error')
+      else if (status === 409) showToast('Already a co-author or invitation pending', 'warning')
+      else showToast('Failed to send invitation', 'error')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  const handleRemoveCollaborator = async (userId) => {
+    try {
+      await collaboratorsAPI.remove(worldId, userId)
+      setCollaborators(prev => prev.filter(c => c.user_id !== userId))
+      showToast('Co-author removed', 'success')
+    } catch {
+      showToast('Failed to remove co-author', 'error')
+    }
+  }
+
   const canEdit = !!(user && world && user.user_id === world.owner_id)
 
   return (
@@ -494,6 +527,11 @@ function WorldDetailContainer({ showToast }) {
       onClearAnalyzedEntities={handleClearAnalyzedEntities}
       onUpdateAnalyzedEntities={handleUpdateAnalyzedEntities}
       onCreateStory={handleCreateStory}
+      // Collaborators props
+      collaborators={collaborators}
+      inviteLoading={inviteLoading}
+      onInviteCollaborator={handleInviteCollaborator}
+      onRemoveCollaborator={handleRemoveCollaborator}
     />
   )
 }

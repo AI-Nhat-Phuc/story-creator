@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { invitationsAPI } from '../services/api'
 import ThemeSelector from './ThemeSelector'
+import InvitationsDropdown from './InvitationsDropdown'
 import {
   BookOpenIcon,
   ShieldCheckIcon,
@@ -15,6 +17,30 @@ function Navbar() {
   const { user, isAuthenticated, loading: authLoading, logout } = useAuth()
   const navigate = useNavigate()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [invitations, setInvitations] = useState([])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    invitationsAPI.list().then(res => setInvitations(res.data || [])).catch(() => {})
+  }, [isAuthenticated])
+
+  const handleAcceptInvitation = async (id) => {
+    try {
+      await invitationsAPI.accept(id)
+      setInvitations(prev => prev.filter(i => i.invitation_id !== id))
+    } catch {
+      // silent — user can retry
+    }
+  }
+
+  const handleDeclineInvitation = async (id) => {
+    try {
+      await invitationsAPI.decline(id)
+      setInvitations(prev => prev.filter(i => i.invitation_id !== id))
+    } catch {
+      // silent
+    }
+  }
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true)
@@ -92,6 +118,15 @@ function Navbar() {
             <ThemeSelector />
           </div>
         </div>
+
+        {/* Invitations bell - desktop */}
+        {isAuthenticated && (
+          <InvitationsDropdown
+            invitations={invitations}
+            onAccept={handleAcceptInvitation}
+            onDecline={handleDeclineInvitation}
+          />
+        )}
 
         {/* User menu - desktop */}
         {authLoading ? (

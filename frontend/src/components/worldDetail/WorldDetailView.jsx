@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'
+import CollaboratorsPanel from './CollaboratorsPanel'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
 import Tag from '../Tag'
@@ -67,7 +68,11 @@ function WorldDetailView({
   showAnalyzedModal,
   onCloseAnalyzedModal,
   onOpenAnalyzedModal,
-  onCreateStory
+  onCreateStory,
+  collaborators = [],
+  inviteLoading = false,
+  onInviteCollaborator,
+  onRemoveCollaborator,
 }) {
   const [editingEntityId, setEditingEntityId] = useState(null)
   const [entityEditForm, setEntityEditForm] = useState({})
@@ -176,6 +181,18 @@ function WorldDetailView({
           </>
         )}
       </div>
+
+      {(collaborators.length > 0 || canEdit) && (
+        <div className="mb-4">
+          <CollaboratorsPanel
+            collaborators={collaborators}
+            canEdit={canEdit}
+            inviteLoading={inviteLoading}
+            onInvite={onInviteCollaborator}
+            onRemove={onRemoveCollaborator}
+          />
+        </div>
+      )}
 
       <div className="mb-4 tabs tabs-boxed">
         <a
