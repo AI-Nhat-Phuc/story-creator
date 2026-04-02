@@ -47,17 +47,10 @@ function EditorHeader({
         </span>
       )}
 
-      {!isPublished && (
-        <button
-          onClick={onPublish}
-          className="btn btn-primary btn-sm shrink-0"
-        >
-          Publish
-        </button>
-      )}
-      {isPublished && (
-        <span className="badge badge-success badge-sm shrink-0">Published</span>
-      )}
+      {isPublished
+        ? <span className="badge badge-success badge-sm shrink-0">Published</span>
+        : <button onClick={onPublish} className="btn btn-primary btn-sm shrink-0">Publish</button>
+      }
     </header>
   )
 }

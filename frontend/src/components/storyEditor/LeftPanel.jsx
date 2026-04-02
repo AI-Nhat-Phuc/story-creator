@@ -6,15 +6,7 @@ import { PencilSquareIcon } from '@heroicons/react/24/outline'
 function LeftPanel({ gpt, headings, userSignature, onInsertSignature }) {
   return (
     <aside className="flex flex-col gap-5 p-4 w-56 shrink-0 border-r border-base-300 bg-base-100 overflow-y-auto">
-      <GptToolsPanel
-        selectionLength={gpt.selectionLength}
-        isLoading={gpt.isLoading}
-        suggestions={gpt.suggestions}
-        onParaphrase={gpt.onParaphrase}
-        onExpand={gpt.onExpand}
-        onApply={gpt.onApply}
-        onClear={gpt.onClear}
-      />
+      <GptToolsPanel {...gpt} />
 
       <div className="divider my-0" />
 
