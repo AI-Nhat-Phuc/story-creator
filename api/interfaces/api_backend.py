@@ -239,13 +239,23 @@ class APIBackend:
         - Email:    test@storycreator.local
         - Password: Test@123
         - Role:     user
+
+        Always ensures the password is correct — resets it if a stale record exists.
         """
         from core.models import User
 
-        if self.storage.find_user_by_username("testuser"):
-            return  # already seeded
+        test_password = "Test@123"
+        existing = self.storage.find_user_by_username("testuser")
 
-        password_hash = self.auth_service.hash_password("Test@123")
+        if existing:
+            # Reset password if it doesn't match (handles stale db state)
+            if not self.auth_service.verify_password(test_password, existing.get('password_hash', '')):
+                existing['password_hash'] = self.auth_service.hash_password(test_password)
+                self.storage.save_user(existing)
+                print("🧪 Test account password reset to: Test@123")
+            return
+
+        password_hash = self.auth_service.hash_password(test_password)
         test_user = User(
             username="testuser",
             email="test@storycreator.local",
