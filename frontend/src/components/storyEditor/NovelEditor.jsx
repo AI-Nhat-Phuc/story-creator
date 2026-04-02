@@ -1,9 +1,11 @@
 import React from 'react'
-import { Editor } from 'novel'
+import { EditorRoot, EditorContent, StarterKit, Placeholder } from 'novel'
+
+const extensions = [StarterKit, Placeholder]
 
 function NovelEditor({ initialContent, format, onUpdate, editorRef }) {
   // For plain/markdown stories, wrap as TipTap doc with plain text paragraph
-  const defaultValue =
+  const defaultContent =
     format === 'html'
       ? initialContent || ''
       : {
@@ -17,17 +19,22 @@ function NovelEditor({ initialContent, format, onUpdate, editorRef }) {
         }
 
   return (
-    <Editor
-      defaultValue={defaultValue}
-      disableLocalStorage={true}
-      onUpdate={({ editor }) => {
-        editorRef.current = editor
-        const { from, to } = editor.state.selection
-        const selectionLength = editor.state.doc.textBetween(from, to, ' ').length
-        onUpdate({ html: editor.getHTML(), editor, selectionLength })
-      }}
-      className="min-h-full"
-    />
+    <EditorRoot>
+      <EditorContent
+        initialContent={defaultContent}
+        extensions={extensions}
+        onCreate={({ editor }) => {
+          editorRef.current = editor
+        }}
+        onUpdate={({ editor }) => {
+          editorRef.current = editor
+          const { from, to } = editor.state.selection
+          const selectionLength = editor.state.doc.textBetween(from, to, ' ').length
+          onUpdate({ html: editor.getHTML(), editor, selectionLength })
+        }}
+        className="min-h-full"
+      />
+    </EditorRoot>
   )
 }
 
