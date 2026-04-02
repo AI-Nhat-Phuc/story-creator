@@ -162,6 +162,10 @@ class APIBackend:
         # Ensure default admin account exists
         self._ensure_default_admin()
 
+        # Seed test account in nonprod (no VERCEL env var)
+        if not os.environ.get("VERCEL"):
+            self._seed_test_account()
+
         # Store for async GPT results (persisted in database)
         self.gpt_results = TaskStore(self.storage)
 
@@ -227,6 +231,31 @@ class APIBackend:
             admin_count = len(admin_users)
             print(f"✅ Đã tìm thấy {admin_count} tài khoản admin trong hệ thống")
 
+    def _seed_test_account(self):
+        """Seed a hard-coded test account for local / nonprod development.
+
+        Credentials:
+        - Username: testuser
+        - Email:    test@storycreator.local
+        - Password: Test@123
+        - Role:     user
+        """
+        from core.models import User
+
+        if self.storage.find_user_by_username("testuser"):
+            return  # already seeded
+
+        password_hash = self.auth_service.hash_password("Test@123")
+        test_user = User(
+            username="testuser",
+            email="test@storycreator.local",
+            password_hash=password_hash,
+            role="user"
+        )
+        self.storage.save_user(test_user.to_dict())
+        print("🧪 Test account seeded (nonprod only):")
+        print("   Username: testuser")
+        print("   Password: Test@123")
 
     def _register_blueprints(self):
         """Register all API route blueprints."""
