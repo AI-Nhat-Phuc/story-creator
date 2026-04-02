@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
 import Tag from '../Tag'
@@ -43,6 +43,16 @@ function StoriesView({
   selectedCharacters = [],
   setSelectedCharacters = () => {},
 }) {
+    const navigate = useNavigate()
+
+    const handleCreateStoryClick = () => {
+      if (worlds.length === 1) {
+        navigate(`/stories/new?worldId=${worlds[0].world_id}`)
+      } else {
+        onOpenModal()
+      }
+    }
+
     // Checkbox state for character selection
     const [createNewCharacter, setCreateNewCharacter] = useState(false);
 
@@ -98,7 +108,7 @@ function StoriesView({
               <span className="loading loading-spinner loading-xs"></span>
             </button>
           ) : user ? (
-            <button onClick={onOpenModal} className="btn btn-primary">
+            <button onClick={handleCreateStoryClick} className="btn btn-primary">
               + Tạo câu chuyện mới
             </button>
           ) : (
@@ -212,6 +222,33 @@ function StoriesView({
       )}
 
       {showCreateModal && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-sm">
+            <h3 className="mb-4 font-bold text-lg">Chọn thế giới</h3>
+            <p className="mb-4 text-sm text-base-content/70">Câu chuyện sẽ được tạo trong thế giới nào?</p>
+            <div className="flex flex-col gap-2">
+              {worlds.map(world => (
+                <Link
+                  key={world.world_id}
+                  to={`/stories/new?worldId=${world.world_id}`}
+                  className="btn btn-outline justify-start"
+                  onClick={onCloseModal}
+                >
+                  <GlobeAltIcon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{world.name}</span>
+                  <span className="ml-auto text-xs opacity-50">{world.world_type}</span>
+                </Link>
+              ))}
+            </div>
+            <div className="modal-action mt-6">
+              <button type="button" onClick={onCloseModal} className="btn btn-ghost">Hủy</button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={onCloseModal}></div>
+        </div>
+      )}
+
+      {false && showCreateModal && (
         <div className="modal modal-open">
           <div className="max-w-2xl modal-box">
             <h3 className="mb-4 font-bold text-lg">Tạo câu chuyện mới</h3>
@@ -434,6 +471,7 @@ function StoriesView({
           </div>
         </div>
       )}
+
 
       {/* GPT Analyzed Entities Modal */}
       <AnalyzedEntitiesEditor

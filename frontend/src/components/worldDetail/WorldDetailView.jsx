@@ -242,9 +242,9 @@ function WorldDetailView({
                 </button>
               </div>
             ) : user ? (
-              <button onClick={onOpenStoryModal} className="btn btn-primary btn-sm">
+              <Link to={`/stories/new?worldId=${world.world_id}`} className="btn btn-primary btn-sm">
                 + Thêm câu chuyện
-              </button>
+              </Link>
             ) : (
               <div className="tooltip-left tooltip" data-tip="Vui lòng đăng nhập để tạo câu chuyện">
                 <button className="btn btn-primary btn-sm btn-disabled" disabled>
