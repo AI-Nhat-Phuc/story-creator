@@ -24,23 +24,17 @@ function Navbar() {
     invitationsAPI.list().then(res => setInvitations(res.data || [])).catch(() => {})
   }, [isAuthenticated])
 
-  const handleAcceptInvitation = async (id) => {
+  const handleInvitationAction = (action) => async (id) => {
     try {
-      await invitationsAPI.accept(id)
+      await action(id)
       setInvitations(prev => prev.filter(i => i.invitation_id !== id))
     } catch {
       // silent — user can retry
     }
   }
 
-  const handleDeclineInvitation = async (id) => {
-    try {
-      await invitationsAPI.decline(id)
-      setInvitations(prev => prev.filter(i => i.invitation_id !== id))
-    } catch {
-      // silent
-    }
-  }
+  const handleAcceptInvitation = handleInvitationAction(invitationsAPI.accept)
+  const handleDeclineInvitation = handleInvitationAction(invitationsAPI.decline)
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true)

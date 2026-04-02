@@ -1,14 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { novelAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import NovelView from '../components/novel/NovelView'
-
-function countWords(html) {
-  if (!html) return 0
-  const text = html.replace(/<[^>]+>/g, ' ').trim()
-  return text ? text.split(/\s+/).filter(Boolean).length : 0
-}
+import { countWords } from '../utils/textUtils'
 
 function NovelContainer({ showToast }) {
   const { worldId } = useParams()
@@ -46,7 +41,7 @@ function NovelContainer({ showToast }) {
   )
 
   const isOwner = !!(novel?.owner_id && user?.user_id === novel.owner_id)
-  const isCoAuthor = !!(novel?.co_authors && user && novel.co_authors.includes(user.user_id))
+  const isCoAuthor = !!(user && novel?.co_authors?.includes(user.user_id))
   const canEdit = isOwner
   const canReorder = isOwner || isCoAuthor
 
@@ -74,8 +69,11 @@ function NovelContainer({ showToast }) {
     setMetaForm(prev => ({ ...prev, [field]: value }))
   }, [])
 
+  const chaptersRef = useRef(chapters)
+  useEffect(() => { chaptersRef.current = chapters }, [chapters])
+
   const handleReorder = useCallback(async (reordered) => {
-    const previous = chapters
+    const previous = chaptersRef.current
     setChapters(reordered)
     try {
       await novelAPI.reorderChapters(worldId, reordered.map(c => c.story_id))
@@ -83,7 +81,7 @@ function NovelContainer({ showToast }) {
       showToast('Failed to save chapter order', 'error')
       setChapters(previous)
     }
-  }, [worldId, chapters, showToast])
+  }, [worldId, showToast])
 
   return (
     <NovelView

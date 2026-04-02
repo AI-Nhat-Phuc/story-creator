@@ -443,16 +443,15 @@ function WorldDetailContainer({ showToast }) {
     }
   }
 
-  if (loading) return <LoadingSpinner />
-  if (!world) return <div>Không tìm thấy thế giới</div>
-
   const handleInviteCollaborator = async (usernameOrEmail) => {
     setInviteLoading(true)
     try {
-      await collaboratorsAPI.invite(worldId, usernameOrEmail)
+      const res = await collaboratorsAPI.invite(worldId, usernameOrEmail)
+      const newCollaborator = res.data?.collaborator
+      if (newCollaborator) {
+        setCollaborators(prev => [...prev, newCollaborator])
+      }
       showToast(`Invitation sent to ${usernameOrEmail}`, 'success')
-      const res = await collaboratorsAPI.list(worldId)
-      setCollaborators(res.data || [])
     } catch (err) {
       const status = err.response?.status
       if (status === 404) showToast('User not found', 'error')
@@ -472,6 +471,9 @@ function WorldDetailContainer({ showToast }) {
       showToast('Failed to remove co-author', 'error')
     }
   }
+
+  if (loading) return <LoadingSpinner />
+  if (!world) return <div>Không tìm thấy thế giới</div>
 
   const canEdit = !!(user && world && user.user_id === world.owner_id)
 

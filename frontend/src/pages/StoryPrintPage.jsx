@@ -35,14 +35,16 @@ function StoryPrintPage() {
   // Trigger print once story is loaded
   useEffect(() => {
     if (story) {
+      const prevTitle = document.title
       document.title = story.title || 'Story'
       window.print()
+      return () => { document.title = prevTitle }
     }
   }, [story])
 
   if (notFound) {
     return (
-      <div style={{ padding: '2rem', fontFamily: 'serif' }}>
+      <div className="p-8 font-serif">
         <p>Story not found.</p>
       </div>
     )
@@ -50,27 +52,27 @@ function StoryPrintPage() {
 
   if (!story) {
     return (
-      <div style={{ padding: '2rem', fontFamily: 'serif' }}>
+      <div className="p-8 font-serif">
         <p>Loading…</p>
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1.5rem', fontFamily: 'Georgia, serif' }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+    <div className="max-w-2xl mx-auto px-6 py-8 font-serif">
+      <h1 className="text-4xl font-bold mb-1">
         {story.title}
       </h1>
 
       {(story.author_name || story.world_name) && (
-        <p style={{ color: '#555', marginBottom: '2rem', fontSize: '0.9rem' }}>
+        <p className="text-gray-500 mb-8 text-sm">
           {story.author_name && `By ${story.author_name}`}
           {story.author_name && story.world_name && ' · '}
           {story.world_name && story.world_name}
         </p>
       )}
 
-      <hr style={{ marginBottom: '2rem', borderColor: '#ccc' }} />
+      <hr className="mb-8 border-gray-300" />
 
       {renderContent(story)}
     </div>

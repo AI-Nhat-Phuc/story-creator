@@ -1,12 +1,7 @@
 import React, { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { PencilSquareIcon, Bars3Icon } from '@heroicons/react/24/outline'
-
-function countWords(html) {
-  if (!html) return 0
-  const text = html.replace(/<[^>]+>/g, ' ').trim()
-  return text ? text.split(/\s+/).filter(Boolean).length : 0
-}
+import { countWords } from '../../utils/textUtils'
 
 function formatDate(iso) {
   if (!iso) return ''
@@ -18,6 +13,10 @@ function ChapterList({ chapters, canReorder, onReorder }) {
 
   const handleDragStart = (index) => {
     dragIndexRef.current = index
+  }
+
+  const handleDragEnd = () => {
+    dragIndexRef.current = null
   }
 
   const handleDragOver = (e) => {
@@ -53,6 +52,7 @@ function ChapterList({ chapters, canReorder, onReorder }) {
             key={ch.story_id}
             draggable={canReorder}
             onDragStart={() => handleDragStart(index)}
+            onDragEnd={handleDragEnd}
             onDragOver={handleDragOver}
             onDrop={() => handleDrop(index)}
             className={`flex items-center gap-3 p-3 bg-base-200 rounded-lg border border-base-300 ${canReorder ? 'cursor-grab active:cursor-grabbing' : ''}`}
