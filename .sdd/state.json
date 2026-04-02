@@ -1,43 +1,38 @@
 {
   "phase": "DONE",
-  "current_feature": "Story Export PDF",
-  "task_dir": ".task/story_export_pdf",
+  "current_feature": "hard-coded test account nonprod",
+  "task_dir": ".task/hard_coded_test_account_nonprod",
   "breakdown": [],
   "spec_approved": true,
-  "design_approved": true,
-  "flow_summary_approved": true,
-  "last_flow_file": "frontend/src/components/storyDetail/StoryDetailView.jsx",
+  "design_approved": false,
+  "flow_summary_approved": false,
+  "last_flow_file": "",
   "history": [
     {
       "from": "NONE",
       "to": "ANALYZE",
-      "at": "2026-04-02 02:23:14",
-      "feature": "Story Export PDF"
+      "at": "2026-04-02 06:25:11",
+      "feature": "hard-coded test account nonprod"
     },
     {
       "from": "ANALYZE",
       "to": "DESIGN",
-      "at": "2026-04-02 02:23:22"
+      "at": "2026-04-02 06:26:08"
     },
     {
       "from": "DESIGN",
-      "to": "TEST",
-      "at": "2026-04-02 02:24:00"
-    },
-    {
-      "from": "TEST",
       "to": "IMPLEMENT",
-      "at": "2026-04-02 02:24:00"
+      "at": "2026-04-02 06:26:08"
     },
     {
       "from": "IMPLEMENT",
       "to": "REVIEW",
-      "at": "2026-04-02 02:25:39"
+      "at": "2026-04-02 06:26:08"
     },
     {
       "from": "REVIEW",
       "to": "DONE",
-      "at": "2026-04-02 02:25:39"
+      "at": "2026-04-02 06:26:08"
     }
   ]
 }
