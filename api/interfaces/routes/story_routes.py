@@ -166,6 +166,8 @@ def create_story_bp(storage, story_generator, flush_data):
         story.owner_id = g.current_user.user_id
         story.visibility = visibility
         story.format = data['format']
+        if data['content']:
+            story.content = data['content']
 
         if visibility == 'draft' and _get_user_drafts(storage, g.current_user.user_id):
                 raise ConflictError('You already have a draft story. Finish or publish it first.')
@@ -381,8 +383,9 @@ def create_story_bp(storage, story_generator, flush_data):
                 raise PermissionDeniedError('edit', 'story')
 
         data = request.validated_data
-        if data.get('content') is not None:
-            story_data['content'] = data['content']
+        for field in ['title', 'content', 'format']:
+            if data.get(field) is not None:
+                story_data[field] = data[field]
         if data.get('chapter_number') is not None:
             story_data['chapter_number'] = data['chapter_number']
 

@@ -27,6 +27,11 @@ class CreateStorySchema(Schema):
         load_default=''
     )
 
+    content = fields.Str(
+        validate=validate.Length(max=100000),
+        load_default=''
+    )
+
     visibility = fields.Str(
         validate=validate.OneOf(['draft', 'private', 'public']),
         load_default='private'
