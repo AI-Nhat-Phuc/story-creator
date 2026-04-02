@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom'
 import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'
 import CollaboratorsPanel from './CollaboratorsPanel'
-import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
-import Tag from '../Tag'
 import {
   BookOpenIcon,
   UserIcon,
@@ -13,7 +11,6 @@ import {
   LinkIcon,
   TrashIcon,
   PencilIcon,
-  CheckCircleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
@@ -52,23 +49,6 @@ function WorldDetailView({
   onUpdateEntity,
   onDeleteLocation,
   onDeleteStory,
-  // Story creation props
-  showStoryModal,
-  storyForm,
-  gptGenerating,
-  gptAnalyzing,
-  analyzedEntities,
-  onOpenStoryModal,
-  onCloseStoryModal,
-  onStoryFormChange,
-  onGenerateStoryDescription,
-  onAnalyzeStory,
-  onClearAnalyzedEntities,
-  onUpdateAnalyzedEntities,
-  showAnalyzedModal,
-  onCloseAnalyzedModal,
-  onOpenAnalyzedModal,
-  onCreateStory,
   collaborators = [],
   inviteLoading = false,
   onInviteCollaborator,
@@ -403,160 +383,6 @@ function WorldDetailView({
         </div>
       )}
 
-      {/* Create Story Modal */}
-      {showStoryModal && (
-        <div className="modal modal-open">
-          <div className="max-w-2xl modal-box">
-            <h3 className="mb-4 font-bold text-lg">Tạo câu chuyện mới trong {world.name}</h3>
-            <form onSubmit={onCreateStory}>
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Tiêu đề *</span>
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={storyForm.title}
-                  onChange={onStoryFormChange}
-                  className="input input-bordered"
-                  required
-                />
-              </div>
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Thể loại</span>
-                </label>
-                <select
-                  name="genre"
-                  value={storyForm.genre}
-                  onChange={onStoryFormChange}
-                  className="select-bordered select"
-                >
-                  <option value="adventure">Phiêu lưu</option>
-                  <option value="mystery">Bí ẩn</option>
-                  <option value="conflict">Xung đột</option>
-                  <option value="discovery">Khám phá</option>
-                </select>
-              </div>
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Chế độ hiển thị</span>
-                </label>
-                <select
-                  name="visibility"
-                  value={storyForm.visibility}
-                  onChange={onStoryFormChange}
-                  className="select-bordered select"
-                >
-                  <option value="">Mặc định (theo thế giới)</option>
-                  <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
-                  <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
-                  <option value="public">Công khai - Mọi người có thể xem</option>
-                </select>
-              </div>
-
-              <div className="mb-4 form-control">
-                <div className='flex justify-between'>
-                  <label className="label">
-                    <span className="label-text">Mô tả *</span>
-                  </label>
-                  <GptButton
-                    onClick={onGenerateStoryDescription}
-                    loading={gptGenerating}
-                    loadingText="Đang tạo..."
-                    disabled={!storyForm.title}
-                    variant="secondary"
-                    size="xs"
-                  >
-                    Tạo mô tả
-                  </GptButton>
-                </div>
-                <textarea
-                  name="description"
-                  value={storyForm.description}
-                  onChange={onStoryFormChange}
-                  className="h-32 textarea textarea-bordered"
-                  placeholder="Nhập mô tả hoặc dùng GPT để tự động tạo..."
-                  required
-                />
-                <label className="label">
-                  <span className="label-text-alt">
-                    {storyForm.description.length > 0
-                      ? `${storyForm.description.length} ký tự`
-                      : 'Click nút GPT để tự động tạo mô tả'}
-                  </span>
-                </label>
-              </div>
-
-              {/* Analyze Button */}
-              {storyForm.description && !analyzedEntities && (
-                <div className="mb-4">
-                  <GptButton
-                    onClick={onAnalyzeStory}
-                    loading={gptAnalyzing}
-                    loadingText="Đang phân tích..."
-                    variant="primary"
-                    size="sm"
-                  >
-                    Phân tích nhân vật & địa điểm
-                  </GptButton>
-                </div>
-              )}
-
-              {/* Analyzed entities indicator */}
-              {analyzedEntities && (analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0) && (
-                <div className="flex items-center gap-2 bg-success/10 mb-4 px-3 py-2 border border-success/30 rounded-lg text-sm">
-                  <CheckCircleIcon className="w-4 h-4 text-success shrink-0" />
-                  <span>
-                    Đã phân tích: {analyzedEntities.characters?.length || 0} nhân vật, {analyzedEntities.locations?.length || 0} địa điểm
-                  </span>
-                  <button
-                    type="button"
-                    className="ml-auto text-xs link link-primary"
-                    onClick={onOpenAnalyzedModal}
-                  >
-                    Xem / Sửa
-                  </button>
-                </div>
-              )}
-
-              {gptGenerating && (
-                <div className="mb-4 alert alert-info">
-                  <div>
-                    <span className="loading loading-spinner"></span>
-                    <span>Đang tạo mô tả với GPT...</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Thời điểm (0-100): {storyForm.time_index}</span>
-                </label>
-                <input
-                  type="range"
-                  name="time_index"
-                  min="0"
-                  max="100"
-                  value={storyForm.time_index}
-                  onChange={onStoryFormChange}
-                  className="range"
-                />
-              </div>
-
-              <div className="modal-action">
-                <button type="submit" className="btn btn-primary" disabled={gptGenerating}>
-                  Tạo câu chuyện
-                </button>
-                <button type="button" onClick={onCloseStoryModal} className="btn" disabled={gptGenerating}>Hủy</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Unlinked Stories Modal */}
       <UnlinkedStoriesModal
         open={showUnlinkedModal}
@@ -569,15 +395,6 @@ function WorldDetailView({
         onBatchAnalyze={onBatchAnalyze}
       />
 
-      {/* GPT Analyzed Entities Modal */}
-      <AnalyzedEntitiesEditor
-        open={showAnalyzedModal}
-        analyzedEntities={analyzedEntities}
-        onUpdate={onUpdateAnalyzedEntities}
-        onClose={onCloseAnalyzedModal}
-        onClear={onClearAnalyzedEntities}
-        linkLabel="Xác nhận"
-      />
     </div>
   )
 }
