@@ -16,6 +16,7 @@ const WorldDetailPage = lazy(() => import('./pages/WorldDetailPage'))
 const StoryDetailPage = lazy(() => import('./pages/StoryDetailPage'))
 const StoryEditorPage = lazy(() => import('./pages/StoryEditorPage'))
 const NovelPage = lazy(() => import('./pages/NovelPage'))
+const StoryPrintPage = lazy(() => import('./pages/StoryPrintPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
@@ -39,6 +40,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/stories/:storyId/print" element={<StoryPrintPage />} />
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Dashboard showToast={showToast} />} />
                 <Route path="/worlds" element={<WorldsPage showToast={showToast} />} />

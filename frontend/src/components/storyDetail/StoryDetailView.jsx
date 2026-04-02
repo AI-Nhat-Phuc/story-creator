@@ -166,18 +166,28 @@ function StoryDetailView({
           <>
             <div className="flex justify-between items-start mb-2">
               <h1 className="font-bold text-3xl">{story.title}</h1>
-              {canEdit && (
-                <div className="flex gap-1">
-                  <button onClick={onEdit} className="btn btn-sm btn-ghost">
-                    <PencilIcon className="inline w-4 h-4" /> Sửa
-                  </button>
-                  {onDeleteStory && (
-                    <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost">
-                      <TrashIcon className="inline w-4 h-4" /> Xóa
+              <div className="flex gap-1 items-center">
+                <a
+                  href={`/stories/${story.story_id}/print`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline btn-sm gap-1"
+                >
+                  <ArrowDownTrayIcon className="w-4 h-4" /> Export PDF
+                </a>
+                {canEdit && (
+                  <>
+                    <button onClick={onEdit} className="btn btn-sm btn-ghost">
+                      <PencilIcon className="inline w-4 h-4" /> Sửa
                     </button>
-                  )}
-                </div>
-              )}
+                    {onDeleteStory && (
+                      <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost">
+                        <TrashIcon className="inline w-4 h-4" /> Xóa
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
               <Tag color="neutral" icon={ClockIcon} title={`Time index: ${normalizedTimelineIndex ?? 0}`}>
