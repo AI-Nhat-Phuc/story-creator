@@ -1,18 +1,10 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import GptButton from '../GptButton'
-import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
-import Tag from '../Tag'
-import { STORY_TEMPLATES } from '../storyTemplates'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   BookOpenIcon,
   GlobeAltIcon,
-  UserIcon,
-  PlusIcon,
   ClockIcon,
   DocumentTextIcon,
-  MapPinIcon,
-  CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 
 function StoriesView({
@@ -20,74 +12,20 @@ function StoriesView({
   worlds,
   user,
   authLoading,
-  showCreateModal,
-  formData,
-  detectedCharacters,
-  analyzedEntities,
-  gptGenerating,
-  gptAnalyzing,
-  onOpenModal,
-  onCloseModal,
-  onInputChange,
-  onSubmit,
-  onGenerateDescription,
-  onAnalyzeStory,
-  onClearAnalyzedEntities,
-  onUpdateAnalyzedEntities,
-  showAnalyzedModal,
-  onCloseAnalyzedModal,
-  onOpenAnalyzedModal,
   formatWorldTime,
   getWorldName,
-  availableCharacters = [],
-  selectedCharacters = [],
-  setSelectedCharacters = () => {},
 }) {
-    // Checkbox state for character selection
-    const [createNewCharacter, setCreateNewCharacter] = useState(false);
+  const navigate = useNavigate()
+  const [showWorldPicker, setShowWorldPicker] = useState(false)
 
-    // Handle checkbox change
-    const handleCharacterCheckbox = (e) => {
-      const { value, checked } = e.target;
-      if (value === '__new__') {
-        setCreateNewCharacter(checked);
-        if (checked) {
-          setSelectedCharacters((prev) => prev.filter((id) => id !== '__new__').concat(['__new__']));
-        } else {
-          setSelectedCharacters((prev) => prev.filter((id) => id !== '__new__'));
-        }
-        return;
-      }
-      if (checked) {
-        setSelectedCharacters((prev) => prev.concat([value]));
-      } else {
-        setSelectedCharacters((prev) => prev.filter((id) => id !== value));
-      }
-    };
-  // Popup state for template selection
-  const [selectedTemplate, setSelectedTemplate] = useState('')
-  const [selectedGenre, setSelectedGenre] = useState('adventure')
-
-  // Open template modal
-  // const handleOpenTemplateModal = () => {
-  //   setSelectedGenre(formData.genre || 'adventure')
-  //   setShowTemplateModal(true)
-  // }
-
-  // Handle template select and trigger GPT
-  const handleSelectTemplate = (template) => {
-    setSelectedTemplate(template)
-    // Pass template to GPT handler
-    onGenerateDescription(template)
+  const handleCreateStoryClick = () => {
+    if (worlds.length === 1) {
+      navigate(`/stories/new?worldId=${worlds[0].world_id}`)
+    } else {
+      setShowWorldPicker(true)
+    }
   }
 
-  // Change genre in modal
-  const handleChangeGenre = (e) => {
-    setSelectedGenre(e.target.value)
-  }
-
-  // Get templates for selected genre
-  const genreTemplates = STORY_TEMPLATES.find(t => t.genre === selectedGenre)
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -98,7 +36,7 @@ function StoriesView({
               <span className="loading loading-spinner loading-xs"></span>
             </button>
           ) : user ? (
-            <button onClick={onOpenModal} className="btn btn-primary">
+            <button onClick={handleCreateStoryClick} className="btn btn-primary">
               + Tạo câu chuyện mới
             </button>
           ) : (
@@ -119,10 +57,7 @@ function StoriesView({
 
       <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {stories.map(story => {
-          // Get world name for scroll color
           const worldName = getWorldName(story.world_id)
-
-          // Generate color based on world name hash
           const colorPalettes = [
             { rod: 'from-amber-600 via-amber-500 to-amber-600', rodEdge: 'from-amber-700 to-amber-800', text: 'text-amber-100' },
             { rod: 'from-cyan-600 via-cyan-500 to-cyan-600', rodEdge: 'from-cyan-700 to-cyan-800', text: 'text-cyan-100' },
@@ -135,18 +70,13 @@ function StoriesView({
             { rod: 'from-indigo-600 via-indigo-500 to-indigo-600', rodEdge: 'from-indigo-700 to-indigo-800', text: 'text-indigo-100' },
             { rod: 'from-pink-600 via-pink-500 to-pink-600', rodEdge: 'from-pink-700 to-pink-800', text: 'text-pink-100' },
           ]
-
-          // Simple hash from world name
           const hash = worldName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
           const colors = colorPalettes[hash % colorPalettes.length]
 
           return (
             <Link key={story.story_id} to={`/stories/${story.story_id}`} className="group block">
-              {/* Scroll Container */}
               <div className="flex h-[220px]">
-                {/* Left Scroll Rod */}
                 <div className={`relative bg-gradient-to-r ${colors.rod} shadow-md rounded-l-sm w-7`}>
-                  {/* World name vertical text */}
                   <div className="absolute inset-0 flex justify-center items-center">
                     <span
                       className={`font-bold text-[16px] ${colors.text} whitespace-nowrap origin-center drop-shadow-sm`}
@@ -156,8 +86,6 @@ function StoriesView({
                     </span>
                   </div>
                 </div>
-
-                {/* Scroll Paper */}
                 <div className="relative flex-1 bg-white shadow-xl group-hover:shadow-2xl border border-gray-200 border-l-0 rounded-r-sm overflow-hidden transition-all">
                   <div className="z-10 relative flex flex-col p-4 h-full">
                     <h2 className="mb-2 font-bold text-gray-900 text-lg line-clamp-2 leading-tight">
@@ -165,7 +93,7 @@ function StoriesView({
                     </h2>
                     <div className="flex flex-wrap gap-1 mb-2">
                       <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-700 text-xs">
-                                                <ClockIcon className="inline w-3.5 h-3.5" /> {formatWorldTime(story)}
+                        <ClockIcon className="inline w-3.5 h-3.5" /> {formatWorldTime(story)}
                       </span>
                     </div>
                     <div className="flex-1 overflow-hidden">
@@ -174,9 +102,7 @@ function StoriesView({
                           {story.content}
                         </p>
                       ) : (
-                        <p className="text-gray-400 text-sm italic">
-                          Chưa có mô tả...
-                        </p>
+                        <p className="text-gray-400 text-sm italic">Chưa có mô tả...</p>
                       )}
                     </div>
                     <div className="mt-2 pt-2 border-gray-300 border-t border-dashed">
@@ -205,245 +131,39 @@ function StoriesView({
             <p className="opacity-60 mt-4 text-xl">Chưa có thế giới nào!</p>
             <p className="opacity-50 mt-2">Bạn cần tạo thế giới trước khi tạo câu chuyện.</p>
             <Link to="/worlds" className="mt-4 btn btn-primary">
-                            <GlobeAltIcon className="inline w-4 h-4" /> Tạo thế giới mới
+              <GlobeAltIcon className="inline w-4 h-4" /> Tạo thế giới mới
             </Link>
           </div>
         </div>
       )}
 
-      {showCreateModal && (
+      {/* World picker modal — shown when user has multiple worlds */}
+      {showWorldPicker && (
         <div className="modal modal-open">
-          <div className="max-w-2xl modal-box">
-            <h3 className="mb-4 font-bold text-lg">Tạo câu chuyện mới</h3>
-            <form onSubmit={onSubmit}>
-              {/* Character selection group */}
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Chọn nhân vật tham gia</span>
-                </label>
-                <div className="flex flex-col gap-2">
-                  {availableCharacters.map((char) => (
-                    <label key={char.entity_id} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        value={char.entity_id}
-                        checked={selectedCharacters.includes(char.entity_id)}
-                        onChange={handleCharacterCheckbox}
-                        className="checkbox checkbox-sm"
-                      />
-                      <span><UserIcon className="inline w-3.5 h-3.5" /> {char.name}</span>
-                    </label>
-                  ))}
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value="__new__"
-                      checked={selectedCharacters.includes('__new__')}
-                      onChange={handleCharacterCheckbox}
-                      className="checkbox checkbox-sm"
-                    />
-                    <span><PlusIcon className="inline w-3.5 h-3.5" /> Tạo nhân vật mới (GPT sẽ đặt tên)</span>
-                  </label>
-                </div>
-              {/* END character selection group */}
-                <label className="label">
-                  <span className="label-text">Thế giới *</span>
-                </label>
-                <select
-                  name="world_id"
-                  value={formData.world_id}
-                  onChange={onInputChange}
-                  className="select-bordered select"
-                  required
+          <div className="modal-box max-w-sm">
+            <h3 className="mb-4 font-bold text-lg">Chọn thế giới</h3>
+            <p className="mb-4 text-sm text-base-content/70">Câu chuyện sẽ được tạo trong thế giới nào?</p>
+            <div className="flex flex-col gap-2">
+              {worlds.map(world => (
+                <Link
+                  key={world.world_id}
+                  to={`/stories/new?worldId=${world.world_id}`}
+                  className="btn btn-outline justify-start"
+                  onClick={() => setShowWorldPicker(false)}
                 >
-                  <option value="">-- Chọn thế giới --</option>
-                  {worlds.map(world => (
-                    <option key={world.world_id} value={world.world_id}>
-                      {world.name} ({world.world_type})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Tiêu đề *</span>
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={onInputChange}
-                  className="input input-bordered"
-                  required
-                />
-              </div>
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Thể loại</span>
-                </label>
-                <select
-                  name="genre"
-                  value={formData.genre}
-                  onChange={onInputChange}
-                  className="select-bordered select"
-                >
-                  <option value="adventure">Phiêu lưu</option>
-                  <option value="mystery">Bí ẩn</option>
-                  <option value="conflict">Xung đột</option>
-                  <option value="discovery">Khám phá</option>
-                </select>
-              </div>
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Chế độ hiển thị</span>
-                </label>
-                <select
-                  name="visibility"
-                  value={formData.visibility}
-                  onChange={onInputChange}
-                  className="select-bordered select"
-                >
-                  <option value="">Mặc định (theo thế giới)</option>
-                  <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
-                  <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
-                  <option value="public">Công khai - Mọi người có thể xem</option>
-                </select>
-              </div>
-
-              <div className="mb-4 form-control">
-                <div className='flex justify-between'>
-                  <label className="label">
-                    <span className="label-text">Mô tả *</span>
-                  </label>
-                  <div className="flex gap-2 mb-2">
-                    <GptButton
-                      // onClick={handleOpenTemplateModal}
-                      loading={gptGenerating}
-                      loadingText="Đang tạo..."
-                      disabled={!formData.world_id || !formData.title}
-                      variant="secondary"
-                      size="xs"
-                    >
-                      Tạo Mô tả
-                    </GptButton>
-                  </div>
-                </div>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={onInputChange}
-                  className="h-32 textarea textarea-bordered"
-                  placeholder="Nhập mô tả hoặc dùng GPT để tự động tạo..."
-                  required
-                />
-                <label className="label">
-                  <span className="label-text-alt">
-                    {formData.description.length > 0
-                      ? `${formData.description.length} ký tự`
-                      : <span className="px-2 py-1 rounded font-semibold text-gray-400">Click nút GPT để tự động tạo mô tả</span>}
-                  </span>
-                </label>
-              </div>
-
-              {/* Analyze Button */}
-              {formData.description && !analyzedEntities && (
-                <div className="mb-4">
-                  <GptButton
-                    onClick={onAnalyzeStory}
-                    loading={gptAnalyzing}
-                    loadingText="Đang phân tích..."
-                    variant="primary"
-                    size="sm"
-                  >
-                    Phân tích nhân vật & địa điểm
-                  </GptButton>
-                </div>
-              )}
-
-              {/* Analyzed entities indicator */}
-              {analyzedEntities && (analyzedEntities.characters?.length > 0 || analyzedEntities.locations?.length > 0) && (
-                <div className="flex items-center gap-2 bg-success/10 mb-4 px-3 py-2 border border-success/30 rounded-lg text-sm">
-                  <CheckCircleIcon className="w-4 h-4 text-success shrink-0" />
-                  <span>
-                    Đã phân tích: {analyzedEntities.characters?.length || 0} nhân vật, {analyzedEntities.locations?.length || 0} địa điểm
-                  </span>
-                  <button
-                    type="button"
-                    className="ml-auto text-xs link link-primary"
-                    onClick={onOpenAnalyzedModal}
-                  >
-                    Xem / Sửa
-                  </button>
-                </div>
-              )}
-
-              {gptGenerating && (
-                <div className="mb-4 alert alert-info">
-                  <div>
-                    <span className="loading loading-spinner"></span>
-                    <span>Đang tạo mô tả với GPT...</span>
-                  </div>
-                </div>
-              )}
-
-              {detectedCharacters.length > 0 && (
-                <div className="mb-4 alert alert-info">
-                  <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0 stroke-current w-6 h-6" fill="none" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <div className="font-bold">Đã phát hiện {detectedCharacters.length} nhân vật:</div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {detectedCharacters.map(char => (
-                          <Tag key={char.entity_id} color="primary" icon={UserIcon}>
-                            {char.name}
-                          </Tag>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="label-text">Thời điểm (0-100): {formData.time_index}</span>
-                </label>
-                <input
-                  type="range"
-                  name="time_index"
-                  min="0"
-                  max="100"
-                  value={formData.time_index}
-                  onChange={onInputChange}
-                  className="range"
-                />
-              </div>
-
-              <div className="modal-action">
-                <button type="submit" className="btn btn-primary" disabled={gptGenerating}>
-                  Tạo câu chuyện
-                </button>
-                <button type="button" onClick={onCloseModal} className="btn" disabled={gptGenerating}>Hủy</button>
-              </div>
-            </form>
+                  <GlobeAltIcon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{world.name}</span>
+                  <span className="ml-auto text-xs opacity-50">{world.world_type}</span>
+                </Link>
+              ))}
+            </div>
+            <div className="modal-action mt-6">
+              <button type="button" onClick={() => setShowWorldPicker(false)} className="btn btn-ghost">Hủy</button>
+            </div>
           </div>
+          <div className="modal-backdrop" onClick={() => setShowWorldPicker(false)}></div>
         </div>
       )}
-
-      {/* GPT Analyzed Entities Modal */}
-      <AnalyzedEntitiesEditor
-        open={showAnalyzedModal}
-        analyzedEntities={analyzedEntities}
-        onUpdate={onUpdateAnalyzedEntities}
-        onClose={onCloseAnalyzedModal}
-        onClear={onClearAnalyzedEntities}
-        linkLabel="Xác nhận"
-      />
     </div>
   )
 }

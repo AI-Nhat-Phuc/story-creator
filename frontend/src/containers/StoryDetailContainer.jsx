@@ -19,8 +19,6 @@ function StoryDetailContainer({ showToast }) {
   const [linkedCharacters, setLinkedCharacters] = useState([])
   const [linkedLocations, setLinkedLocations] = useState([])
   const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(false)
-  const [editForm, setEditForm] = useState({ title: '', content: '', visibility: '' })
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [analyzedEntities, setAnalyzedEntities] = useState(null)
   const [showAnalyzedModal, setShowAnalyzedModal] = useState(false)
@@ -35,7 +33,6 @@ function StoryDetailContainer({ showToast }) {
       const storyRes = await storiesAPI.getById(storyId)
       const storyData = storyRes.data
       setStory(storyData)
-      setEditForm({ title: storyData.title, content: storyData.content, visibility: storyData.visibility || 'private' })
 
       if (storyData.world_id) {
         const worldRes = await worldsAPI.getById(storyData.world_id)
@@ -126,30 +123,6 @@ function StoryDetailContainer({ showToast }) {
       return `Chỉ số: ${normalizedIndex}`
     }
     return 'Mốc chưa xác định'
-  }
-
-  const handleEdit = () => setEditing(true)
-
-  const handleCancelEdit = () => {
-    setEditing(false)
-    if (story) {
-      setEditForm({ title: story.title, content: story.content, visibility: story.visibility || 'private' })
-    }
-  }
-
-  const handleEditFormChange = (field, value) => {
-    setEditForm(prev => ({ ...prev, [field]: value }))
-  }
-
-  const handleSaveEdit = async () => {
-    try {
-      await storiesAPI.update(storyId, editForm)
-      setStory(prev => ({ ...prev, ...editForm }))
-      setEditing(false)
-      showToast('Đã cập nhật câu chuyện!', 'success')
-    } catch (error) {
-      showToast(`Lỗi cập nhật câu chuyện: ${error.response?.data?.error || error.message}`, 'error')
-    }
   }
 
   const handleAnalyzeStory = async () => {
@@ -316,17 +289,11 @@ function StoryDetailContainer({ showToast }) {
       linkedCharacters={linkedCharacters}
       linkedLocations={linkedLocations}
       canEdit={canEdit}
-      editing={editing}
-      editForm={editForm}
       formattedWorldTime={formattedWorldTime}
       displayWorldTime={displayWorldTime}
       normalizedTimelineIndex={normalizedTimelineIndex}
       gptAnalyzing={gptAnalyzing}
       analyzedEntities={analyzedEntities}
-      onEdit={handleEdit}
-      onCancelEdit={handleCancelEdit}
-      onSaveEdit={handleSaveEdit}
-      onChangeForm={handleEditFormChange}
       onAnalyzeStory={handleAnalyzeStory}
       showAnalyzedModal={showAnalyzedModal}
       onCloseAnalyzedModal={handleCloseAnalyzedModal}

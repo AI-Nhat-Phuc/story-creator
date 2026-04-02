@@ -60,9 +60,11 @@ export const storiesAPI = {
   getById: (id) => api.get(`/stories/${id}`),
   create: (data) => api.post('/stories', data),
   update: (id, data) => api.put(`/stories/${id}`, data),
+  patch: (id, data) => api.patch(`/stories/${id}`, data),
   delete: (id) => api.delete(`/stories/${id}`),
   linkEntities: (id, data) => api.post(`/stories/${id}/link-entities`, data),
   clearLinks: (id) => api.post(`/stories/${id}/clear-links`),
+  getMyDraft: () => api.get('/stories/my-draft'),
 }
 
 // GPT API
@@ -72,6 +74,7 @@ export const gptAPI = {
   getResults: (taskId) => api.get(`/gpt/results/${taskId}`),
   batchAnalyzeStories: (data) => api.post('/gpt/batch-analyze-stories', data),
   getTasks: (taskIds) => api.get('/gpt/tasks', { params: { task_ids: taskIds.join(',') } }),
+  paraphrase: (text, mode) => api.post('/gpt/paraphrase', { text, mode }),
 }
 
 // Stats API
@@ -104,6 +107,7 @@ export const authAPI = {
   verify: () => api.get('/auth/verify'),
   changePassword: (data) => api.post('/auth/change-password', data),
   getCurrentUser: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/auth/profile', data),
   // OAuth
   googleLogin: (token) => api.post('/auth/oauth/google', { token }),
 }
@@ -121,3 +125,24 @@ export const adminAPI = {
 }
 
 export default api
+
+// Collaborators API
+export const collaboratorsAPI = {
+  list:   (worldId)            => api.get(`/worlds/${worldId}/collaborators`),
+  invite: (worldId, usernameOrEmail) => api.post(`/worlds/${worldId}/collaborators`, { username_or_email: usernameOrEmail, role: 'co_author' }),
+  remove: (worldId, userId)    => api.delete(`/worlds/${worldId}/collaborators/${userId}`),
+}
+
+// Novel API
+export const novelAPI = {
+  get:             (worldId)        => api.get(`/worlds/${worldId}/novel`),
+  update:          (worldId, data)  => api.put(`/worlds/${worldId}/novel`, data),
+  reorderChapters: (worldId, order) => api.patch(`/worlds/${worldId}/novel/chapters`, { order }),
+}
+
+// Invitations API
+export const invitationsAPI = {
+  list:    ()    => api.get('/users/me/invitations'),
+  accept:  (id)  => api.post(`/users/me/invitations/${id}/accept`),
+  decline: (id)  => api.post(`/users/me/invitations/${id}/decline`),
+}

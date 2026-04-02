@@ -20,17 +20,11 @@ function StoryDetailView({
   world,
   linkedCharacters = [],
   linkedLocations = [],
-  editing,
-  editForm,
   formattedWorldTime,
   displayWorldTime,
   normalizedTimelineIndex,
   gptAnalyzing,
   analyzedEntities,
-  onEdit,
-  onCancelEdit,
-  onSaveEdit,
-  onChangeForm,
   onAnalyzeStory,
   onClearAnalyzedEntities,
   onUpdateAnalyzedEntities,
@@ -55,13 +49,24 @@ function StoryDetailView({
 
   const renderStoryContent = () => {
     if (!story.content) return null
+
+    // HTML format — rendered by novel/TipTap editor
+    if (story.format === 'html') {
+      return (
+        <div
+          className="prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: story.content }}
+        />
+      )
+    }
+
+    // Plain/markdown: paragraph-by-paragraph with highlight support
     const paragraphs = story.content.split('\n')
 
     // Resolve highlight: if target paragraph is empty, find nearest non-empty one
     let effectiveHighlight = highlightPosition
     if (effectiveHighlight >= 0) {
       if (effectiveHighlight >= paragraphs.length || !paragraphs[effectiveHighlight]?.trim()) {
-        // Find nearest non-empty paragraph
         let closest = -1
         let minDist = Infinity
         paragraphs.forEach((p, i) => {
@@ -113,60 +118,31 @@ function StoryDetailView({
       </div>
 
       <div className="bg-base-100 shadow-xl mb-6 p-6 rounded-box">
-        {editing ? (
-          <>
-            <input
-              type="text"
-              value={editForm.title}
-              onChange={(e) => onChangeForm('title', e.target.value)}
-              className="mb-4 w-full font-bold text-3xl input input-bordered"
-              placeholder="Tiêu đề câu chuyện"
-            />
-            <textarea
-              value={editForm.content}
-              onChange={(e) => onChangeForm('content', e.target.value)}
-              className="mb-4 w-full min-h-[200px] textarea textarea-bordered"
-              placeholder="Mô tả câu chuyện"
-            />
-            <div className="mb-4 form-control">
-              <label className="label">
-                <span className="font-semibold label-text">Chế độ hiển thị</span>
-              </label>
-              <select
-                value={editForm.visibility}
-                onChange={(e) => onChangeForm('visibility', e.target.value)}
-                className="w-full max-w-xs select-bordered select"
-              >
-                <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
-                <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
-                <option value="public">Công khai - Mọi người có thể xem</option>
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={onSaveEdit} className="btn btn-primary">
-                <ArrowDownTrayIcon className="inline w-4 h-4" /> Lưu
-              </button>
-              <button onClick={onCancelEdit} className="btn btn-ghost">
-                <XMarkIcon className="inline w-4 h-4" /> Hủy
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
+        <>
             <div className="flex justify-between items-start mb-2">
               <h1 className="font-bold text-3xl">{story.title}</h1>
-              {canEdit && (
-                <div className="flex gap-1">
-                  <button onClick={onEdit} className="btn btn-sm btn-ghost">
-                    <PencilIcon className="inline w-4 h-4" /> Sửa
-                  </button>
-                  {onDeleteStory && (
-                    <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost">
-                      <TrashIcon className="inline w-4 h-4" /> Xóa
-                    </button>
-                  )}
-                </div>
-              )}
+              <div className="flex gap-1 items-center">
+                <a
+                  href={`/stories/${story.story_id}/print`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline btn-sm gap-1"
+                >
+                  <ArrowDownTrayIcon className="w-4 h-4" /> Export PDF
+                </a>
+                {canEdit && (
+                  <>
+                    <Link to={`/stories/${story.story_id}/edit`} className="btn btn-sm btn-ghost">
+                      <PencilIcon className="inline w-4 h-4" /> Sửa
+                    </Link>
+                    {onDeleteStory && (
+                      <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost">
+                        <TrashIcon className="inline w-4 h-4" /> Xóa
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
               <Tag color="neutral" icon={ClockIcon} title={`Time index: ${normalizedTimelineIndex ?? 0}`}>
