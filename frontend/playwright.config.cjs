@@ -20,11 +20,12 @@ module.exports = defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     extraHTTPHeaders,
-    launchOptions: {
-      executablePath:
-        process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
-        '/root/.cache/ms-playwright/chromium-1194/chrome-linux/chrome',
-    },
+    // In local dev the pre-cached binary is used; in CI let Playwright resolve it.
+    ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+      ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
+      : !process.env.CI
+        ? { launchOptions: { executablePath: '/root/.cache/ms-playwright/chromium-1194/chrome-linux/chrome' } }
+        : {}),
   },
   projects: [
     {
