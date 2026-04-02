@@ -1,5 +1,5 @@
 {
-  "phase": "IMPLEMENT",
+  "phase": "DONE",
   "current_feature": "Story Export PDF",
   "task_dir": ".task/story_export_pdf",
   "breakdown": [],
@@ -28,6 +28,16 @@
       "from": "TEST",
       "to": "IMPLEMENT",
       "at": "2026-04-02 02:24:00"
+    },
+    {
+      "from": "IMPLEMENT",
+      "to": "REVIEW",
+      "at": "2026-04-02 02:25:39"
+    },
+    {
+      "from": "REVIEW",
+      "to": "DONE",
+      "at": "2026-04-02 02:25:39"
     }
   ]
 }
