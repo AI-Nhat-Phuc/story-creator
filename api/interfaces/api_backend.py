@@ -162,8 +162,8 @@ class APIBackend:
         # Ensure default admin account exists
         self._ensure_default_admin()
 
-        # Seed test account in nonprod (no VERCEL env var)
-        if not os.environ.get("VERCEL"):
+        # Seed test account on local dev and Vercel preview (not production)
+        if os.environ.get("VERCEL_ENV") != "production":
             self._seed_test_account()
 
         # Store for async GPT results (persisted in database)
