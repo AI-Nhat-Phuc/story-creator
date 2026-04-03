@@ -58,8 +58,11 @@ function StoryEditorView({
         <main
           className="flex-1 overflow-y-auto cursor-text"
           onClick={(e) => {
-            // Focus editor at end when clicking on empty area below content
-            if (e.target === e.currentTarget) {
+            // Focus editor when clicking outside the actual ProseMirror content area
+            if (!e.target.closest('.ProseMirror')) {
+              // Direct DOM focus avoids TipTap's internal setTimeout delay
+              const pm = e.currentTarget.querySelector('.ProseMirror')
+              pm?.focus()
               editorRef.current?.commands.focus('end')
             }
           }}

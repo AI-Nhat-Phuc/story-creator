@@ -91,21 +91,26 @@ test.describe('Story Editor', () => {
   })
 
   test('clicking empty area below text focuses the editor', async ({ page }) => {
-    // Type a short text so the editor doesn't fill the whole area
     const editor = page.locator('.ProseMirror')
+
+    // Type a small amount of text (ProseMirror will be ~24px tall)
     await editor.click()
-    await editor.type('Short text')
+    await editor.type('Hi')
 
-    // Click on the main container (below editor content)
+    // Blur using the title input (reliably focusable)
+    await page.locator('input').first().click()
+    await expect(editor).not.toBeFocused({ timeout: 2000 })
+
+    // Click in the editor area well below the text, but within the visible viewport.
+    // main can extend below viewport (clipped by outer overflow-hidden), so we use
+    // main.top + 300px which is guaranteed to be: (a) below ProseMirror (~24px from top)
+    // and (b) inside the visible area (main.top ~193, +300 = ~493 < viewport 720).
     const main = page.locator('main.cursor-text')
-    const box = await main.boundingBox()
-    if (box) {
-      // Click near the bottom of the main area
-      await page.mouse.click(box.x + box.width / 2, box.y + box.height - 20)
-    }
+    const mainBox = await main.boundingBox()
+    await page.mouse.click(mainBox.x + mainBox.width / 2, mainBox.y + 300)
 
-    // Editor should be focused (has text cursor)
-    await expect(editor).toBeFocused()
+    // Verify focus: if the handler fired, ProseMirror should be focused
+    await expect(editor).toBeFocused({ timeout: 3000 })
   })
 
   // ── Formatting toolbar ───────────────────────────────────────────────────
