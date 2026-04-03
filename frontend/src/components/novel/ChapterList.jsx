@@ -1,7 +1,6 @@
 import React, { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { PencilSquareIcon, Bars3Icon } from '@heroicons/react/24/outline'
-import { countWords } from '../../utils/textUtils'
 
 function formatDate(iso) {
   if (!iso) return ''
@@ -46,7 +45,7 @@ function ChapterList({ chapters, canReorder, onReorder }) {
   return (
     <ul className="space-y-2">
       {chapters.map((ch, index) => {
-        const words = countWords(ch.content)
+        const words = ch.word_count || 0
         return (
           <li
             key={ch.story_id}

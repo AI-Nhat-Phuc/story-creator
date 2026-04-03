@@ -1,43 +1,48 @@
 {
   "phase": "DONE",
-  "current_feature": "separate prod nonprod data",
-  "task_dir": ".task/separate_prod_nonprod_data",
+  "current_feature": "fix novel feature bugs",
+  "task_dir": ".task/fix_novel_feature_bugs",
   "breakdown": [],
   "spec_approved": true,
   "design_approved": true,
-  "flow_summary_approved": false,
-  "last_flow_file": "",
+  "flow_summary_approved": true,
+  "last_flow_file": "api/interfaces/routes/story_routes.py",
   "history": [
     {
       "from": "NONE",
       "to": "ANALYZE",
-      "at": "2026-04-03 02:32:26",
-      "feature": "separate prod nonprod data"
+      "at": "2026-04-03 11:10:24",
+      "feature": "fix novel feature bugs"
     },
     {
       "from": "ANALYZE",
+      "to": "SPEC",
+      "at": "2026-04-03 11:10:30"
+    },
+    {
+      "from": "SPEC",
       "to": "DESIGN",
-      "at": "2026-04-03 02:41:28"
+      "at": "2026-04-03 11:11:39"
     },
     {
       "from": "DESIGN",
       "to": "TEST",
-      "at": "2026-04-03 04:09:55"
+      "at": "2026-04-03 11:12:12"
     },
     {
       "from": "TEST",
       "to": "IMPLEMENT",
-      "at": "2026-04-03 04:28:32"
+      "at": "2026-04-03 11:16:03"
     },
     {
       "from": "IMPLEMENT",
       "to": "REVIEW",
-      "at": "2026-04-03 04:33:09"
+      "at": "2026-04-03 11:16:42"
     },
     {
       "from": "REVIEW",
       "to": "DONE",
-      "at": "2026-04-03 04:34:17"
+      "at": "2026-04-03 11:18:19"
     }
   ]
 }
