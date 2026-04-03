@@ -1,9 +1,9 @@
 {
-  "phase": "DONE",
-  "current_feature": "hard-coded test account nonprod",
-  "task_dir": ".task/hard_coded_test_account_nonprod",
+  "phase": "ANALYZE",
+  "current_feature": "separate prod nonprod data",
+  "task_dir": ".task/separate_prod_nonprod_data",
   "breakdown": [],
-  "spec_approved": true,
+  "spec_approved": false,
   "design_approved": false,
   "flow_summary_approved": false,
   "last_flow_file": "",
@@ -11,28 +11,8 @@
     {
       "from": "NONE",
       "to": "ANALYZE",
-      "at": "2026-04-02 06:25:11",
-      "feature": "hard-coded test account nonprod"
-    },
-    {
-      "from": "ANALYZE",
-      "to": "DESIGN",
-      "at": "2026-04-02 06:26:08"
-    },
-    {
-      "from": "DESIGN",
-      "to": "IMPLEMENT",
-      "at": "2026-04-02 06:26:08"
-    },
-    {
-      "from": "IMPLEMENT",
-      "to": "REVIEW",
-      "at": "2026-04-02 06:26:08"
-    },
-    {
-      "from": "REVIEW",
-      "to": "DONE",
-      "at": "2026-04-02 06:26:08"
+      "at": "2026-04-03 02:32:26",
+      "feature": "separate prod nonprod data"
     }
   ]
 }
