@@ -29,5 +29,5 @@ def get_db_config() -> tuple:
     is_vercel = os.environ.get("VERCEL")
     default_db = f"/tmp/story_creator{suffix}.db" if is_vercel else f"story_creator{suffix}.db"
     db_path = os.environ.get("STORY_DB_PATH", default_db)
-    mongo_db_name = f"story_creator{suffix}" if suffix else "story_creator_dev"
+    mongo_db_name = f"story_creator{suffix or '_dev'}"
     return db_path, mongo_db_name

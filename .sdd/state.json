@@ -1,5 +1,5 @@
 {
-  "phase": "REVIEW",
+  "phase": "DONE",
   "current_feature": "separate prod nonprod data",
   "task_dir": ".task/separate_prod_nonprod_data",
   "breakdown": [],
@@ -33,6 +33,11 @@
       "from": "IMPLEMENT",
       "to": "REVIEW",
       "at": "2026-04-03 04:33:09"
+    },
+    {
+      "from": "REVIEW",
+      "to": "DONE",
+      "at": "2026-04-03 04:34:17"
     }
   ]
 }
