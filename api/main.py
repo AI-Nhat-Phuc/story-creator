@@ -53,13 +53,12 @@ def main():
         default="nosql",
         help="Loại storage: json (file-based) hoặc nosql (database) (mặc định: nosql)"
     )
-    # Use /tmp for db path if running on Vercel (read-only filesystem workaround)
-    vercel_db_path = os.environ.get("STORY_DB_PATH")
-    default_db_path = vercel_db_path if vercel_db_path else "/tmp/story_creator.db" if os.environ.get("VERCEL") else "story_creator.db"
+    from utils.env_config import get_db_config
+    default_db_path, _mongo_db_name = get_db_config()
     parser.add_argument(
         "--db-path",
         default=default_db_path,
-        help="Đường dẫn đến database (chỉ dùng cho NoSQL) (mặc định: story_creator.db, Vercel: /tmp/story_creator.db)"
+        help="Đường dẫn đến database (chỉ dùng cho NoSQL). Tự động theo APP_ENV."
     )
     parser.add_argument(
         "--debug",
@@ -92,7 +91,8 @@ def main():
         api = APIBackend(
             data_dir=args.data_dir,
             storage_type=args.storage,
-            db_path=args.db_path
+            db_path=args.db_path,
+            mongo_db_name=_mongo_db_name
         )
         api.run(host='127.0.0.1', port=5000, debug=args.debug)
 
