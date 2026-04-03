@@ -172,15 +172,27 @@ def test_invalid_app_env_fallback():
 
 def test_mongo_storage_default_db_name():
     """BR-1/BR-3: MongoStorage default db_name must be 'story_creator_dev', not 'story_creator'."""
-    from storage.mongo_storage import MongoStorage
-    import inspect
-    sig = inspect.signature(MongoStorage.__init__)
-    default_db_name = sig.parameters['db_name'].default
-    assert default_db_name == 'story_creator_dev', (
-        f"MongoStorage default db_name should be 'story_creator_dev', got: '{default_db_name}'. "
-        "Old default 'story_creator' would mix prod/nonprod data."
-    )
-    print("  PASS: test_mongo_storage_default_db_name")
+    import ast
+    src_path = os.path.join(os.path.dirname(__file__), 'storage', 'mongo_storage.py')
+    with open(src_path) as f:
+        tree = ast.parse(f.read())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name == 'MongoStorage':
+            for item in node.body:
+                if isinstance(item, ast.FunctionDef) and item.name == '__init__':
+                    defaults = item.args.defaults
+                    args = item.args.args
+                    # Match defaults to args (defaults align to end of args list)
+                    offset = len(args) - len(defaults)
+                    for i, arg in enumerate(args[offset:]):
+                        if arg.arg == 'db_name':
+                            val = ast.literal_eval(defaults[i])
+                            assert val == 'story_creator_dev', (
+                                f"MongoStorage default db_name should be 'story_creator_dev', got: '{val}'."
+                            )
+                            print("  PASS: test_mongo_storage_default_db_name")
+                            return
+    raise AssertionError("Could not find db_name param in MongoStorage.__init__")
 
 
 # ---------------------------------------------------------------------------
@@ -189,13 +201,21 @@ def test_mongo_storage_default_db_name():
 
 def test_api_backend_accepts_mongo_db_name():
     """BR-1: APIBackend.__init__ must accept mongo_db_name parameter."""
-    from interfaces.api_backend import APIBackend
-    import inspect
-    sig = inspect.signature(APIBackend.__init__)
-    assert 'mongo_db_name' in sig.parameters, (
-        "APIBackend.__init__ must accept 'mongo_db_name' parameter"
-    )
-    print("  PASS: test_api_backend_accepts_mongo_db_name")
+    import ast
+    src_path = os.path.join(os.path.dirname(__file__), 'interfaces', 'api_backend.py')
+    with open(src_path) as f:
+        tree = ast.parse(f.read())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name == 'APIBackend':
+            for item in node.body:
+                if isinstance(item, ast.FunctionDef) and item.name == '__init__':
+                    param_names = [a.arg for a in item.args.args]
+                    assert 'mongo_db_name' in param_names, (
+                        f"APIBackend.__init__ must accept 'mongo_db_name'. Found: {param_names}"
+                    )
+                    print("  PASS: test_api_backend_accepts_mongo_db_name")
+                    return
+    raise AssertionError("Could not find APIBackend.__init__")
 
 
 # ---------------------------------------------------------------------------

@@ -42,7 +42,7 @@ class MongoStorage:
                  events, event_analysis_cache, users
     """
 
-    def __init__(self, mongodb_uri: Optional[str] = None, db_name: str = "story_creator"):
+    def __init__(self, mongodb_uri: Optional[str] = None, db_name: str = "story_creator_dev"):
         """
         Initialize MongoDB storage.
 

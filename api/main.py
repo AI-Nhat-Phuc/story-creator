@@ -53,12 +53,8 @@ def main():
         default="nosql",
         help="Loại storage: json (file-based) hoặc nosql (database) (mặc định: nosql)"
     )
-    # Compute db path based on APP_ENV (production|staging|development)
-    _env = os.environ.get("APP_ENV", "development").lower()
-    _env_suffix = {"production": "_prod", "staging": "_staging"}.get(_env, "")
-    _is_vercel = os.environ.get("VERCEL")
-    _default_db = f"/tmp/story_creator{_env_suffix}.db" if _is_vercel else f"story_creator{_env_suffix}.db"
-    default_db_path = os.environ.get("STORY_DB_PATH", _default_db)
+    from utils.env_config import get_db_config
+    default_db_path, _mongo_db_name = get_db_config()
     parser.add_argument(
         "--db-path",
         default=default_db_path,
@@ -92,12 +88,11 @@ def main():
         # Pure API backend for React frontend
         logger.info("Launching API Backend")
         from interfaces.api_backend import APIBackend
-        mongo_db_name = f"story_creator{_env_suffix}" if _env_suffix else "story_creator_dev"
         api = APIBackend(
             data_dir=args.data_dir,
             storage_type=args.storage,
             db_path=args.db_path,
-            mongo_db_name=mongo_db_name
+            mongo_db_name=_mongo_db_name
         )
         api.run(host='127.0.0.1', port=5000, debug=args.debug)
 
