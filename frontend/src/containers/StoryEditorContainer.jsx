@@ -21,6 +21,7 @@ function StoryEditorContainer({ showToast }) {
   })
   const [initialFormat, setInitialFormat] = useState('html')
   const [gpt, setGpt] = useState({ isLoading: false, suggestions: [], selectionLength: 0 })
+  const [activeFormats, setActiveFormats] = useState({})
   const [userSignature, setUserSignature] = useState('')
 
   // Refs — mirror mutable values so doSave is always reading current data (no stale closures)
@@ -153,18 +154,36 @@ function StoryEditorContainer({ showToast }) {
     scheduleAutoSave()
   }, [scheduleAutoSave])
 
+  const getActiveFormats = useCallback((ed) => ({
+    bold: ed.isActive('bold'),
+    italic: ed.isActive('italic'),
+    underline: ed.isActive('underline'),
+    strike: ed.isActive('strike'),
+    highlight: ed.isActive('highlight'),
+    h1: ed.isActive('heading', { level: 1 }),
+    h2: ed.isActive('heading', { level: 2 }),
+    h3: ed.isActive('heading', { level: 3 }),
+    bulletList: ed.isActive('bulletList'),
+    orderedList: ed.isActive('orderedList'),
+    alignLeft: ed.isActive({ textAlign: 'left' }),
+    alignCenter: ed.isActive({ textAlign: 'center' }),
+    alignRight: ed.isActive({ textAlign: 'right' }),
+  }), [])
+
   const handleContentUpdate = useCallback(({ html, editor: editorInstance, selectionLength }) => {
     editorRef.current = editorInstance
     editorDataRef.current = { ...editorDataRef.current, content: html }
     setEditor(prev => ({ ...prev, content: html, saveStatus: 'idle' }))
     setGpt(prev => ({ ...prev, selectionLength }))
+    setActiveFormats(getActiveFormats(editorInstance))
     scheduleAutoSave()
-  }, [scheduleAutoSave])
+  }, [scheduleAutoSave, getActiveFormats])
 
   const handleSelectionChange = useCallback(({ selectionLength, editor: editorInstance }) => {
     editorRef.current = editorInstance
     setGpt(prev => ({ ...prev, selectionLength }))
-  }, [])
+    setActiveFormats(getActiveFormats(editorInstance))
+  }, [getActiveFormats])
 
   const handleSave = useCallback(() => {
     clearTimeout(saveTimerRef.current)
@@ -255,6 +274,7 @@ function StoryEditorContainer({ showToast }) {
       headings={headings}
       editorRef={editorRef}
       gpt={gptProps}
+      activeFormats={activeFormats}
       userSignature={userSignature}
       onTitleChange={handleTitleChange}
       onContentUpdate={handleContentUpdate}

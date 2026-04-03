@@ -2,6 +2,7 @@ import React from 'react'
 import EditorHeader from './EditorHeader'
 import LeftPanel from './LeftPanel'
 import NovelEditor from './NovelEditor'
+import FormattingToolbar from './FormattingToolbar'
 import LoadingSpinner from '../LoadingSpinner'
 
 function StoryEditorView({
@@ -11,6 +12,7 @@ function StoryEditorView({
   headings,
   editorRef,
   gpt,
+  activeFormats,
   userSignature,
   onTitleChange,
   onContentUpdate,
@@ -42,6 +44,8 @@ function StoryEditorView({
         onPublish={onPublish}
         onBack={onBack}
       />
+
+      <FormattingToolbar editorRef={editorRef} activeFormats={activeFormats} />
 
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel
