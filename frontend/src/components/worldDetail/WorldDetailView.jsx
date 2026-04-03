@@ -4,6 +4,7 @@ import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'
 import CollaboratorsPanel from './CollaboratorsPanel'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
+import Tag from '../Tag'
 import {
   BookOpenIcon,
   UserIcon,
@@ -12,6 +13,7 @@ import {
   TrashIcon,
   PencilIcon,
   XMarkIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
 
