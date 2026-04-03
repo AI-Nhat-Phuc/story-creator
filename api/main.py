@@ -53,13 +53,16 @@ def main():
         default="nosql",
         help="Loại storage: json (file-based) hoặc nosql (database) (mặc định: nosql)"
     )
-    # Use /tmp for db path if running on Vercel (read-only filesystem workaround)
-    vercel_db_path = os.environ.get("STORY_DB_PATH")
-    default_db_path = vercel_db_path if vercel_db_path else "/tmp/story_creator.db" if os.environ.get("VERCEL") else "story_creator.db"
+    # Compute db path based on APP_ENV (production|staging|development)
+    _env = os.environ.get("APP_ENV", "development").lower()
+    _env_suffix = {"production": "_prod", "staging": "_staging"}.get(_env, "")
+    _is_vercel = os.environ.get("VERCEL")
+    _default_db = f"/tmp/story_creator{_env_suffix}.db" if _is_vercel else f"story_creator{_env_suffix}.db"
+    default_db_path = os.environ.get("STORY_DB_PATH", _default_db)
     parser.add_argument(
         "--db-path",
         default=default_db_path,
-        help="Đường dẫn đến database (chỉ dùng cho NoSQL) (mặc định: story_creator.db, Vercel: /tmp/story_creator.db)"
+        help="Đường dẫn đến database (chỉ dùng cho NoSQL). Tự động theo APP_ENV."
     )
     parser.add_argument(
         "--debug",
@@ -89,10 +92,12 @@ def main():
         # Pure API backend for React frontend
         logger.info("Launching API Backend")
         from interfaces.api_backend import APIBackend
+        mongo_db_name = f"story_creator{_env_suffix}" if _env_suffix else "story_creator_dev"
         api = APIBackend(
             data_dir=args.data_dir,
             storage_type=args.storage,
-            db_path=args.db_path
+            db_path=args.db_path,
+            mongo_db_name=mongo_db_name
         )
         api.run(host='127.0.0.1', port=5000, debug=args.debug)
 
