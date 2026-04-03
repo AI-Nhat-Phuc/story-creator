@@ -193,7 +193,6 @@ function StoryDetailView({
 
             {/* Analyzed Entities Display - now in modal */}
           </>
-        )}
       </div>
 
       <div className="bg-base-100 shadow-xl p-6 rounded-box">
