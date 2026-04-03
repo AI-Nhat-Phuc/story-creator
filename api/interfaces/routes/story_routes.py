@@ -332,6 +332,7 @@ def create_story_bp(storage, story_generator, flush_data):
             if field in data:
                 story_data[field] = data[field]
 
+        story_data['updated_at'] = datetime.now().isoformat()
         storage.save_story(story_data)
         flush_data()
 

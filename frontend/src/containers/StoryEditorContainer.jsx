@@ -75,7 +75,7 @@ function StoryEditorContainer({ showToast }) {
     }
     try {
       const res = await storiesAPI.getMyDraft()
-      const draft = res.data
+      const draft = res.data?.story
       if (draft?.story_id) {
         showToast('Resuming your draft', 'info')
         navigate(`/stories/${draft.story_id}/edit`)

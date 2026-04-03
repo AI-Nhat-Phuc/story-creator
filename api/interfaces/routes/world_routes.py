@@ -877,9 +877,13 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
         order = request.validated_data['order']
 
+        world_story_ids = set(world_data.get('stories', []))
+
         # Update chapter_number on each story (1-based, contiguous)
         updated_chapters = []
         for idx, story_id in enumerate(order, start=1):
+            if story_id not in world_story_ids:
+                continue
             story = storage.load_story(story_id)
             if story:
                 story['chapter_number'] = idx
