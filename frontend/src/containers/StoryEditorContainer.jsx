@@ -161,6 +161,11 @@ function StoryEditorContainer({ showToast }) {
     scheduleAutoSave()
   }, [scheduleAutoSave])
 
+  const handleSelectionChange = useCallback(({ selectionLength, editor: editorInstance }) => {
+    editorRef.current = editorInstance
+    setGpt(prev => ({ ...prev, selectionLength }))
+  }, [])
+
   const handleSave = useCallback(() => {
     clearTimeout(saveTimerRef.current)
     doSave()
@@ -253,6 +258,7 @@ function StoryEditorContainer({ showToast }) {
       userSignature={userSignature}
       onTitleChange={handleTitleChange}
       onContentUpdate={handleContentUpdate}
+      onSelectionChange={handleSelectionChange}
       onSave={handleSave}
       onPublish={handlePublish}
       onBack={handleBack}

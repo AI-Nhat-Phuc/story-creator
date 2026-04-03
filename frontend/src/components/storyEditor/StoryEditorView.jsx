@@ -14,6 +14,7 @@ function StoryEditorView({
   userSignature,
   onTitleChange,
   onContentUpdate,
+  onSelectionChange,
   onSave,
   onPublish,
   onBack,
@@ -50,11 +51,20 @@ function StoryEditorView({
           onInsertSignature={onInsertSignature}
         />
 
-        <main className="flex-1 overflow-y-auto">
+        <main
+          className="flex-1 overflow-y-auto cursor-text"
+          onClick={(e) => {
+            // Focus editor at end when clicking on empty area below content
+            if (e.target === e.currentTarget) {
+              editorRef.current?.commands.focus('end')
+            }
+          }}
+        >
           <NovelEditor
             initialContent={editor.content}
             format={initialFormat}
             onUpdate={onContentUpdate}
+            onSelectionChange={onSelectionChange}
             editorRef={editorRef}
           />
         </main>

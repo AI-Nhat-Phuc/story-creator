@@ -3,7 +3,7 @@ import { EditorRoot, EditorContent, StarterKit, Placeholder } from 'novel'
 
 const extensions = [StarterKit, Placeholder]
 
-function NovelEditor({ initialContent, format, onUpdate, editorRef }) {
+function NovelEditor({ initialContent, format, onUpdate, onSelectionChange, editorRef }) {
   // For plain/markdown stories, wrap as TipTap doc with plain text paragraph
   const defaultContent =
     format === 'html'
@@ -25,6 +25,12 @@ function NovelEditor({ initialContent, format, onUpdate, editorRef }) {
         extensions={extensions}
         onCreate={({ editor }) => {
           editorRef.current = editor
+          // Track selection changes separately from content changes
+          editor.on('selectionUpdate', ({ editor: e }) => {
+            const { from, to } = e.state.selection
+            const selectionLength = e.state.doc.textBetween(from, to, ' ').length
+            onSelectionChange?.({ selectionLength, editor: e })
+          })
         }}
         onUpdate={({ editor }) => {
           editorRef.current = editor
