@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Tests for 6 novel feature bug fixes.
+"""Integration tests for the novel feature.
 
 Spec clauses covered:
   S1 — novel.owner_permissions
@@ -8,8 +8,6 @@ Spec clauses covered:
   S4 — story.updated_at_put
   S5 — story.draft_resume          (response shape of GET /stories/my-draft)
   S6 — novel.reorder_validation
-
-NOTE: Code is already implemented — tests are expected to PASS (retroactive SDD).
 """
 
 import sys
@@ -46,7 +44,7 @@ def _register_and_login(client, username, email, password):
 def _create_world(client, token, name='Test World'):
     resp = client.post(
         '/api/worlds',
-        json={'name': name, 'description': 'A test world for novel bugs', 'world_type': 'fantasy'},
+        json={'name': name, 'description': 'A test world for novel tests', 'world_type': 'fantasy'},
         headers={'Authorization': f'Bearer {token}'},
         content_type='application/json'
     )
@@ -269,8 +267,7 @@ def test_reorder_chapters_ignores_foreign_stories(client):
 
 def main():
     print("=" * 70)
-    print("  NOVEL BUGS — TEST SUITE (fix_novel_feature_bugs)")
-    print("  NOTE: Retroactive SDD — tests expected to PASS (code already fixed)")
+    print("  NOVEL — TEST SUITE")
     print("=" * 70 + "\n")
 
     backend, temp_db_path = _create_test_app()
