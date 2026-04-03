@@ -777,7 +777,9 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             'title': novel.get('title', world_data.get('name')),
             'description': novel.get('description', ''),
             'chapters': chapters,
-            'total_word_count': total_word_count
+            'total_word_count': total_word_count,
+            'owner_id': world_data.get('owner_id'),
+            'co_authors': world_data.get('co_authors', [])
         })
 
     @world_bp.route('/api/worlds/<world_id>/novel', methods=['PUT'])
