@@ -16,7 +16,6 @@ import {
   CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
-import Tag from '../Tag'
 
 function WorldDetailView({
   world,
