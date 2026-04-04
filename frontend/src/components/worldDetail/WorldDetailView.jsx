@@ -12,8 +12,10 @@ import {
   TrashIcon,
   PencilIcon,
   XMarkIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
+import Tag from '../Tag'
 
 function WorldDetailView({
   world,
@@ -31,6 +33,7 @@ function WorldDetailView({
   onCancelEdit,
   onSaveEdit,
   onChangeField,
+  onPublish,
   getStoryWorldTime,
   getTimelineLabel,
   // Auto-link props
@@ -56,6 +59,7 @@ function WorldDetailView({
 }) {
   const [editingEntityId, setEditingEntityId] = useState(null)
   const [entityEditForm, setEntityEditForm] = useState({})
+  const [publishTarget, setPublishTarget] = useState(null)
 
   const startEditEntity = (char) => {
     setEditingEntityId(char.entity_id)
@@ -147,6 +151,11 @@ function WorldDetailView({
                 <Link to={`/worlds/${world.world_id}/novel`} className="btn btn-outline btn-sm gap-1">
                   <BookOpenIcon className="w-4 h-4" /> Novel
                 </Link>
+                {canEdit && world.visibility !== 'public' && (
+                  <button onClick={() => setPublishTarget(world.visibility === 'draft' ? 'private' : 'public')} className="btn btn-success btn-sm">
+                    Publish
+                  </button>
+                )}
                 {canEdit && (
                   <button onClick={onEdit} className="btn btn-sm btn-ghost">
                     <PencilIcon className="inline w-4 h-4" /> Sửa
@@ -380,6 +389,39 @@ function WorldDetailView({
             </div>
           ))}
           {locations.length === 0 && <p className="opacity-60 text-center">Chưa có địa điểm nào</p>}
+        </div>
+      )}
+
+      {/* Publish Modal */}
+      {publishTarget && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-sm">
+            <h3 className="font-bold text-lg mb-2">Publish thế giới</h3>
+            <p className="mb-4 text-sm opacity-70">Chọn chế độ hiển thị cho thế giới này:</p>
+            <div className="flex flex-col gap-2 mb-4">
+              <button
+                onClick={() => setPublishTarget('private')}
+                className={`btn btn-outline justify-start ${publishTarget === 'private' ? 'btn-active' : ''}`}
+              >
+                Riêng tư — Chỉ bạn có thể xem
+              </button>
+              <button
+                onClick={() => setPublishTarget('public')}
+                className={`btn btn-outline justify-start ${publishTarget === 'public' ? 'btn-active' : ''}`}
+              >
+                Công khai — Mọi người có thể xem
+              </button>
+            </div>
+            <div className="modal-action">
+              <button
+                className="btn btn-success"
+                onClick={() => { onPublish(publishTarget); setPublishTarget(null) }}
+              >
+                Xác nhận
+              </button>
+              <button className="btn btn-ghost" onClick={() => setPublishTarget(null)}>Hủy</button>
+            </div>
+          </div>
         </div>
       )}
 
