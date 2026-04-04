@@ -35,7 +35,8 @@ class APIBackend:
         self,
         data_dir: str = "data",
         storage_type: str = "nosql",
-        db_path: str = "story_creator.db"
+        db_path: str = "story_creator.db",
+        mongo_db_name: str = "story_creator_dev"
     ):
         """Initialize API Backend."""
         # Initialize Flask app
@@ -119,7 +120,7 @@ class APIBackend:
         mongodb_uri = os.environ.get('MONGODB_URI')
         if mongodb_uri and MongoStorage:
             try:
-                self.storage = MongoStorage(mongodb_uri)
+                self.storage = MongoStorage(mongodb_uri, db_name=mongo_db_name)
                 self.storage_label = "MongoDB Atlas"
                 print("✅ Using MongoDB Atlas for persistent storage")
             except Exception as e:

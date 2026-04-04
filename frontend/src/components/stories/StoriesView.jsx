@@ -86,27 +86,27 @@ function StoriesView({
                     </span>
                   </div>
                 </div>
-                <div className="relative flex-1 bg-white shadow-xl group-hover:shadow-2xl border border-gray-200 border-l-0 rounded-r-sm overflow-hidden transition-all">
+                <div className="relative flex-1 bg-base-100 shadow-xl group-hover:shadow-2xl border border-base-300 border-l-0 rounded-r-sm overflow-hidden transition-all">
                   <div className="z-10 relative flex flex-col p-4 h-full">
-                    <h2 className="mb-2 font-bold text-gray-900 text-lg line-clamp-2 leading-tight">
+                    <h2 className="mb-2 font-bold text-base-content text-lg line-clamp-2 leading-tight">
                       {story.title}
                     </h2>
                     <div className="flex flex-wrap gap-1 mb-2">
-                      <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-700 text-xs">
+                      <span className="bg-base-200 px-2 py-0.5 rounded text-base-content/70 text-xs">
                         <ClockIcon className="inline w-3.5 h-3.5" /> {formatWorldTime(story)}
                       </span>
                     </div>
                     <div className="flex-1 overflow-hidden">
                       {story.content ? (
-                        <p className="text-gray-800 text-sm line-clamp-4 leading-relaxed">
+                        <p className="text-base-content/80 text-sm line-clamp-4 leading-relaxed">
                           {story.content}
                         </p>
                       ) : (
-                        <p className="text-gray-400 text-sm italic">Chưa có mô tả...</p>
+                        <p className="text-base-content/40 text-sm italic">Chưa có mô tả...</p>
                       )}
                     </div>
-                    <div className="mt-2 pt-2 border-gray-300 border-t border-dashed">
-                      <span className="text-gray-400 text-xs"><DocumentTextIcon className="inline w-3.5 h-3.5" /> Click để đọc thêm</span>
+                    <div className="mt-2 pt-2 border-base-300 border-t border-dashed">
+                      <span className="text-base-content/40 text-xs"><DocumentTextIcon className="inline w-3.5 h-3.5" /> Click để đọc thêm</span>
                     </div>
                   </div>
                 </div>

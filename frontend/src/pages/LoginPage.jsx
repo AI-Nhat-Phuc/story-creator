@@ -132,12 +132,13 @@ export default function LoginPage() {
           {/* Email/Password Form */}
           <form onSubmit={handleSubmit}>
             <div className="form-control">
-              <label className="label">
+              <label className="label" htmlFor="username">
                 <span className="font-medium label-text">Tên đăng nhập</span>
               </label>
               <input
                 type="text"
                 name="username"
+                id="username"
                 value={formData.username}
                 onChange={handleChange}
                 className="input input-bordered"
@@ -147,12 +148,13 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-4 form-control">
-              <label className="label">
+              <label className="label" htmlFor="password">
                 <span className="font-medium label-text">Mật khẩu</span>
               </label>
               <input
                 type="password"
                 name="password"
+                id="password"
                 value={formData.password}
                 onChange={handleChange}
                 className="input input-bordered"

@@ -4,6 +4,7 @@ import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'
 import CollaboratorsPanel from './CollaboratorsPanel'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
+import Tag from '../Tag'
 import {
   BookOpenIcon,
   UserIcon,

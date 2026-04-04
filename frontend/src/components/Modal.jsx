@@ -12,7 +12,7 @@ export default function Modal({ open, onClose, title, children, className = '' }
   if (!open) return null;
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center bg-black/40">
-      <div className={`bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative ${className}`}>
+      <div className={`bg-base-100 rounded-lg shadow-lg max-w-lg w-full p-6 relative ${className}`}>
         <button
           className="top-2 right-2 absolute btn btn-sm btn-circle btn-ghost"
           onClick={onClose}

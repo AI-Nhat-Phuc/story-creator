@@ -5,8 +5,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from interfaces.api_backend import APIBackend
+from utils.env_config import get_db_config
 
-# Use /tmp for db_path if running on Vercel (read-only filesystem)
-db_path = os.environ.get("STORY_DB_PATH", "/tmp/story_creator.db" if os.environ.get("VERCEL") else "story_creator.db")
-api = APIBackend(db_path=db_path)
+db_path, mongo_db_name = get_db_config()
+api = APIBackend(db_path=db_path, mongo_db_name=mongo_db_name)
 app = api.app  # Expose Flask app for Vercel/WSGI/ASGI

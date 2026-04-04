@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom'
 import { novelAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import NovelView from '../components/novel/NovelView'
-import { countWords } from '../utils/textUtils'
 
 function NovelContainer({ showToast }) {
   const { worldId } = useParams()
@@ -36,7 +35,7 @@ function NovelContainer({ showToast }) {
   }
 
   const totalWordCount = useMemo(
-    () => chapters.reduce((sum, ch) => sum + countWords(ch.content), 0),
+    () => chapters.reduce((sum, ch) => sum + (ch.word_count || 0), 0),
     [chapters]
   )
 
