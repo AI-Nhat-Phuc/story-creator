@@ -45,6 +45,10 @@ module.exports = defineConfig({
   testDir: './e2e',
   testMatch: '**/*.spec.cjs',
   globalSetup: './e2e/global-setup.cjs',
+  // In CI emit JSON so the workflow can parse failures and post a PR comment.
+  reporter: process.env.CI
+    ? [['list'], ['json', { outputFile: 'test-results/results.json' }], ['html', { open: 'never' }]]
+    : [['list'], ['html', { open: 'never' }]],
   // Auto-start servers when running locally (skipped in CI where BASE_URL is pre-deployed)
   ...(!process.env.CI && !process.env.BASE_URL ? {
     webServer: [
