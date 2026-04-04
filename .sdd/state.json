@@ -1,48 +1,43 @@
 {
   "phase": "DONE",
-  "current_feature": "fix novel feature bugs",
-  "task_dir": ".task/fix_novel_feature_bugs",
+  "current_feature": "world publish mode",
+  "task_dir": ".task/world_publish_mode",
   "breakdown": [],
   "spec_approved": true,
   "design_approved": true,
   "flow_summary_approved": true,
-  "last_flow_file": "api/interfaces/routes/story_routes.py",
+  "last_flow_file": "frontend/src/containers/WorldDetailContainer.jsx",
   "history": [
     {
       "from": "NONE",
       "to": "ANALYZE",
-      "at": "2026-04-03 11:10:24",
-      "feature": "fix novel feature bugs"
+      "at": "2026-04-03 18:29:30",
+      "feature": "world publish mode"
     },
     {
       "from": "ANALYZE",
-      "to": "SPEC",
-      "at": "2026-04-03 11:10:30"
-    },
-    {
-      "from": "SPEC",
       "to": "DESIGN",
-      "at": "2026-04-03 11:11:39"
+      "at": "2026-04-03 18:32:03"
     },
     {
       "from": "DESIGN",
       "to": "TEST",
-      "at": "2026-04-03 11:12:12"
+      "at": "2026-04-04 13:43:54"
     },
     {
       "from": "TEST",
       "to": "IMPLEMENT",
-      "at": "2026-04-03 11:16:03"
+      "at": "2026-04-04 13:47:53"
     },
     {
       "from": "IMPLEMENT",
       "to": "REVIEW",
-      "at": "2026-04-03 11:16:42"
+      "at": "2026-04-04 14:02:35"
     },
     {
       "from": "REVIEW",
       "to": "DONE",
-      "at": "2026-04-03 11:18:19"
+      "at": "2026-04-04 14:02:41"
     }
   ]
 }

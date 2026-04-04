@@ -51,7 +51,7 @@ function WorldDetailContainer({ showToast }) {
       setCharacters(charsRes.data)
       setLocations(locsRes.data)
       setCollaborators(collabRes.data || [])
-      setEditForm({ name: worldRes.data.name, description: worldRes.data.description, visibility: worldRes.data.visibility || 'private' })
+      setEditForm({ name: worldRes.data.name, description: worldRes.data.description, visibility: worldRes.data.visibility || 'draft' })
     } catch (error) {
       showToast('Không thể tải chi tiết thế giới', 'error')
     } finally {
@@ -233,12 +233,23 @@ function WorldDetailContainer({ showToast }) {
     }
   }
 
+  const handlePublish = async (newVisibility) => {
+    try {
+      await worldsAPI.update(worldId, { visibility: newVisibility })
+      setWorld(prev => ({ ...prev, visibility: newVisibility }))
+      setEditForm(prev => ({ ...prev, visibility: newVisibility }))
+      showToast(`Đã publish thế giới: ${newVisibility === 'public' ? 'Công khai' : 'Riêng tư'}`, 'success')
+    } catch (error) {
+      showToast(`Lỗi publish: ${error.response?.data?.error || error.message}`, 'error')
+    }
+  }
+
   const handleEdit = () => setEditing(true)
 
   const handleCancelEdit = () => {
     setEditing(false)
     if (world) {
-      setEditForm({ name: world.name, description: world.description, visibility: world.visibility || 'private' })
+      setEditForm({ name: world.name, description: world.description, visibility: world.visibility || 'draft' })
     }
   }
 
@@ -304,6 +315,7 @@ function WorldDetailContainer({ showToast }) {
       user={user}
       onChangeTab={setActiveTab}
       onEdit={handleEdit}
+      onPublish={handlePublish}
       onCancelEdit={handleCancelEdit}
       onSaveEdit={handleSaveEdit}
       onChangeField={handleEditFormChange}
