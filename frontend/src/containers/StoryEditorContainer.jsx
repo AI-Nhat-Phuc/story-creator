@@ -8,7 +8,7 @@ function StoryEditorContainer({ showToast }) {
   const { storyId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
 
   const worldId = searchParams.get('worldId')
 
@@ -34,10 +34,13 @@ function StoryEditorContainer({ showToast }) {
   const gptSelectionRef = useRef(null)
 
   useEffect(() => {
-    if (user === null) {
+    // Wait for token verification before deciding user is unauthenticated.
+    // Without this guard, a direct page load (full URL navigation) triggers a
+    // redirect to /login before verifyToken resolves — visible on Vercel cold starts.
+    if (!authLoading && user === null) {
       navigate('/login')
     }
-  }, [user, navigate])
+  }, [user, authLoading, navigate])
 
   useEffect(() => {
     if (!user) return
