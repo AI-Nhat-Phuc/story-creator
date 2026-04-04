@@ -47,6 +47,20 @@ module.exports = async function globalSetup(config) {
     } else {
       console.error('[global-setup] admin login failed — tests will likely fail')
     }
+
+    // Pre-warm the Vercel function instances used by story-editor tests.
+    // Without this, cold-starting Python lambdas cause the first storyEditor
+    // test's verifyToken + checkForDraft round-trips to exceed the timeout.
+    if (loginRes.ok()) {
+      const { token } = await loginRes.json()
+      const warmHeaders = { Authorization: `Bearer ${token}`, ...extraHeaders }
+      await Promise.allSettled([
+        ctx.get('/api/auth/verify',      { headers: warmHeaders }),
+        ctx.get('/api/stories/my-draft', { headers: warmHeaders }),
+        ctx.get('/api/worlds',           { headers: warmHeaders }),
+      ])
+      console.log('[global-setup] Vercel function instances pre-warmed ✓')
+    }
   } finally {
     await ctx.dispose()
   }
