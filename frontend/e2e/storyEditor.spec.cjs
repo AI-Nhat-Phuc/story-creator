@@ -39,10 +39,7 @@ async function ensureWorld(page) {
 /** Navigate to the story editor (new story) and wait for it to be ready. */
 async function openEditor(page, worldId) {
   await page.goto(`/stories/new?worldId=${worldId}`)
-  // On Vercel, cold-starting Python instances can add 5-15 s of latency
-  // to the first verifyToken + checkForDraft API round-trips.
-  // 30 s gives enough headroom without masking real failures.
-  await expect(page.locator('.ProseMirror')).toBeVisible({ timeout: 30000 })
+  await expect(page.locator('.ProseMirror')).toBeVisible({ timeout: 15000 })
 }
 
 // ── Suite ─────────────────────────────────────────────────────────────────

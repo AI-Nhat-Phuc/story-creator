@@ -48,18 +48,15 @@ module.exports = async function globalSetup(config) {
       console.error('[global-setup] admin login failed — tests will likely fail')
     }
 
-    // Pre-warm the Vercel function instances used by story-editor tests.
-    // Without this, cold-starting Python lambdas cause the first storyEditor
-    // test's verifyToken + checkForDraft round-trips to exceed the timeout.
-    if (loginRes.ok()) {
-      const { token } = await loginRes.json()
-      const warmHeaders = { Authorization: `Bearer ${token}`, ...extraHeaders }
-      await Promise.allSettled([
-        ctx.get('/api/auth/verify',      { headers: warmHeaders }),
-        ctx.get('/api/stories/my-draft', { headers: warmHeaders }),
-        ctx.get('/api/worlds',           { headers: warmHeaders }),
-      ])
-      console.log('[global-setup] Vercel function instances pre-warmed ✓')
+    // Warm up the Vercel Python lambda before tests start.
+    // A cold-start can take 5-15 s; hitting /api/health forces the instance
+    // to finish initialising so the first storyEditor test's API calls
+    // (verifyToken + checkForDraft) don't time out.
+    const healthRes = await ctx.get('/api/health')
+    if (healthRes.ok()) {
+      console.log('[global-setup] backend warm ✓')
+    } else {
+      console.warn(`[global-setup] health check returned HTTP ${healthRes.status()}`)
     }
   } finally {
     await ctx.dispose()
