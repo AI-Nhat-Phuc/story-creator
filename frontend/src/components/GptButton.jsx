@@ -1,3 +1,5 @@
+import { ArrowPathIcon } from '@heroicons/react/24/outline'
+
 // OpenAI Logo SVG
 const OpenAILogo = ({ className = 'w-4 h-4' }) => (
   <svg
@@ -61,7 +63,7 @@ function GptButton({
     >
       {loading ? (
         <>
-          <span className="loading loading-spinner loading-xs"></span>
+          <ArrowPathIcon className={`animate-spin ${size === 'xs' ? 'w-3 h-3' : 'w-4 h-4'}`} />
           {loadingText}
         </>
       ) : (
