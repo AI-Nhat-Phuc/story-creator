@@ -15,14 +15,25 @@ const extraHTTPHeaders = process.env.VERCEL_BYPASS_SECRET
 module.exports = defineConfig({
   testDir: './e2e',
   testMatch: '**/*.spec.cjs',
-  // Auto-start the dev server when running locally (skipped in CI where BASE_URL is pre-deployed)
+  globalSetup: './e2e/global-setup.cjs',
+  // Auto-start servers when running locally (skipped in CI where BASE_URL is pre-deployed)
   ...(!process.env.CI && !process.env.BASE_URL ? {
-    webServer: {
-      command: 'npm run dev',
-      url: 'http://localhost:3000',
-      reuseExistingServer: true,   // reuse if already running (avoids double-start)
-      timeout: 30000,
-    },
+    webServer: [
+      {
+        // React frontend (Vite)
+        command: 'npm run dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: true,
+        timeout: 30000,
+      },
+      {
+        // Flask API backend
+        command: 'python ../api/main.py -i api',
+        url: 'http://localhost:5000/api/health',
+        reuseExistingServer: true,
+        timeout: 30000,
+      },
+    ],
   } : {}),
   // Vercel cold starts can take 10-20 s; give each test enough headroom.
   timeout: 60000,
