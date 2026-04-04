@@ -67,13 +67,13 @@ jobs:
           done
           echo "::error::Deployment did not become reachable after 90 s." && exit 1
 
-      - name: Run Playwright login tests
+      - name: Run Playwright E2E tests
         working-directory: frontend
         env:
           CI: 'true'
           BASE_URL: ${{ github.event.deployment_status.target_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-        run: npx playwright test --config=playwright.config.cjs --reporter=list
+        run: npx playwright test --config=playwright.config.cjs
 
       - name: Upload Playwright HTML report on failure
         if: failure()
@@ -90,3 +90,67 @@ jobs:
           name: playwright-test-results-${{ github.run_id }}
           path: frontend/test-results/
           retention-days: 7
+
+      - name: Comment failures on PR
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const sha = context.payload.deployment?.sha || context.sha
+            const deployUrl = context.payload.deployment_status?.target_url || ''
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+
+            // Find open PR associated with the deployed commit SHA
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: sha,
+            })
+            const openPR = prs.find(pr => pr.state === 'open')
+            if (!openPR) {
+              console.log(`No open PR found for commit ${sha} — skipping comment`)
+              return
+            }
+            const prNumber = openPR.number
+
+            // Parse Playwright JSON results for failed test details
+            let failedLines = ''
+            try {
+              const raw = fs.readFileSync('frontend/test-results/results.json', 'utf8')
+              const report = JSON.parse(raw)
+              const failures = []
+              for (const suite of (report.suites || [])) {
+                for (const spec of (suite.specs || [])) {
+                  const failed = (spec.tests || []).flatMap(t => t.results || []).filter(r => r.status === 'failed')
+                  if (!failed.length) continue
+                  const err = failed[0].error?.message?.split('\n')[0] || ''
+                  failures.push(`| \`${spec.title}\` | ${err.slice(0, 120)} |`)
+                }
+              }
+              failedLines = failures.length
+                ? `| Test | Error |\n|------|-------|\n${failures.join('\n')}`
+                : '_No structured failures found — see logs._'
+            } catch (e) {
+              failedLines = '_Could not parse `test-results/results.json`._'
+            }
+
+            const body = [
+              '## ❌ E2E Tests Failed',
+              '',
+              `**Deploy:** ${deployUrl}`,
+              `**Run:** [Logs & artifacts](${runUrl})`,
+              '',
+              '### Failed tests',
+              failedLines,
+              '',
+              '> Screenshots and videos are attached as artifacts on the Actions run.',
+            ].join('\n')
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body,
+            })
+            console.log(`Commented on PR #${prNumber}`)

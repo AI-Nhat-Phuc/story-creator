@@ -6,6 +6,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/setupTests.js',
+    exclude: ['**/node_modules/**', '**/e2e/**'],
   },
   plugins: [react()],
   // Đọc .env từ root project thay vì frontend/

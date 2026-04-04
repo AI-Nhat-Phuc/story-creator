@@ -21,7 +21,7 @@ function GptToolsPanel({
 
       <div className="flex flex-col gap-2">
         <button
-          onClick={onParaphrase}
+          onMouseDown={(e) => { e.preventDefault(); onParaphrase() }}
           disabled={!canUseGpt || isLoading}
           className="btn btn-sm btn-outline btn-accent w-full justify-start gap-2"
         >
@@ -29,7 +29,7 @@ function GptToolsPanel({
           Paraphrase
         </button>
         <button
-          onClick={onExpand}
+          onMouseDown={(e) => { e.preventDefault(); onExpand() }}
           disabled={!canUseGpt || isLoading}
           className="btn btn-sm btn-outline btn-accent w-full justify-start gap-2"
         >
@@ -55,13 +55,13 @@ function GptToolsPanel({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-base-content/60">Suggestions</span>
-            <button onClick={onClear} className="btn btn-ghost btn-xs">Clear</button>
+            <button onMouseDown={(e) => { e.preventDefault(); onClear() }} className="btn btn-ghost btn-xs">Clear</button>
           </div>
           {suggestions.map((s, i) => (
             <div key={i} className="bg-base-200 rounded p-2 text-sm space-y-1">
               <p className="text-base-content line-clamp-3">{s}</p>
               <button
-                onClick={() => onApply(s)}
+                onMouseDown={(e) => { e.preventDefault(); onApply(s) }}
                 className="btn btn-xs btn-primary w-full"
               >
                 Apply

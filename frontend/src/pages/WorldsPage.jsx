@@ -9,6 +9,7 @@ import {
   LockClosedIcon,
   UserIcon,
   MapPinIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline'
 
 function WorldsPage({ showToast }) {
@@ -315,8 +316,8 @@ function WorldsPage({ showToast }) {
               </div>
 
               <div className="mb-4 form-control">
-                <div className='flex justify-between'>
-                  <label className="label">
+                <div className='flex justify-between items-center mb-1'>
+                  <label className="label py-0">
                     <span className="label-text">Mô tả *</span>
                   </label>
                   <GptButton
@@ -346,10 +347,8 @@ function WorldsPage({ showToast }) {
 
               {gptAnalyzing && (
                 <div className="mb-4 alert alert-info">
-                  <div>
-                    <span className="loading loading-spinner"></span>
-                    <span>Đang phân tích với GPT...</span>
-                  </div>
+                  <ArrowPathIcon className="w-5 h-5 animate-spin shrink-0" />
+                  <span>Đang phân tích với GPT...</span>
                 </div>
               )}
 

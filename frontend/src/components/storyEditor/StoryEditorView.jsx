@@ -2,6 +2,7 @@ import React from 'react'
 import EditorHeader from './EditorHeader'
 import LeftPanel from './LeftPanel'
 import NovelEditor from './NovelEditor'
+import FormattingToolbar from './FormattingToolbar'
 import LoadingSpinner from '../LoadingSpinner'
 
 function StoryEditorView({
@@ -11,9 +12,11 @@ function StoryEditorView({
   headings,
   editorRef,
   gpt,
+  activeFormats,
   userSignature,
   onTitleChange,
   onContentUpdate,
+  onSelectionChange,
   onSave,
   onPublish,
   onBack,
@@ -42,6 +45,8 @@ function StoryEditorView({
         onBack={onBack}
       />
 
+      <FormattingToolbar editorRef={editorRef} activeFormats={activeFormats} />
+
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel
           gpt={gpt}
@@ -50,11 +55,23 @@ function StoryEditorView({
           onInsertSignature={onInsertSignature}
         />
 
-        <main className="flex-1 overflow-y-auto">
+        <main
+          className="flex-1 overflow-y-auto cursor-text"
+          onClick={(e) => {
+            // Focus editor when clicking outside the actual ProseMirror content area
+            if (!e.target.closest('.ProseMirror')) {
+              // Direct DOM focus avoids TipTap's internal setTimeout delay
+              const pm = e.currentTarget.querySelector('.ProseMirror')
+              pm?.focus()
+              editorRef.current?.commands.focus('end')
+            }
+          }}
+        >
           <NovelEditor
             initialContent={editor.content}
             format={initialFormat}
             onUpdate={onContentUpdate}
+            onSelectionChange={onSelectionChange}
             editorRef={editorRef}
           />
         </main>

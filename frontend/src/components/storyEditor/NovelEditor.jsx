@@ -1,9 +1,18 @@
 import React from 'react'
 import { EditorRoot, EditorContent, StarterKit, Placeholder } from 'novel'
+import Underline from '@tiptap/extension-underline'
+import Highlight from '@tiptap/extension-highlight'
+import TextAlign from '@tiptap/extension-text-align'
 
-const extensions = [StarterKit, Placeholder]
+const extensions = [
+  StarterKit,
+  Placeholder,
+  Underline,
+  Highlight.configure({ multicolor: true }),
+  TextAlign.configure({ types: ['heading', 'paragraph'] }),
+]
 
-function NovelEditor({ initialContent, format, onUpdate, editorRef }) {
+function NovelEditor({ initialContent, format, onUpdate, onSelectionChange, editorRef }) {
   // For plain/markdown stories, wrap as TipTap doc with plain text paragraph
   const defaultContent =
     format === 'html'
@@ -25,6 +34,12 @@ function NovelEditor({ initialContent, format, onUpdate, editorRef }) {
         extensions={extensions}
         onCreate={({ editor }) => {
           editorRef.current = editor
+          // Track selection changes separately from content changes
+          editor.on('selectionUpdate', ({ editor: e }) => {
+            const { from, to } = e.state.selection
+            const selectionLength = e.state.doc.textBetween(from, to, ' ').length
+            onSelectionChange?.({ selectionLength, editor: e })
+          })
         }}
         onUpdate={({ editor }) => {
           editorRef.current = editor

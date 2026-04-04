@@ -189,24 +189,27 @@ function WorldDetailView({
         </div>
       )}
 
-      <div className="mb-4 tabs tabs-boxed">
+      <div className="mb-4 tabs tabs-boxed w-full">
         <a
-          className={`tab ${activeTab === 'stories' ? 'tab-active' : ''}`}
+          className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'stories' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('stories')}
         >
-                    <BookOpenIcon className="inline w-4 h-4" /> Câu chuyện ({stories.length})
+          <BookOpenIcon className="w-4 h-4 shrink-0" />
+          <span>Câu chuyện ({stories.length})</span>
         </a>
         <a
-          className={`tab ${activeTab === 'characters' ? 'tab-active' : ''}`}
+          className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'characters' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('characters')}
         >
-                    <UserIcon className="inline w-4 h-4" /> Nhân vật ({characters.length})
+          <UserIcon className="w-4 h-4 shrink-0" />
+          <span>Nhân vật ({characters.length})</span>
         </a>
         <a
-          className={`tab ${activeTab === 'locations' ? 'tab-active' : ''}`}
+          className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'locations' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('locations')}
         >
-                    <MapPinIcon className="inline w-4 h-4" /> Địa điểm ({locations.length})
+          <MapPinIcon className="w-4 h-4 shrink-0" />
+          <span>Địa điểm ({locations.length})</span>
         </a>
       </div>
 
