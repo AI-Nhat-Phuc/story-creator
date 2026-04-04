@@ -97,22 +97,22 @@ jobs:
         with:
           script: |
             const fs = require('fs')
-            const branch = context.payload.deployment?.ref || ''
+            const sha = context.payload.deployment?.sha || context.sha
             const deployUrl = context.payload.deployment_status?.target_url || ''
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
 
-            // Find open PR for this branch
-            const { data: prs } = await github.rest.pulls.list({
+            // Find open PR associated with the deployed commit SHA
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: `${context.repo.owner}:${branch}`,
-              state: 'open',
+              commit_sha: sha,
             })
-            if (!prs.length) {
-              console.log(`No open PR found for branch "${branch}" — skipping comment`)
+            const openPR = prs.find(pr => pr.state === 'open')
+            if (!openPR) {
+              console.log(`No open PR found for commit ${sha} — skipping comment`)
               return
             }
-            const prNumber = prs[0].number
+            const prNumber = openPR.number
 
             // Parse Playwright JSON results for failed test details
             let failedLines = ''
