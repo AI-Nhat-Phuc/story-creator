@@ -120,20 +120,6 @@ function WorldDetailView({
               className="mb-4 w-full min-h-[120px] textarea textarea-bordered"
               placeholder="Mô tả thế giới"
             />
-            <div className="mb-4 form-control">
-              <label className="label">
-                <span className="font-semibold label-text">Chế độ hiển thị</span>
-              </label>
-              <select
-                value={editForm.visibility}
-                onChange={(e) => onChangeField('visibility', e.target.value)}
-                className="w-full max-w-xs select-bordered select"
-              >
-                <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
-                <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
-                <option value="public">Công khai - Mọi người có thể xem</option>
-              </select>
-            </div>
             <div className="flex gap-2">
               <button onClick={onSaveEdit} className="btn btn-primary">
                 <ArrowDownTrayIcon className="inline w-4 h-4" /> Lưu
