@@ -70,7 +70,7 @@ function WorldDetailContainer({ showToast }) {
         year: 0,
         era: '',
         year_name: '',
-        description: 'Không xác định'
+        description: 'Chưa đặt thời gian'
       }
     }
 
@@ -97,7 +97,7 @@ function WorldDetailContainer({ showToast }) {
     const worldTime = getStoryWorldTime(story)
     if (worldTime) {
       return worldTime.year === 0
-        ? worldTime.description || 'Không xác định'
+        ? 'Chưa đặt thời gian'
         : worldTime.description || `${worldTime.year_name || 'Năm'} ${worldTime.year}`
     }
     if (story.time_index !== undefined && story.time_index !== null && story.time_index !== 0) {

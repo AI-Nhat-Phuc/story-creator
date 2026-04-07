@@ -145,9 +145,9 @@ function WorldDetailView({
           </>
         ) : (
           <>
-            <div className="flex justify-between items-start mb-2">
-              <h1 className="font-bold text-3xl">{world.name}</h1>
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+              <h1 className="font-bold text-2xl md:text-3xl">{world.name}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
                 <Link to={`/worlds/${world.world_id}/novel`} className="btn btn-outline btn-sm gap-1">
                   <BookOpenIcon className="w-4 h-4" /> Novel
                 </Link>
