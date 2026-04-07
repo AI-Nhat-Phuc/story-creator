@@ -194,21 +194,24 @@ function WorldDetailView({
           onClick={() => onChangeTab('stories')}
         >
           <BookOpenIcon className="w-4 h-4 shrink-0" />
-          <span>Câu chuyện ({stories.length})</span>
+          <span className="hidden sm:inline">Câu chuyện </span>
+          <span>({stories.length})</span>
         </a>
         <a
           className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'characters' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('characters')}
         >
           <UserIcon className="w-4 h-4 shrink-0" />
-          <span>Nhân vật ({characters.length})</span>
+          <span className="hidden sm:inline">Nhân vật </span>
+          <span>({characters.length})</span>
         </a>
         <a
           className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'locations' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('locations')}
         >
           <MapPinIcon className="w-4 h-4 shrink-0" />
-          <span>Địa điểm ({locations.length})</span>
+          <span className="hidden sm:inline">Địa điểm </span>
+          <span>({locations.length})</span>
         </a>
       </div>
 
