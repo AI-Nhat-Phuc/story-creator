@@ -120,20 +120,6 @@ function WorldDetailView({
               className="mb-4 w-full min-h-[120px] textarea textarea-bordered"
               placeholder="Mô tả thế giới"
             />
-            <div className="mb-4 form-control">
-              <label className="label">
-                <span className="font-semibold label-text">Chế độ hiển thị</span>
-              </label>
-              <select
-                value={editForm.visibility}
-                onChange={(e) => onChangeField('visibility', e.target.value)}
-                className="w-full max-w-xs select-bordered select"
-              >
-                <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
-                <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
-                <option value="public">Công khai - Mọi người có thể xem</option>
-              </select>
-            </div>
             <div className="flex gap-2">
               <button onClick={onSaveEdit} className="btn btn-primary">
                 <ArrowDownTrayIcon className="inline w-4 h-4" /> Lưu
@@ -145,12 +131,9 @@ function WorldDetailView({
           </>
         ) : (
           <>
-            <div className="flex justify-between items-start mb-2">
-              <h1 className="font-bold text-3xl">{world.name}</h1>
-              <div className="flex items-center gap-2">
-                <Link to={`/worlds/${world.world_id}/novel`} className="btn btn-outline btn-sm gap-1">
-                  <BookOpenIcon className="w-4 h-4" /> Novel
-                </Link>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+              <h1 className="font-bold text-2xl md:text-3xl">{world.name}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
                 {canEdit && world.visibility !== 'public' && (
                   <button onClick={() => setPublishTarget(world.visibility === 'draft' ? 'private' : 'public')} className="btn btn-success btn-sm">
                     Publish
@@ -194,21 +177,24 @@ function WorldDetailView({
           onClick={() => onChangeTab('stories')}
         >
           <BookOpenIcon className="w-4 h-4 shrink-0" />
-          <span>Câu chuyện ({stories.length})</span>
+          <span className="hidden sm:inline">Câu chuyện </span>
+          <span>({stories.length})</span>
         </a>
         <a
           className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'characters' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('characters')}
         >
           <UserIcon className="w-4 h-4 shrink-0" />
-          <span>Nhân vật ({characters.length})</span>
+          <span className="hidden sm:inline">Nhân vật </span>
+          <span>({characters.length})</span>
         </a>
         <a
           className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'locations' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('locations')}
         >
           <MapPinIcon className="w-4 h-4 shrink-0" />
-          <span>Địa điểm ({locations.length})</span>
+          <span className="hidden sm:inline">Địa điểm </span>
+          <span>({locations.length})</span>
         </a>
       </div>
 

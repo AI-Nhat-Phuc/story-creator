@@ -18,6 +18,9 @@ function Sep() {
 }
 
 function FormattingToolbar({ editorRef, activeFormats = {} }) {
+  // e.preventDefault() on mousedown keeps editor focus + selection intact.
+  // Do NOT call .focus() in the chain — it can collapse the text selection
+  // before the mark/command is applied, causing styles to hit the whole block.
   const run = (fn) => (e) => {
     e.preventDefault()
     const ed = editorRef.current
@@ -27,64 +30,64 @@ function FormattingToolbar({ editorRef, activeFormats = {} }) {
 
   return (
     <div className="flex items-center flex-wrap gap-0.5 px-3 py-1.5 border-b border-base-300 bg-base-100 shrink-0">
-      {/* Headings */}
+      {/* Block type */}
       <ToolbarBtn
         active={!activeFormats.h1 && !activeFormats.h2 && !activeFormats.h3}
         title="Paragraph"
-        onMouseDown={run(ed => ed.chain().focus().setParagraph().run())}
+        onMouseDown={run(ed => ed.chain().setParagraph().run())}
       >
         <span className="text-xs font-normal">T</span>
       </ToolbarBtn>
       <ToolbarBtn
         active={activeFormats.h1}
         title="Heading 1"
-        onMouseDown={run(ed => ed.chain().focus().toggleHeading({ level: 1 }).run())}
+        onMouseDown={run(ed => ed.chain().toggleHeading({ level: 1 }).run())}
       >
         <span className="text-sm font-bold">H1</span>
       </ToolbarBtn>
       <ToolbarBtn
         active={activeFormats.h2}
         title="Heading 2"
-        onMouseDown={run(ed => ed.chain().focus().toggleHeading({ level: 2 }).run())}
+        onMouseDown={run(ed => ed.chain().toggleHeading({ level: 2 }).run())}
       >
         <span className="text-xs font-bold">H2</span>
       </ToolbarBtn>
       <ToolbarBtn
         active={activeFormats.h3}
         title="Heading 3"
-        onMouseDown={run(ed => ed.chain().focus().toggleHeading({ level: 3 }).run())}
+        onMouseDown={run(ed => ed.chain().toggleHeading({ level: 3 }).run())}
       >
         <span className="text-xs font-bold">H3</span>
       </ToolbarBtn>
 
       <Sep />
 
-      {/* Inline formatting */}
+      {/* Inline marks — no .focus() so selection is preserved */}
       <ToolbarBtn
         active={activeFormats.bold}
         title="Bold (Ctrl+B)"
-        onMouseDown={run(ed => ed.chain().focus().toggleBold().run())}
+        onMouseDown={run(ed => ed.chain().toggleBold().run())}
       >
         <span className="font-bold">B</span>
       </ToolbarBtn>
       <ToolbarBtn
         active={activeFormats.italic}
         title="Italic (Ctrl+I)"
-        onMouseDown={run(ed => ed.chain().focus().toggleItalic().run())}
+        onMouseDown={run(ed => ed.chain().toggleItalic().run())}
       >
         <span className="italic font-serif">I</span>
       </ToolbarBtn>
       <ToolbarBtn
         active={activeFormats.underline}
         title="Underline (Ctrl+U)"
-        onMouseDown={run(ed => ed.chain().focus().toggleUnderline().run())}
+        onMouseDown={run(ed => ed.chain().toggleUnderline().run())}
       >
         <span className="underline">U</span>
       </ToolbarBtn>
       <ToolbarBtn
         active={activeFormats.strike}
         title="Strikethrough"
-        onMouseDown={run(ed => ed.chain().focus().toggleStrike().run())}
+        onMouseDown={run(ed => ed.chain().toggleStrike().run())}
       >
         <span className="line-through">S</span>
       </ToolbarBtn>
@@ -95,7 +98,7 @@ function FormattingToolbar({ editorRef, activeFormats = {} }) {
       <ToolbarBtn
         active={activeFormats.highlight}
         title="Highlight"
-        onMouseDown={run(ed => ed.chain().focus().toggleHighlight({ color: '#fef08a' }).run())}
+        onMouseDown={run(ed => ed.chain().toggleHighlight({ color: '#fef08a' }).run())}
       >
         <span
           className="px-0.5 rounded font-bold text-xs"
@@ -111,14 +114,14 @@ function FormattingToolbar({ editorRef, activeFormats = {} }) {
       <ToolbarBtn
         active={activeFormats.bulletList}
         title="Bullet list"
-        onMouseDown={run(ed => ed.chain().focus().toggleBulletList().run())}
+        onMouseDown={run(ed => ed.chain().toggleBulletList().run())}
       >
         <ListBulletIcon className="w-4 h-4" />
       </ToolbarBtn>
       <ToolbarBtn
         active={activeFormats.orderedList}
         title="Numbered list"
-        onMouseDown={run(ed => ed.chain().focus().toggleOrderedList().run())}
+        onMouseDown={run(ed => ed.chain().toggleOrderedList().run())}
       >
         <span className="font-mono text-xs">1.</span>
       </ToolbarBtn>
@@ -129,21 +132,21 @@ function FormattingToolbar({ editorRef, activeFormats = {} }) {
       <ToolbarBtn
         active={activeFormats.alignLeft}
         title="Align left"
-        onMouseDown={run(ed => ed.chain().focus().setTextAlign('left').run())}
+        onMouseDown={run(ed => ed.chain().setTextAlign('left').run())}
       >
         <AlignLeftIcon />
       </ToolbarBtn>
       <ToolbarBtn
         active={activeFormats.alignCenter}
         title="Align center"
-        onMouseDown={run(ed => ed.chain().focus().setTextAlign('center').run())}
+        onMouseDown={run(ed => ed.chain().setTextAlign('center').run())}
       >
         <AlignCenterIcon />
       </ToolbarBtn>
       <ToolbarBtn
         active={activeFormats.alignRight}
         title="Align right"
-        onMouseDown={run(ed => ed.chain().focus().setTextAlign('right').run())}
+        onMouseDown={run(ed => ed.chain().setTextAlign('right').run())}
       >
         <AlignRightIcon />
       </ToolbarBtn>

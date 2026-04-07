@@ -32,9 +32,13 @@ function NovelEditor({ initialContent, format, onUpdate, onSelectionChange, edit
       <EditorContent
         initialContent={defaultContent}
         extensions={extensions}
+        editorProps={{
+          attributes: {
+            class: 'prose prose-stone dark:prose-invert max-w-none focus:outline-none p-4 md:p-8',
+          },
+        }}
         onCreate={({ editor }) => {
           editorRef.current = editor
-          // Track selection changes separately from content changes
           editor.on('selectionUpdate', ({ editor: e }) => {
             const { from, to } = e.state.selection
             const selectionLength = e.state.doc.textBetween(from, to, ' ').length
