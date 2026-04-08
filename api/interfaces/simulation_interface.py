@@ -3,7 +3,7 @@
 import sys
 from typing import Optional, List, Dict, Any
 from core.models import World, Story, Entity
-from storage import NoSQLStorage, JSONStorage
+from storage import MongoStorage
 from ai.gpt_client import GPTIntegration
 from ai.simulation import SimulationState, CharacterTimeline
 
@@ -257,7 +257,8 @@ def main():
     api_key = os.getenv("OPENAI_API_KEY")
 
     # Initialize storage
-    storage = NoSQLStorage("story_creator.db")
+    from utils.env_config import get_mongo_uri, get_mongo_db_name
+    storage = MongoStorage(get_mongo_uri(), db_name=get_mongo_db_name())
 
     # Initialize GPT if API key available
     gpt = None
