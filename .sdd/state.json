@@ -1,5 +1,5 @@
 {
-  "phase": "ANALYZE",
+  "phase": "SPEC",
   "current_feature": "fix api cold start",
   "task_dir": ".task/fix_api_cold_start",
   "breakdown": [],
@@ -13,6 +13,11 @@
       "to": "ANALYZE",
       "at": "2026-04-08 02:54:26",
       "feature": "fix api cold start"
+    },
+    {
+      "from": "ANALYZE",
+      "to": "SPEC",
+      "at": "2026-04-08 03:00:50"
     }
   ]
 }
