@@ -104,7 +104,7 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
 
                 return (
                   <div key={story.story_id} className="bg-base-100 shadow-lg p-4 timeline-box">
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-center">
                       <Link to={`/stories/${story.story_id}`} className="link link-hover">
                         <h3 className="font-bold text-xl">{story.title}</h3>
                       </Link>

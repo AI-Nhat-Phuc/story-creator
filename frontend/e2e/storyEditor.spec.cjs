@@ -65,8 +65,8 @@ test.describe('Story Editor', () => {
     await expect(page.getByTitle('Underline (Ctrl+U)')).toBeVisible()
 
     // Left panel GPT section
-    await expect(page.getByRole('button', { name: /paraphrase/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /expand/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /diễn đạt lại/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /mở rộng/i })).toBeVisible()
 
     // Editor area
     await expect(page.locator('.ProseMirror')).toBeVisible()
@@ -230,8 +230,8 @@ test.describe('Story Editor', () => {
   // ── GPT tools panel ──────────────────────────────────────────────────────
 
   test('GPT Paraphrase and Expand buttons are disabled with no selection', async ({ page }) => {
-    await expect(page.getByRole('button', { name: /paraphrase/i })).toBeDisabled()
-    await expect(page.getByRole('button', { name: /expand/i })).toBeDisabled()
+    await expect(page.getByRole('button', { name: /diễn đạt lại/i })).toBeDisabled()
+    await expect(page.getByRole('button', { name: /mở rộng/i })).toBeDisabled()
   })
 
   test('GPT buttons enable after selecting ≥10 characters', async ({ page }) => {
@@ -243,8 +243,8 @@ test.describe('Story Editor', () => {
     await page.keyboard.press('Control+A')
 
     // Buttons should become enabled
-    await expect(page.getByRole('button', { name: /paraphrase/i })).toBeEnabled({ timeout: 3000 })
-    await expect(page.getByRole('button', { name: /expand/i })).toBeEnabled({ timeout: 3000 })
+    await expect(page.getByRole('button', { name: /diễn đạt lại/i })).toBeEnabled({ timeout: 3000 })
+    await expect(page.getByRole('button', { name: /mở rộng/i })).toBeEnabled({ timeout: 3000 })
   })
 
   test('GPT buttons remain disabled when fewer than 10 characters selected', async ({ page }) => {
@@ -254,7 +254,7 @@ test.describe('Story Editor', () => {
 
     await page.keyboard.press('Control+A')
 
-    await expect(page.getByRole('button', { name: /paraphrase/i })).toBeDisabled()
-    await expect(page.getByRole('button', { name: /expand/i })).toBeDisabled()
+    await expect(page.getByRole('button', { name: /diễn đạt lại/i })).toBeDisabled()
+    await expect(page.getByRole('button', { name: /mở rộng/i })).toBeDisabled()
   })
 })

@@ -273,6 +273,7 @@ function StoryEditorContainer({ showToast }) {
       onContentUpdate={handleContentUpdate}
       onSelectionChange={handleSelectionChange}
       onSave={handleSave}
+      onPublish={handlePublish}
       onBack={handleBack}
       onInsertSignature={handleInsertSignature}
       initialFormat={initialFormat}

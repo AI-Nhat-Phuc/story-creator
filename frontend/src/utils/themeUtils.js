@@ -50,6 +50,32 @@ export function hexToHsl(hex) {
   return { h, s: Math.round(s * 100), l: Math.round(l * 100) }
 }
 
+// DaisyUI v4 uses oklch format: "L% C H"
+export function hexToOklch(hex) {
+  const toLinear = (v) => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+  const r = toLinear(parseInt(hex.slice(1, 3), 16) / 255)
+  const g = toLinear(parseInt(hex.slice(3, 5), 16) / 255)
+  const b = toLinear(parseInt(hex.slice(5, 7), 16) / 255)
+
+  // Linear RGB → OKLab (via M1 then cube root then M2)
+  const lc = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
+  const mc = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
+  const sc = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
+
+  const L = 0.2104542553 * lc + 0.7936177850 * mc - 0.0040720468 * sc
+  const a = 1.9779984951 * lc - 2.4285922050 * mc + 0.4505937099 * sc
+  const bOk = 0.0259040371 * lc + 0.7827717662 * mc - 0.8086757660 * sc
+
+  const C = Math.sqrt(a * a + bOk * bOk)
+  const H = (Math.atan2(bOk, a) * 180 / Math.PI + 360) % 360
+
+  return {
+    l: Math.round(L * 10000) / 100,
+    c: Math.round(C * 10000) / 10000,
+    h: Math.round(H * 100) / 100,
+  }
+}
+
 function hslToHex(h, s, l) {
   const sN = s / 100
   const lN = l / 100

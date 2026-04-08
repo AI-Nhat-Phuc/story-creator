@@ -6,7 +6,7 @@ import {
   THEME_MODES,
   isValidHex,
   deriveCustomPalette,
-  hexToHsl,
+  hexToOklch,
   relativeLuminance,
 } from '../utils/themeUtils'
 
@@ -32,19 +32,17 @@ function saveToStorage(mode, primaryColor) {
   }
 }
 
-// DaisyUI reads HSL as "H S% L%" without the hsl() wrapper
-function hexToDaisyHsl(hex) {
-  const { h, s, l } = hexToHsl(hex)
-  return `${h} ${s}% ${l}%`
+// DaisyUI v4 uses oklch format: "L% C H"
+function hexToDaisyOklch(hex) {
+  const { l, c, h } = hexToOklch(hex)
+  return `${l}% ${c} ${h}`
 }
 
 const CSS_VARS = ['--p', '--pc', '--s', '--sc', '--a', '--ac', '--b1', '--b2']
 
-// Returns DaisyUI HSL for readable text on the given background hex color.
-// Threshold 0.22 (~sRGB midpoint) ensures both white and black text have
-// sufficient contrast across the widest range of mid-tone colors (WCAG AA).
-function contrastHsl(hex) {
-  return relativeLuminance(hex) > 0.22 ? '0 0% 0%' : '0 0% 100%'
+// Returns DaisyUI oklch for readable text on the given background hex color.
+function contrastOklch(hex) {
+  return relativeLuminance(hex) > 0.22 ? '0% 0 0' : '100% 0 0'
 }
 
 function clearCustomVars() {
@@ -52,14 +50,14 @@ function clearCustomVars() {
 }
 
 function injectCustomVars(palette) {
-  document.documentElement.style.setProperty('--p', hexToDaisyHsl(palette.primary))
-  document.documentElement.style.setProperty('--pc', contrastHsl(palette.primary))
-  document.documentElement.style.setProperty('--s', hexToDaisyHsl(palette.secondary))
-  document.documentElement.style.setProperty('--sc', contrastHsl(palette.secondary))
-  document.documentElement.style.setProperty('--a', hexToDaisyHsl(palette.accent))
-  document.documentElement.style.setProperty('--ac', contrastHsl(palette.accent))
-  document.documentElement.style.setProperty('--b1', hexToDaisyHsl(palette.base100))
-  document.documentElement.style.setProperty('--b2', hexToDaisyHsl(palette.base200))
+  document.documentElement.style.setProperty('--p', hexToDaisyOklch(palette.primary))
+  document.documentElement.style.setProperty('--pc', contrastOklch(palette.primary))
+  document.documentElement.style.setProperty('--s', hexToDaisyOklch(palette.secondary))
+  document.documentElement.style.setProperty('--sc', contrastOklch(palette.secondary))
+  document.documentElement.style.setProperty('--a', hexToDaisyOklch(palette.accent))
+  document.documentElement.style.setProperty('--ac', contrastOklch(palette.accent))
+  document.documentElement.style.setProperty('--b1', hexToDaisyOklch(palette.base100))
+  document.documentElement.style.setProperty('--b2', hexToDaisyOklch(palette.base200))
 }
 
 export function getPalette(mode, primaryColor) {

@@ -3,7 +3,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 const STATUS_BADGE = {
   idle:    { cls: 'badge-warning',  label: 'Draft'    },
-  saving:  { cls: 'badge-info',     label: 'Saving…'  },
+  saving:  { cls: '',               label: 'Saving…'  },
   saved:   { cls: '',               label: 'Saved'    },
   error:   { cls: 'badge-error',    label: 'Error'    },
 }
@@ -13,8 +13,10 @@ function EditorHeader({
   saveStatus,
   wordCount,
   readTime,
+  isPublished,
   onTitleChange,
   onSave,
+  onPublish,
   onBack,
 }) {
   const titleRef = useRef(null)
@@ -71,6 +73,11 @@ function EditorHeader({
         </span>
       )}
 
+      {(saveStatus === 'saved' || saveStatus === 'error') && !isPublished && (
+        <button onClick={onPublish} className="btn btn-success btn-sm shrink-0">
+          Xuất bản
+        </button>
+      )}
       <button onClick={handleSave} className="btn btn-primary btn-sm shrink-0">
         Lưu
       </button>
