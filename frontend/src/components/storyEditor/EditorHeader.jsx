@@ -4,7 +4,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 const STATUS_BADGE = {
   idle:    { cls: 'badge-warning',  label: 'Draft'    },
   saving:  { cls: 'badge-info',     label: 'Saving…'  },
-  saved:   { cls: 'badge-success',  label: 'Saved'    },
+  saved:   { cls: '',               label: 'Saved'    },
   error:   { cls: 'badge-error',    label: 'Error'    },
 }
 
@@ -39,7 +39,10 @@ function EditorHeader({
         className="input input-ghost input-sm flex-1 font-semibold text-base focus:outline-none focus:bg-base-100 rounded"
       />
 
-      <span className={`badge ${badge.cls} badge-sm shrink-0`}>{badge.label}</span>
+      {saveStatus === 'saved'
+        ? <span className="text-xs text-base-content/50 shrink-0">{badge.label}</span>
+        : <span className={`badge ${badge.cls} badge-sm shrink-0`}>{badge.label}</span>
+      }
 
       {wordCount > 0 && (
         <span className="text-xs text-base-content/50 shrink-0 hidden sm:block">

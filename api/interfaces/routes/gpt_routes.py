@@ -472,6 +472,7 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
             system_prompt = (
                 "You are a creative writing assistant. "
                 "Expand the given text into a richer, more detailed version. "
+                "IMPORTANT: Always respond in the same language as the input text. "
                 "Return exactly 3 numbered alternatives, one per line."
             )
             user_prompt = f"Expand this passage into 3 longer alternatives:\n\n{text}"
@@ -479,6 +480,7 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
             system_prompt = (
                 "You are a creative writing assistant. "
                 "Paraphrase the given text in different ways while preserving meaning. "
+                "IMPORTANT: Always respond in the same language as the input text. "
                 "Return exactly 3 numbered alternatives, one per line."
             )
             user_prompt = f"Paraphrase this passage in 3 different ways:\n\n{text}"
