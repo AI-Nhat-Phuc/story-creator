@@ -16,7 +16,7 @@ function GptToolsPanel({
   return (
     <div className="space-y-3">
       <div className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
-        GPT Tools
+        Công cụ GPT
       </div>
 
       <div className="flex flex-col gap-2">
@@ -26,7 +26,7 @@ function GptToolsPanel({
           className="btn btn-sm btn-outline btn-accent w-full justify-start gap-2"
         >
           <SparklesIcon className="w-4 h-4" />
-          Paraphrase
+          Diễn đạt lại
         </button>
         <button
           onMouseDown={(e) => { e.preventDefault(); onExpand() }}
@@ -34,28 +34,28 @@ function GptToolsPanel({
           className="btn btn-sm btn-outline btn-accent w-full justify-start gap-2"
         >
           <SparklesIcon className="w-4 h-4" />
-          Expand
+          Mở rộng
         </button>
       </div>
 
       {!canUseGpt && (
         <p className="text-xs text-base-content/40 italic">
-          Select ≥ 10 characters to enable
+          Chọn ≥ 10 ký tự để sử dụng
         </p>
       )}
 
       {isLoading && (
         <div className="flex items-center gap-2 text-sm text-base-content/60">
           <LoadingSpinner size="sm" />
-          Generating…
+          Đang tạo…
         </div>
       )}
 
       {suggestions.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-base-content/60">Suggestions</span>
-            <button onMouseDown={(e) => { e.preventDefault(); onClear() }} className="btn btn-ghost btn-xs">Clear</button>
+            <span className="text-xs font-medium text-base-content/60">Gợi ý</span>
+            <button onMouseDown={(e) => { e.preventDefault(); onClear() }} className="btn btn-ghost btn-xs">Xóa</button>
           </div>
           {suggestions.map((s, i) => (
             <div key={i} className="bg-base-200 rounded p-2 text-sm space-y-1">
@@ -64,7 +64,7 @@ function GptToolsPanel({
                 onMouseDown={(e) => { e.preventDefault(); onApply(s) }}
                 className="btn btn-xs btn-primary w-full"
               >
-                Apply
+                Áp dụng
               </button>
             </div>
           ))}

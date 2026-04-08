@@ -61,6 +61,7 @@ function StoryEditorContainer({ showToast }) {
       const data = res.data
       const title = data.title || ''
       const content = data.content || ''
+      storyIdRef.current = storyId
       setInitialFormat(data.format || 'plain')
       editorDataRef.current = { title, content }
       lastSavedRef.current = { title, content }
@@ -76,17 +77,6 @@ function StoryEditorContainer({ showToast }) {
       showToast('No world selected. Redirecting…', 'warning')
       navigate('/worlds')
       return
-    }
-    try {
-      const res = await storiesAPI.getMyDraft()
-      const draft = res.data?.story
-      if (draft?.story_id) {
-        showToast('Resuming your draft', 'info')
-        navigate(`/stories/${draft.story_id}/edit`)
-        return
-      }
-    } catch {
-      // no draft found — start fresh
     }
     setEditor(prev => ({ ...prev, isLoading: false }))
   }
