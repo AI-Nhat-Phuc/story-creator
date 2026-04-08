@@ -10,8 +10,10 @@
 
 The Flask API on Vercel suffers from cold start delays of 1.5–4+ seconds because
 all heavy initialization (GPT client, admin seeding, Swagger) runs synchronously at
-module import time. Additionally, after a period of inactivity the Vercel container
-is evicted, causing the next user request to wait through a full cold start.
+module import time. Additionally, TinyDB stores data in `/tmp/` on Vercel, which is
+ephemeral — data is lost on every cold start. After a period of inactivity the
+Vercel container is evicted, causing the next user request to wait through a full
+cold start.
 
 This feature reduces perceived cold start time and prevents container eviction by:
 
@@ -26,9 +28,12 @@ This feature reduces perceived cold start time and prevents container eviction b
 3. **Lazy Swagger initialization**: Flasgger spec is built only when `/api/docs` is
    first accessed, not during `APIBackend.__init__()`.
 
-4. **MongoDB lazy connect**: `MongoStorage` does not open a network connection in its
-   constructor. The connection is established on first database operation, using a
-   short connection timeout to fail fast.
+4. **Remove TinyDB — MongoDB only**: TinyDB (`NoSQLStorage`), JSON storage
+   (`JSONStorage`), and all related fallback logic are removed from the codebase.
+   MongoDB (`MongoStorage`) becomes the sole storage backend. The `MongoClient`
+   connection is opened lazily on the first database operation (not in the
+   constructor). `MONGODB_URI` is required; the app raises a clear startup error if
+   it is missing.
 
 5. **Frontend keep-alive ping**: The React app silently pings `GET /api/health` every
    5 minutes while the browser tab is active. This keeps the Vercel container warm
@@ -45,8 +50,7 @@ GET /api/health
 Response 200: { "status": "ok", "version": "...", "timestamp": "..." }
 ```
 
-No new endpoints are introduced. The health endpoint already exists and requires no
-changes; the frontend simply needs to call it periodically.
+No new endpoints are introduced.
 
 ---
 
@@ -56,25 +60,33 @@ changes; the frontend simply needs to call it periodically.
    at most once per process. A thread-safe lazy-init guard must be used.
 
 2. Admin seeding MUST run before any authenticated request is processed, but MUST NOT
-   run during the health check or Swagger requests to avoid delaying warm-up pings.
+   run during health check or Swagger requests to avoid delaying warm-up pings.
 
 3. Admin seeding MUST run at most once per process (use a module-level boolean flag).
 
 4. If GPT initialization fails (missing API key, import error), the API MUST continue
    to serve non-GPT routes exactly as it does today. GPT routes return 503.
 
-5. MongoDB `MongoClient` MUST NOT be constructed before the first DB call. Connection
-   errors during lazy init MUST fall back to TinyDB transparently (existing behavior).
+5. `MongoStorage` MUST NOT open a network connection before the first DB call.
+   Connection errors on first DB operation MUST surface as a clear 503 response —
+   no silent fallback to TinyDB (TinyDB is removed).
 
-6. The frontend keep-alive ping MUST be silent (no UI feedback, no error toasts on
+6. `NoSQLStorage` (TinyDB), `JSONStorage`, and `tinydb` package references MUST be
+   removed from: `api/storage/`, `api/interfaces/api_backend.py`,
+   `api/utils/env_config.py`, and `api/requirements.txt`.
+
+7. `MONGODB_URI` environment variable is now **required**. If absent at startup the
+   app MUST log a clear error and raise `RuntimeError`.
+
+8. The frontend keep-alive ping MUST be silent (no UI feedback, no error toasts on
    network failure). It MUST only run while the browser tab is visible
    (`document.visibilityState === "visible"`).
 
-7. The keep-alive interval MUST be 5 minutes (300 000 ms). It MUST be cleared when
+9. The keep-alive interval MUST be 5 minutes (300 000 ms). It MUST be cleared when
    the component unmounts or the app navigates away.
 
-8. Keep-alive ping MUST use the existing `api.js` HTTP client (Axios), calling the
-   existing health endpoint path (`/api/health`).
+10. Keep-alive ping MUST use the existing `api.js` HTTP client (Axios), calling the
+    existing health endpoint path (`/api/health`).
 
 ---
 
@@ -93,16 +105,19 @@ changes; the frontend simply needs to call it periodically.
 - **Ping failure**: If the health ping fails (network error, 5xx), the frontend must
   silently ignore it and retry on the next interval.
 
-- **MongoDB lazy connect + fallback**: If MongoDB connection fails on first DB op,
-  the existing fallback to TinyDB must still work.
+- **Missing MONGODB_URI**: App must fail fast at startup with a descriptive
+  `RuntimeError` rather than silently writing to a temporary local file.
+
+- **MongoDB connection failure on first request**: Return 503 with message
+  `"Database unavailable"` — no crash, no fallback to TinyDB.
 
 ---
 
 ## Out of Scope
 
-- Replacing TinyDB with a persistent database (separate task).
+- Persistent in-memory caching (Redis, Memcached).
 - Reducing Python dependency import times (packaging concern).
 - Server-Side Rendering or edge functions for the frontend.
 - Upgrading Vercel plan to use scheduled cron jobs.
-- Persistent in-memory caching (Redis, Memcached).
 - Pre-warming multiple Vercel regions simultaneously.
+- Migrating existing TinyDB data to MongoDB (data migration is a separate task).
