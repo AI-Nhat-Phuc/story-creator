@@ -75,3 +75,50 @@ A fully-initialized `Flask` app, ready to serve. Total cold-start cost: ~1.5–4
 - `_ensure_default_admin()` and `_seed_test_account()` method bodies
 - All non-GPT blueprints in `_register_blueprints()`
 - `run()`, `_kill_existing_server()`, `_flush_data()`, `_signal_handler()`
+
+---
+
+## Flow Summary — api/interfaces/routes/gpt_routes.py
+
+### Current Flow
+
+**Input**: `create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage, flush_data, limiter)`
+All parameters are captured by value in closures at blueprint creation time.
+
+**Execution steps per request**:
+1. Route handler reads `has_gpt` (closure bool) → raises 503 if `False`
+2. Route handler reads `gpt` (closure object) → calls `gpt.client.chat.completions.create()`
+3. Route handler reads `gpt_service` (closure object) → calls `gpt_service.analyze_*`
+
+**Observed issue**: `has_gpt`, `gpt`, `gpt_service` are captured at registration. With lazy init they will always be `None`/`False`.
+
+### Planned Changes
+
+1. Add `backend` parameter to `create_gpt_bp` signature
+2. Each GPT-using route calls `backend._ensure_gpt()` before checking `has_gpt`
+3. Replace closure reads of `has_gpt`, `gpt`, `gpt_service` with `backend.has_gpt`, `backend.gpt`, `backend.gpt_service`
+
+**Will NOT change**: route URLs, docstrings, business logic, threading patterns, `gpt_results` usage, `storage` usage, `flush_data` usage, limiter setup.
+
+---
+
+## Flow Summary — api/interfaces/routes/event_routes.py
+
+### Current Flow
+
+**Input**: `create_event_bp(storage, event_service, gpt_results, has_gpt)`
+`event_service` and `has_gpt` captured by value at creation time.
+
+**Execution steps per GPT-using request**:
+1. Route checks `has_gpt` (closure bool) → raises 503 if `False`
+2. Route calls `event_service.extract_events_from_world()` or `extract_events_from_story()`
+
+**Observed issue**: Same as gpt_routes — `has_gpt` and `event_service` are stale if initialized lazily.
+
+### Planned Changes
+
+1. Add `backend` parameter to `create_event_bp` signature
+2. GPT-using routes (`extract_world_events`, `extract_story_events`) call `backend._ensure_gpt()` before checking `has_gpt`
+3. Replace `has_gpt` and `event_service` reads with `backend.has_gpt` and `backend.event_service`
+
+**Will NOT change**: non-GPT routes (`get_world_timeline`, `update_event`, `delete_event`, `add_event_connection`, `clear_story_event_cache`), route URLs, business logic, docstrings.
