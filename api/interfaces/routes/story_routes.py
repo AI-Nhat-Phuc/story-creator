@@ -169,8 +169,6 @@ def create_story_bp(storage, story_generator, flush_data):
         if data['content']:
             story.content = data['content']
 
-        if visibility == 'draft' and _get_user_drafts(storage, g.current_user.user_id):
-                raise ConflictError('You already have a draft story. Finish or publish it first.')
 
         _set_world_time(story, world, time_index)
 
@@ -321,10 +319,6 @@ def create_story_bp(storage, story_generator, flush_data):
             elif old_visibility == 'public' and new_visibility != 'public':
                 user.decrement_public_stories()
                 storage.save_user(user.to_dict())
-
-            if new_visibility == 'draft' and old_visibility != 'draft' and \
-                    _get_user_drafts(storage, g.current_user.user_id, exclude_story_id=story_id):
-                    raise ConflictError('You already have a draft story. Finish or publish it first.')
 
             story_data['visibility'] = new_visibility
 

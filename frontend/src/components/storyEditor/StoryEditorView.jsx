@@ -19,6 +19,7 @@ function StoryEditorView({
   onContentUpdate,
   onSelectionChange,
   onSave,
+  onPublish,
   onBack,
   onInsertSignature,
   initialFormat,
@@ -42,6 +43,8 @@ function StoryEditorView({
         readTime={readTime}
         onTitleChange={onTitleChange}
         onSave={onSave}
+        onPublish={onPublish}
+        isPublished={editor.isPublished}
         onBack={onBack}
       />
 
