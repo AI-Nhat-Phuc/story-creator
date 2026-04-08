@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
@@ -12,6 +12,7 @@ import {
   PencilIcon,
   XMarkIcon,
   TrashIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
 
@@ -38,6 +39,7 @@ function StoryDetailView({
   highlightPosition = -1
 }) {
   const highlightRef = useRef(null)
+  const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
 
   useEffect(() => {
     if (highlightPosition >= 0 && highlightRef.current) {
@@ -104,6 +106,9 @@ function StoryDetailView({
       </div>
     )
   }
+
+  const hasLinks = linkedCharacters.length > 0 || linkedLocations.length > 0
+
   return (
     <div>
       <div className="flex gap-2 mb-4">
@@ -117,8 +122,10 @@ function StoryDetailView({
         )}
       </div>
 
-      <div className="bg-base-100 shadow-xl mb-6 p-6 rounded-box">
-        <>
+      <div className="flex gap-0 items-start">
+        {/* Main content */}
+        <div className="flex-1 min-w-0">
+          <div className="bg-base-100 shadow-xl mb-6 p-6 rounded-box">
             <div className="flex justify-between items-start mb-2">
               <h1 className="font-bold text-3xl">{story.title}</h1>
               <div className="flex gap-1 items-center">
@@ -160,127 +167,154 @@ function StoryDetailView({
               )}
             </div>
             {renderStoryContent()}
+          </div>
 
-            {/* Analyze Button */}
-            {story.content && !analyzedEntities && (
-              <div className="flex gap-2 mt-4">
-                {/* Show regular analyze button only if no existing links */}
-                {(!linkedCharacters?.length && !linkedLocations?.length) && (
-                  <GptButton
-                    onClick={onAnalyzeStory}
-                    loading={gptAnalyzing}
-                    loadingText="Đang phân tích..."
-                    variant="primary"
-                    size="sm"
-                  >
-                    Phân tích nhân vật & địa điểm
-                  </GptButton>
-                )}
-                {/* Re-analyze button when existing links are present */}
-                {(linkedCharacters?.length > 0 || linkedLocations?.length > 0) && (
-                  <GptButton
-                    onClick={onReanalyzeStory}
-                    loading={gptAnalyzing}
-                    loadingText="Đang phân tích lại..."
-                    variant="warning"
-                    size="sm"
-                  >
-                    Phân tích lại
-                  </GptButton>
-                )}
+          <div className="bg-base-100 shadow-xl p-6 rounded-box">
+            <h2 className="mb-4 font-bold text-2xl"><ClipboardDocumentListIcon className="inline w-6 h-6" /> Thông tin chi tiết</h2>
+            <div className="overflow-x-auto">
+              <table className="table table-zebra w-full">
+                <tbody>
+                  <tr>
+                    <td className="font-semibold">ID</td>
+                    <td className="font-mono text-sm">{story.story_id}</td>
+                  </tr>
+                  <tr>
+                    <td className="font-semibold">Thế giới</td>
+                    <td>
+                      {world ? (
+                        <Link to={`/worlds/${world.world_id}`} className="link link-info">
+                          {world.name}
+                        </Link>
+                      ) : (
+                        'N/A'
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="font-semibold">Thời điểm</td>
+                    <td>
+                      <div>{formattedWorldTime}</div>
+                      {displayWorldTime?.era && (
+                        <div className="opacity-60 mt-1 text-xs">
+                          Kỷ nguyên: {displayWorldTime.era}
+                        </div>
+                      )}
+                      {displayWorldTime?.year > 0 && (
+                        <div className="opacity-60 text-xs">
+                          Niên đại: {(displayWorldTime.year_name || 'Năm')} {displayWorldTime.year}
+                        </div>
+                      )}
+                      {normalizedTimelineIndex !== null && normalizedTimelineIndex !== 0 ? (
+                        <div className="opacity-50 mt-1 text-xs">
+                          Chỉ số timeline: {normalizedTimelineIndex}
+                        </div>
+                      ) : (
+                        <div className="opacity-50 mt-1 text-xs">
+                          Mốc thời gian chưa xác định
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Analysis panel toggle */}
+        {story.content && (
+          <div className="flex items-start ml-2 mt-0">
+            <button
+              onClick={() => setShowAnalysisPanel(v => !v)}
+              className="btn btn-ghost btn-sm px-1.5 py-6 h-auto rounded-l-lg rounded-r-none border border-base-300 border-r-0 bg-base-100 shadow"
+              title={showAnalysisPanel ? 'Đóng phân tích' : 'Mở phân tích'}
+            >
+              <span className="font-mono text-base-content/60 text-xs leading-none" style={{ writingMode: 'vertical-rl' }}>
+                {showAnalysisPanel ? '>>' : '<<'}
+              </span>
+            </button>
+
+            {/* Analysis panel */}
+            {showAnalysisPanel && (
+              <div className="bg-base-100 shadow-xl border border-base-300 rounded-r-box w-72 shrink-0 overflow-hidden">
+                <div className="bg-base-200 px-4 py-3 border-b border-base-300">
+                  <h3 className="flex items-center gap-2 font-semibold text-sm">
+                    <SparklesIcon className="w-4 h-4 text-warning" />
+                    Phân tích AI
+                  </h3>
+                </div>
+                <div className="p-4 space-y-4">
+                  {/* Analyze buttons */}
+                  {!analyzedEntities && (
+                    <>
+                      {!hasLinks && (
+                        <GptButton
+                          onClick={onAnalyzeStory}
+                          loading={gptAnalyzing}
+                          loadingText="Đang phân tích..."
+                          variant="primary"
+                          size="sm"
+                        >
+                          Phân tích nhân vật & địa điểm
+                        </GptButton>
+                      )}
+                      {hasLinks && (
+                        <GptButton
+                          onClick={onReanalyzeStory}
+                          loading={gptAnalyzing}
+                          loadingText="Đang phân tích lại..."
+                          variant="warning"
+                          size="sm"
+                        >
+                          Phân tích lại
+                        </GptButton>
+                      )}
+                    </>
+                  )}
+
+                  {/* Linked characters */}
+                  {linkedCharacters.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
+                        <UserIcon className="w-3.5 h-3.5" /> Nhân vật
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {linkedCharacters.map((char) => (
+                          <Tag key={char.entity_id} color="primary" size="sm" icon={UserIcon}>
+                            {char.name}
+                          </Tag>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Linked locations */}
+                  {linkedLocations.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
+                        <MapPinIcon className="w-3.5 h-3.5" /> Địa điểm
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {linkedLocations.map((loc) => (
+                          <Tag key={loc.location_id} color="secondary" size="sm" icon={MapPinIcon}>
+                            {loc.name}
+                          </Tag>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty state */}
+                  {!hasLinks && !gptAnalyzing && !analyzedEntities && (
+                    <p className="text-base-content/40 text-xs italic">
+                      Chưa có liên kết nhân vật hay địa điểm nào.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
-
-            {/* Analyzed Entities Display - now in modal */}
-          </>
-      </div>
-
-      <div className="bg-base-100 shadow-xl p-6 rounded-box">
-        <h2 className="mb-4 font-bold text-2xl"><ClipboardDocumentListIcon className="inline w-6 h-6" /> Thông tin chi tiết</h2>
-        <div className="overflow-x-auto">
-          <table className="table table-zebra w-full">
-            <tbody>
-              <tr>
-                <td className="font-semibold">ID</td>
-                <td className="font-mono text-sm">{story.story_id}</td>
-              </tr>
-              <tr>
-                <td className="font-semibold">Thế giới</td>
-                <td>
-                  {world ? (
-                    <Link to={`/worlds/${world.world_id}`} className="link link-info">
-                      {world.name}
-                    </Link>
-                  ) : (
-                    'N/A'
-                  )}
-                </td>
-              </tr>
-              <tr>
-                <td className="font-semibold">Thời điểm</td>
-                <td>
-                  <div>{formattedWorldTime}</div>
-                  {displayWorldTime?.era && (
-                    <div className="opacity-60 mt-1 text-xs">
-                      Kỷ nguyên: {displayWorldTime.era}
-                    </div>
-                  )}
-                  {displayWorldTime?.year > 0 && (
-                    <div className="opacity-60 text-xs">
-                      Niên đại: {(displayWorldTime.year_name || 'Năm')} {displayWorldTime.year}
-                    </div>
-                  )}
-                  {normalizedTimelineIndex !== null && normalizedTimelineIndex !== 0 ? (
-                    <div className="opacity-50 mt-1 text-xs">
-                      Chỉ số timeline: {normalizedTimelineIndex}
-                    </div>
-                  ) : (
-                    <div className="opacity-50 mt-1 text-xs">
-                      Mốc thời gian chưa xác định
-                    </div>
-                  )}
-                </td>
-              </tr>
-              {linkedCharacters.length > 0 && (
-                <tr>
-                  <td className="font-semibold">Nhân vật liên kết</td>
-                  <td>
-                    <div className="flex flex-wrap gap-1">
-                      {linkedCharacters.map((char) => (
-                        <Tag key={char.entity_id} color="primary" size="sm" icon={UserIcon}>
-                          {char.name}
-                        </Tag>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              )}
-              {linkedLocations.length > 0 && (
-                <tr>
-                  <td className="font-semibold">Địa điểm liên kết</td>
-                  <td>
-                    <div className="flex flex-wrap gap-1">
-                      {linkedLocations.map((loc) => (
-                        <Tag key={loc.location_id} color="secondary" size="sm" icon={MapPinIcon}>
-                          {loc.name}
-                        </Tag>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              )}
-              {(linkedCharacters.length === 0 && linkedLocations.length === 0 &&
-                (story.entities?.length > 0 || story.locations?.length > 0)) && (
-                <tr>
-                  <td className="font-semibold">Liên kết</td>
-                  <td className="opacity-60 text-sm">
-                    {story.entities?.length || 0} nhân vật, {story.locations?.length || 0} địa điểm (đang tải...)
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* GPT Analyzed Entities Modal */}
