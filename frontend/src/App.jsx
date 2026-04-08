@@ -1,4 +1,5 @@
 import React, { useState, useCallback, lazy, Suspense } from 'react'
+import { useKeepAlive } from './hooks/useKeepAlive'
 import { Routes, Route } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from './contexts/AuthContext'
@@ -24,6 +25,7 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID
 
 function App() {
+  useKeepAlive()
   const [toast, setToast] = useState(null)
 
   const showToast = useCallback((message, type = 'info') => {

@@ -330,15 +330,18 @@ class TestLazyAdminSeeding(unittest.TestCase):
 class TestLazySwagger(unittest.TestCase):
 
     def test_swagger_not_built_at_init(self):
-        """Behavior-3: Flasgger Swagger() must NOT be called during __init__."""
+        """Behavior-3: backend._swagger must be None after __init__ (lazy Swagger)."""
         mock_storage = MagicMock()
         mock_storage.list_users.return_value = [{'role': 'admin'}]
 
         with patch('storage.MongoStorage', return_value=mock_storage):
             from interfaces.api_backend import APIBackend
-            with patch('interfaces.api_backend.Swagger') as mock_swagger:
-                APIBackend(mongodb_uri='mongodb://localhost/test', mongo_db_name='test_db')
-                mock_swagger.assert_not_called()
+            backend = APIBackend(mongodb_uri='mongodb://localhost/test', mongo_db_name='test_db')
+
+        self.assertIsNone(
+            backend._swagger,
+            "backend._swagger must be None after __init__ — Swagger is lazy"
+        )
 
     def test_swagger_attribute_is_none_after_init(self):
         """Behavior-3: backend._swagger must be None after __init__."""

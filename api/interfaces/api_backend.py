@@ -1,10 +1,9 @@
 """Pure API backend for Story Creator - No template rendering, API-only."""
 
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
-from flasgger import Swagger
 from generators import WorldGenerator, StoryGenerator, StoryLinker
-from storage import NoSQLStorage, JSONStorage, MongoStorage
+from storage import MongoStorage
 from ai.gpt_client import GPTIntegration
 from services import GPTService, AuthService
 from services import EventService
@@ -24,8 +23,14 @@ from interfaces.routes import (
 )
 import os
 import signal
+import threading
 import psutil
 import time
+
+# Module-level lazy-init sentinels
+_gpt_initialized = False
+_gpt_lock = threading.Lock()
+_admin_seeded = False
 
 
 class APIBackend:
@@ -33,9 +38,7 @@ class APIBackend:
 
     def __init__(
         self,
-        data_dir: str = "data",
-        storage_type: str = "nosql",
-        db_path: str = "story_creator.db",
+        mongodb_uri: str,
         mongo_db_name: str = "story_creator_dev"
     ):
         """Initialize API Backend."""
@@ -60,8 +63,8 @@ class APIBackend:
             }
         })
 
-        # Initialize Swagger UI
-        swagger_config = {
+        # Store Swagger config — will be initialized lazily on first /api/docs request
+        self._swagger_config = {
             "headers": [],
             "specs": [
                 {
@@ -76,7 +79,7 @@ class APIBackend:
             "specs_route": "/api/docs"
         }
 
-        swagger_template = {
+        self._swagger_template = {
             "swagger": "2.0",
             "info": {
                 "title": "Story Creator API",
@@ -101,7 +104,7 @@ class APIBackend:
             ]
         }
 
-        self.swagger = Swagger(self.app, config=swagger_config, template=swagger_template)
+        self._swagger = None
 
         # Register global error handlers
         from interfaces.error_handlers import register_error_handlers
@@ -115,25 +118,9 @@ class APIBackend:
         from interfaces.rate_limiter import create_limiter
         self.limiter = create_limiter(self.app)
 
-        # Initialize storage
-        # Priority: MongoDB (if MONGODB_URI set) → NoSQL (TinyDB) → JSON files
-        mongodb_uri = os.environ.get('MONGODB_URI')
-        if mongodb_uri and MongoStorage:
-            try:
-                self.storage = MongoStorage(mongodb_uri, db_name=mongo_db_name)
-                self.storage_label = "MongoDB Atlas"
-                print("✅ Using MongoDB Atlas for persistent storage")
-            except Exception as e:
-                print(f"⚠️  MongoDB connection failed: {e}")
-                print("   Falling back to TinyDB...")
-                self.storage = NoSQLStorage(db_path)
-                self.storage_label = "NoSQL Database (fallback)"
-        elif storage_type == "nosql":
-            self.storage = NoSQLStorage(db_path)
-            self.storage_label = "NoSQL Database"
-        else:
-            self.storage = JSONStorage(data_dir)
-            self.storage_label = "JSON Files"
+        # Initialize storage (MongoDB only — lazy connect, no network I/O here)
+        self.storage = MongoStorage(mongodb_uri, db_name=mongo_db_name)
+        self.storage_label = "MongoDB Atlas"
 
         # Initialize generators
         self.world_generator = WorldGenerator()
@@ -141,31 +128,17 @@ class APIBackend:
         self.story_linker = StoryLinker()
         self.diagram_generator = RelationshipDiagram(canvas_width=1200, canvas_height=800)
 
-        # Initialize GPT integration (optional)
-        try:
-            self.gpt = GPTIntegration()
-            self.gpt_service = GPTService(self.gpt)
-            self.event_service = EventService(self.gpt, self.storage)
-            self.has_gpt = True
-        except (ImportError, ValueError) as e:
-            self.gpt = None
-            self.gpt_service = None
-            self.event_service = EventService(None, self.storage)
-            self.has_gpt = False
-            print(f"⚠️  GPT not available: {e}")
+        # GPT integration — deferred until first GPT request (_ensure_gpt)
+        self.gpt = None
+        self.gpt_service = None
+        self.event_service = EventService(None, self.storage)
+        self.has_gpt = False
 
         # Initialize Auth service
         self.auth_service = AuthService(self.storage)
 
         # Initialize auth middleware
         init_auth_middleware(self.auth_service)
-
-        # Ensure default admin account exists
-        self._ensure_default_admin()
-
-        # Seed test account on local dev and Vercel preview (not production)
-        if os.environ.get("VERCEL_ENV") != "production":
-            self._seed_test_account()
 
         # Store for async GPT results (persisted in database)
         self.gpt_results = TaskStore(self.storage)
@@ -176,6 +149,21 @@ class APIBackend:
 
         # Register API routes using blueprints
         self._register_blueprints()
+
+        # Register before_request hooks for lazy init
+        backend = self
+
+        @self.app.before_request
+        def _lazy_init():
+            path = request.path
+            # Always initialize Swagger when docs are requested
+            if path.startswith('/api/docs') or path.startswith('/flasgger') or path.startswith('/apispec'):
+                backend._ensure_swagger()
+                return
+            # Skip admin seeding for health checks
+            if path.startswith('/api/health'):
+                return
+            backend._seed_once()
 
     def _signal_handler(self, signum, frame):
         """Handle graceful shutdown."""
@@ -268,6 +256,41 @@ class APIBackend:
         print("   Username: testuser")
         print("   Password: Test@123")
 
+    def _ensure_gpt(self):
+        """Lazily initialize GPT integration on first use. Thread-safe, runs once."""
+        global _gpt_initialized, _gpt_lock
+        if _gpt_initialized:
+            return
+        with _gpt_lock:
+            if _gpt_initialized:
+                return
+            try:
+                self.gpt = GPTIntegration()
+                self.gpt_service = GPTService(self.gpt)
+                self.event_service = EventService(self.gpt, self.storage)
+                self.has_gpt = True
+                print("✅ GPT initialized on first use")
+            except (ImportError, ValueError) as e:
+                self.has_gpt = False
+                print(f"⚠️  GPT not available: {e}")
+            _gpt_initialized = True
+
+    def _seed_once(self):
+        """Run admin seeding exactly once per process, deferred from __init__."""
+        global _admin_seeded
+        if _admin_seeded:
+            return
+        _admin_seeded = True
+        self._ensure_default_admin()
+        if os.environ.get("VERCEL_ENV") != "production":
+            self._seed_test_account()
+
+    def _ensure_swagger(self):
+        """Initialize Flasgger on first /api/docs request."""
+        if self._swagger is None:
+            from flasgger import Swagger
+            self._swagger = Swagger(self.app, config=self._swagger_config, template=self._swagger_template)
+
     def _register_blueprints(self):
         """Register all API route blueprints."""
         # Health routes
@@ -296,10 +319,8 @@ class APIBackend:
 
         # GPT routes
         gpt_bp = create_gpt_bp(
-            gpt=self.gpt,
-            gpt_service=self.gpt_service,
+            backend=self,
             gpt_results=self.gpt_results,
-            has_gpt=self.has_gpt,
             storage=self.storage,
             flush_data=self._flush_data,
             limiter=self.limiter
@@ -316,9 +337,8 @@ class APIBackend:
         # Event routes
         event_bp = create_event_bp(
             storage=self.storage,
-            event_service=self.event_service,
             gpt_results=self.gpt_results,
-            has_gpt=self.has_gpt
+            backend=self
         )
         self.app.register_blueprint(event_bp)
 

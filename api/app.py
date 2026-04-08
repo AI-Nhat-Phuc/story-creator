@@ -5,8 +5,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from interfaces.api_backend import APIBackend
-from utils.env_config import get_db_config
+from utils.env_config import get_mongo_uri, get_mongo_db_name
 
-db_path, mongo_db_name = get_db_config()
-api = APIBackend(db_path=db_path, mongo_db_name=mongo_db_name)
+api = APIBackend(mongodb_uri=get_mongo_uri(), mongo_db_name=get_mongo_db_name())
 app = api.app  # Expose Flask app for Vercel/WSGI/ASGI
