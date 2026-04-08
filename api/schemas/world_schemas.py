@@ -26,7 +26,7 @@ class CreateWorldSchema(Schema):
 
     visibility = fields.Str(
         validate=validate.OneOf(['draft', 'private', 'public']),
-        load_default='private'
+        load_default='draft'
     )
 
     use_gpt = fields.Bool(load_default=False)

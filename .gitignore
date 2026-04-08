@@ -227,6 +227,12 @@ node_modules/
 frontend/dist/
 frontend/.env.local
 
+# Playwright test artifacts
+test-results/
+playwright-report/
+frontend/test-results/
+frontend/playwright-report/
+
 # Temporary files
 *.tmp
 *.bak

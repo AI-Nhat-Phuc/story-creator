@@ -13,14 +13,13 @@ from schemas.event_schemas import UpdateEventSchema, AddEventConnectionSchema
 import uuid
 
 
-def create_event_bp(storage, event_service, gpt_results, has_gpt):
+def create_event_bp(storage, gpt_results, backend):
     """Create and configure the Event blueprint.
 
     Args:
         storage: Storage instance
-        event_service: EventService instance
         gpt_results: Shared dict to store GPT task results
-        has_gpt: Boolean indicating if GPT is available
+        backend: Backend instance providing has_gpt, event_service, and _ensure_gpt()
 
     Returns:
         Blueprint: Configured Flask blueprint for event routes
@@ -49,7 +48,7 @@ def create_event_bp(storage, event_service, gpt_results, has_gpt):
         if not world:
             raise ResourceNotFoundError('World', world_id)
 
-        timeline = event_service.build_timeline(world_id)
+        timeline = backend.event_service.build_timeline(world_id)
         return success_response(timeline)
 
     @event_bp.route('/api/worlds/<world_id>/events/extract', methods=['POST'])
@@ -76,7 +75,8 @@ def create_event_bp(storage, event_service, gpt_results, has_gpt):
           503:
             description: GPT not available
         """
-        if not has_gpt:
+        backend._ensure_gpt()
+        if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
 
         world = storage.load_world(world_id)
@@ -103,7 +103,7 @@ def create_event_bp(storage, event_service, gpt_results, has_gpt):
         def on_error(error):
             gpt_results[task_id] = {'status': 'error', 'result': str(error)}
 
-        event_service.extract_events_from_world(
+        backend.event_service.extract_events_from_world(
             world_id, force=force,
             callback_success=on_success, callback_error=on_error
         )
@@ -138,7 +138,8 @@ def create_event_bp(storage, event_service, gpt_results, has_gpt):
           503:
             description: GPT not available
         """
-        if not has_gpt:
+        backend._ensure_gpt()
+        if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
 
         story = storage.load_story(story_id)
@@ -160,7 +161,7 @@ def create_event_bp(storage, event_service, gpt_results, has_gpt):
         def on_error(error):
             gpt_results[task_id] = {'status': 'error', 'result': str(error)}
 
-        event_service.extract_events_from_story(
+        backend.event_service.extract_events_from_story(
             story_id, force=force,
             callback_success=on_success, callback_error=on_error
         )
@@ -192,7 +193,7 @@ def create_event_bp(storage, event_service, gpt_results, has_gpt):
         if not story:
             raise ResourceNotFoundError('Story', story_id)
 
-        deleted = event_service.clear_story_cache(story_id)
+        deleted = backend.event_service.clear_story_cache(story_id)
         return success_response(
             {'cache_cleared': deleted},
             'Cache đã được xóa' if deleted else 'Không có cache để xóa'

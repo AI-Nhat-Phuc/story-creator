@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { worldsAPI, gptAPI, statsAPI } from '../services/api'
+import { worldsAPI, gptAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import GptButton, { OpenAILogo } from '../components/GptButton'
@@ -9,6 +9,7 @@ import {
   LockClosedIcon,
   UserIcon,
   MapPinIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline'
 
 function WorldsPage({ showToast }) {
@@ -16,21 +17,16 @@ function WorldsPage({ showToast }) {
   const [worlds, setWorlds] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [quota, setQuota] = useState(null)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     world_type: 'fantasy',
-    visibility: 'public'
   })
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [gptEntities, setGptEntities] = useState(null)
 
   useEffect(() => {
     loadWorlds()
-    if (isAuthenticated) {
-      loadQuota()
-    }
   }, [isAuthenticated])
 
   const loadWorlds = async () => {
@@ -42,15 +38,6 @@ function WorldsPage({ showToast }) {
       showToast('Không thể tải danh sách thế giới', 'error')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const loadQuota = async () => {
-    try {
-      const response = await statsAPI.get()
-      setQuota(response.data?.user_quota)
-    } catch (error) {
-      console.error('Không thể tải quota:', error)
     }
   }
 
@@ -211,7 +198,7 @@ function WorldsPage({ showToast }) {
   }
 
   const resetForm = () => {
-    setFormData({ name: '', description: '', world_type: 'fantasy', visibility: 'public' })
+    setFormData({ name: '', description: '', world_type: 'fantasy' })
     setGptEntities(null)
   }
 
@@ -296,46 +283,7 @@ function WorldsPage({ showToast }) {
           <div className="max-w-2xl modal-box">
             <h3 className="mb-4 font-bold text-lg">Tạo thế giới mới</h3>
 
-            {/* Quota Alert */}
-            {isAuthenticated && formData.visibility === 'public' && quota?.worlds && quota.worlds.current >= quota.worlds.limit && (
-              <div className="mb-4 alert alert-error">
-                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <h3 className="font-bold">Đã đạt giới hạn thế giới công khai!</h3>
-                  <div className="text-sm">Bạn đã tạo {quota.worlds.current}/{quota.worlds.limit} thế giới công khai. Vui lòng chọn chế độ Riêng tư hoặc xóa bớt thế giới công khai.</div>
-                </div>
-              </div>
-            )}
-
             <form onSubmit={handleSubmit}>
-              {/* Visibility Option - Always Enabled */}
-              <div className="mb-4 form-control">
-                <label className="label">
-                  <span className="font-semibold label-text">Chế độ hiển thị *</span>
-                </label>
-                <select
-                  name="visibility"
-                  value={formData.visibility}
-                  onChange={handleInputChange}
-                  className="select-bordered select"
-                >
-                  <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
-                  <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
-                  <option value="public">Công khai - Mọi người có thể xem</option>
-                </select>
-                {isAuthenticated && quota?.worlds && (
-                  <label className="label">
-                    <span className="label-text-alt">
-                      {formData.visibility === 'public'
-                        ? `Thế giới công khai: ${quota.worlds.current}/${quota.worlds.limit}`
-                        : 'Thế giới riêng tư không giới hạn'}
-                    </span>
-                  </label>
-                )}
-              </div>
-
               <div className="mb-4 form-control">
                 <label className="label">
                   <span className="label-text">Tên thế giới *</span>
@@ -346,7 +294,6 @@ function WorldsPage({ showToast }) {
                   value={formData.name}
                   onChange={handleInputChange}
                   className="input input-bordered"
-                  disabled={isAuthenticated && formData.visibility === 'public' && quota?.worlds && quota.worlds.current >= quota.worlds.limit}
                   required
                 />
               </div>
@@ -360,7 +307,6 @@ function WorldsPage({ showToast }) {
                   value={formData.world_type}
                   onChange={handleInputChange}
                   className="select-bordered select"
-                  disabled={isAuthenticated && formData.visibility === 'public' && quota?.worlds && quota.worlds.current >= quota.worlds.limit}
                 >
                   <option value="fantasy">Fantasy - Thế giới phép thuật</option>
                   <option value="sci-fi">Sci-Fi - Khoa học viễn tưởng</option>
@@ -370,8 +316,8 @@ function WorldsPage({ showToast }) {
               </div>
 
               <div className="mb-4 form-control">
-                <div className='flex justify-between'>
-                  <label className="label">
+                <div className='flex justify-between items-center mb-1'>
+                  <label className="label py-0">
                     <span className="label-text">Mô tả *</span>
                   </label>
                   <GptButton
@@ -391,7 +337,6 @@ function WorldsPage({ showToast }) {
                   onChange={handleInputChange}
                   className="h-32 textarea textarea-bordered"
                   placeholder="Nhập mô tả thế giới hoặc dùng GPT để tự động tạo... Ví dụ: Một thế giới giả tưởng với ma thuật, rồng và các vương quốc cổ đại..."
-                  disabled={isAuthenticated && formData.visibility === 'public' && quota?.worlds && quota.worlds.current >= quota.worlds.limit}
                   required
                 />
                 <label className="label">
@@ -402,10 +347,8 @@ function WorldsPage({ showToast }) {
 
               {gptAnalyzing && (
                 <div className="mb-4 alert alert-info">
-                  <div>
-                    <span className="loading loading-spinner"></span>
-                    <span>Đang phân tích với GPT...</span>
-                  </div>
+                  <ArrowPathIcon className="w-5 h-5 animate-spin shrink-0" />
+                  <span>Đang phân tích với GPT...</span>
                 </div>
               )}
 
@@ -481,7 +424,6 @@ function WorldsPage({ showToast }) {
                   loadingText="Đang xử lý..."
                   variant="primary"
                   size="md"
-                  disabled={isAuthenticated && formData.visibility === 'public' && quota?.worlds && quota.worlds.current >= quota.worlds.limit}
                 >
                   Tạo & Phân tích
                 </GptButton>

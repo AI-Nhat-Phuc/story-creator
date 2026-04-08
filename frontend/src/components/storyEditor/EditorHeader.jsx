@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 const STATUS_BADGE = {
@@ -11,15 +11,30 @@ const STATUS_BADGE = {
 function EditorHeader({
   title,
   saveStatus,
-  isPublished,
   wordCount,
   readTime,
   onTitleChange,
   onSave,
-  onPublish,
   onBack,
 }) {
+  const titleRef = useRef(null)
+  const [titleError, setTitleError] = useState(false)
   const badge = STATUS_BADGE[saveStatus] || STATUS_BADGE.idle
+
+  const handleSave = () => {
+    if (!title.trim()) {
+      setTitleError(true)
+      titleRef.current?.focus()
+      return
+    }
+    setTitleError(false)
+    onSave()
+  }
+
+  const handleTitleChange = (value) => {
+    if (value.trim()) setTitleError(false)
+    onTitleChange(value)
+  }
 
   return (
     <header className="flex items-center gap-3 px-4 py-2 bg-base-200 border-b border-base-300 min-h-[52px]">
@@ -31,13 +46,19 @@ function EditorHeader({
         <ArrowLeftIcon className="w-5 h-5" />
       </button>
 
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => onTitleChange(e.target.value)}
-        placeholder="Story title…"
-        className="input input-ghost input-sm flex-1 font-semibold text-base focus:outline-none focus:bg-base-100 rounded"
-      />
+      <div className="flex-1 flex flex-col min-w-0">
+        <input
+          ref={titleRef}
+          type="text"
+          value={title}
+          onChange={(e) => handleTitleChange(e.target.value)}
+          placeholder="Tiêu đề câu chuyện…"
+          className={`input input-ghost input-sm w-full font-semibold text-base focus:outline-none focus:bg-base-100 rounded ${titleError ? 'input-error' : ''}`}
+        />
+        {titleError && (
+          <span className="text-error text-xs px-1">Vui lòng nhập tiêu đề</span>
+        )}
+      </div>
 
       {saveStatus === 'saved'
         ? <span className="text-xs text-base-content/50 shrink-0">{badge.label}</span>
@@ -50,10 +71,9 @@ function EditorHeader({
         </span>
       )}
 
-      {isPublished
-        ? <span className="badge badge-success badge-sm shrink-0">Published</span>
-        : <button onClick={onPublish} className="btn btn-primary btn-sm shrink-0">Publish</button>
-      }
+      <button onClick={handleSave} className="btn btn-primary btn-sm shrink-0">
+        Lưu
+      </button>
     </header>
   )
 }

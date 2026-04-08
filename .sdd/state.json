@@ -1,48 +1,38 @@
 {
-  "phase": "DONE",
-  "current_feature": "fix novel feature bugs",
-  "task_dir": ".task/fix_novel_feature_bugs",
+  "phase": "IMPLEMENT",
+  "current_feature": "fix api cold start",
+  "task_dir": ".task/fix_api_cold_start",
   "breakdown": [],
   "spec_approved": true,
   "design_approved": true,
   "flow_summary_approved": true,
-  "last_flow_file": "api/interfaces/routes/story_routes.py",
+  "last_flow_file": "api/interfaces/routes/event_routes.py",
   "history": [
     {
       "from": "NONE",
       "to": "ANALYZE",
-      "at": "2026-04-03 11:10:24",
-      "feature": "fix novel feature bugs"
+      "at": "2026-04-08 02:54:26",
+      "feature": "fix api cold start"
     },
     {
       "from": "ANALYZE",
       "to": "SPEC",
-      "at": "2026-04-03 11:10:30"
+      "at": "2026-04-08 03:00:50"
     },
     {
       "from": "SPEC",
       "to": "DESIGN",
-      "at": "2026-04-03 11:11:39"
+      "at": "2026-04-08 03:44:07"
     },
     {
       "from": "DESIGN",
       "to": "TEST",
-      "at": "2026-04-03 11:12:12"
+      "at": "2026-04-08 04:42:33"
     },
     {
       "from": "TEST",
       "to": "IMPLEMENT",
-      "at": "2026-04-03 11:16:03"
-    },
-    {
-      "from": "IMPLEMENT",
-      "to": "REVIEW",
-      "at": "2026-04-03 11:16:42"
-    },
-    {
-      "from": "REVIEW",
-      "to": "DONE",
-      "at": "2026-04-03 11:18:19"
+      "at": "2026-04-08 11:28:14"
     }
   ]
 }

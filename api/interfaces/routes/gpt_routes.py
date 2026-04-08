@@ -16,14 +16,12 @@ import uuid
 import threading
 
 
-def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_data=None, limiter=None):
+def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=None):
     """Create and configure the GPT blueprint.
 
     Args:
-        gpt: GPT integration instance
-        gpt_service: GPTService instance for async operations
+        backend: Backend instance exposing _ensure_gpt(), has_gpt, gpt, and gpt_service
         gpt_results: Shared dict to store GPT task results
-        has_gpt: Boolean indicating if GPT is available
         storage: Storage instance for database access (optional, needed for batch analyze)
         flush_data: Function to flush data to disk (optional)
         limiter: Optional Flask-Limiter instance for rate limiting
@@ -83,7 +81,8 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
           503:
             description: GPT not available
         """
-        if not has_gpt:
+        backend._ensure_gpt()
+        if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
 
         data = request.json
@@ -116,8 +115,8 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                         world_name=world_name
                     )
 
-                    response = gpt.client.chat.completions.create(
-                        model=gpt.model,
+                    response = backend.gpt.client.chat.completions.create(
+                        model=backend.gpt.model,
                         messages=[
                             {"role": "system", "content": PromptTemplates.API_WORLD_GENERATOR_SYSTEM},
                             {"role": "user", "content": prompt}
@@ -162,8 +161,8 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                         context=context
                     )
 
-                    response = gpt.client.chat.completions.create(
-                        model=gpt.model,
+                    response = backend.gpt.client.chat.completions.create(
+                        model=backend.gpt.model,
                         messages=[
                             {"role": "system", "content": PromptTemplates.API_STORY_GENERATOR_SYSTEM},
                             {"role": "user", "content": prompt}
@@ -230,7 +229,8 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
           503:
             description: GPT not available
         """
-        if not has_gpt:
+        backend._ensure_gpt()
+        if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
 
         data = request.json
@@ -258,12 +258,12 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
             gpt_results[task_id] = {'status': 'error', 'result': str(error)}
 
         if story_description:
-            gpt_service.analyze_story_entities(
+            backend.gpt_service.analyze_story_entities(
                 story_description, story_title, story_genre,
                 callback_success=on_success, callback_error=on_error
             )
         else:
-            gpt_service.analyze_world_entities(
+            backend.gpt_service.analyze_world_entities(
                 world_description, world_type,
                 callback_success=on_success, callback_error=on_error
             )
@@ -327,7 +327,8 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
           503:
             description: GPT not available
         """
-        if not has_gpt:
+        backend._ensure_gpt()
+        if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
         if not storage:
             raise BusinessRuleError('Storage not configured for batch operations')
@@ -373,7 +374,7 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
                         }
                     }
 
-                service = BatchAnalyzeService(gpt, storage)
+                service = BatchAnalyzeService(backend.gpt, storage)
                 result = service.run(world_id, story_ids, progress_callback=progress_callback)
 
                 if flush_data:
@@ -459,7 +460,8 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
         text = data['text']
         mode = data.get('mode', 'paraphrase')
 
-        if not has_gpt:
+        backend._ensure_gpt()
+        if not backend.has_gpt:
             # Deterministic mock for tests without an API key
             suggestions = [
                 f"[mock {mode} 1] {text}",
@@ -486,8 +488,8 @@ def create_gpt_bp(gpt, gpt_service, gpt_results, has_gpt, storage=None, flush_da
             user_prompt = f"Paraphrase this passage in 3 different ways:\n\n{text}"
 
         try:
-            response = gpt.client.chat.completions.create(
-                model=gpt.model,
+            response = backend.gpt.client.chat.completions.create(
+                model=backend.gpt.model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}

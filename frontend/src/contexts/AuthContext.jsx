@@ -14,9 +14,11 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  // Start with loading=false so the UI renders immediately without blocking.
-  // Token verification happens in the background; the UI updates once it resolves.
-  const [loading, setLoading] = useState(false)
+  // Start with loading=true so protected routes wait for token verification before
+  // deciding whether the user is authenticated. Without this, navigating directly
+  // to a protected URL causes an immediate redirect to /login because user===null
+  // before verifyToken resolves (visible as a race condition on Vercel cold starts).
+  const [loading, setLoading] = useState(true)
   const [token, setToken] = useState(localStorage.getItem('auth_token'))
 
   // Setup axios response interceptor to handle 401 errors

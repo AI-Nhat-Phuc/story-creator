@@ -122,6 +122,10 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         world = world_generator.generate(data.get('description', ''), world_type=data['world_type'])
         if data.get('name'):
             world.name = data['name']
+        # Always use the user's exact description — prevent world_generator from
+        # appending auto-generated English theme text to user-provided content.
+        if data.get('description'):
+            world.description = data['description']
 
         world.owner_id = g.current_user.user_id
         world.visibility = visibility

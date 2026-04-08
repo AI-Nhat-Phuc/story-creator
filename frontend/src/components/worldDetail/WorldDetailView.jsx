@@ -33,6 +33,7 @@ function WorldDetailView({
   onCancelEdit,
   onSaveEdit,
   onChangeField,
+  onPublish,
   getStoryWorldTime,
   getTimelineLabel,
   // Auto-link props
@@ -58,6 +59,7 @@ function WorldDetailView({
 }) {
   const [editingEntityId, setEditingEntityId] = useState(null)
   const [entityEditForm, setEntityEditForm] = useState({})
+  const [publishTarget, setPublishTarget] = useState(null)
 
   const startEditEntity = (char) => {
     setEditingEntityId(char.entity_id)
@@ -118,20 +120,6 @@ function WorldDetailView({
               className="mb-4 w-full min-h-[120px] textarea textarea-bordered"
               placeholder="Mô tả thế giới"
             />
-            <div className="mb-4 form-control">
-              <label className="label">
-                <span className="font-semibold label-text">Chế độ hiển thị</span>
-              </label>
-              <select
-                value={editForm.visibility}
-                onChange={(e) => onChangeField('visibility', e.target.value)}
-                className="w-full max-w-xs select-bordered select"
-              >
-                <option value="draft">Bản nháp - Chỉ bạn thấy, đang viết</option>
-                <option value="private">Riêng tư - Chỉ bạn có thể xem</option>
-                <option value="public">Công khai - Mọi người có thể xem</option>
-              </select>
-            </div>
             <div className="flex gap-2">
               <button onClick={onSaveEdit} className="btn btn-primary">
                 <ArrowDownTrayIcon className="inline w-4 h-4" /> Lưu
@@ -143,12 +131,14 @@ function WorldDetailView({
           </>
         ) : (
           <>
-            <div className="flex justify-between items-start mb-2">
-              <h1 className="font-bold text-3xl">{world.name}</h1>
-              <div className="flex items-center gap-2">
-                <Link to={`/worlds/${world.world_id}/novel`} className="btn btn-outline btn-sm gap-1">
-                  <BookOpenIcon className="w-4 h-4" /> Novel
-                </Link>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+              <h1 className="font-bold text-2xl md:text-3xl">{world.name}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                {canEdit && world.visibility !== 'public' && (
+                  <button onClick={() => setPublishTarget(world.visibility === 'draft' ? 'private' : 'public')} className="btn btn-success btn-sm">
+                    Publish
+                  </button>
+                )}
                 {canEdit && (
                   <button onClick={onEdit} className="btn btn-sm btn-ghost">
                     <PencilIcon className="inline w-4 h-4" /> Sửa
@@ -181,24 +171,30 @@ function WorldDetailView({
         </div>
       )}
 
-      <div className="mb-4 tabs tabs-boxed">
+      <div className="mb-4 tabs tabs-boxed w-full">
         <a
-          className={`tab ${activeTab === 'stories' ? 'tab-active' : ''}`}
+          className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'stories' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('stories')}
         >
-                    <BookOpenIcon className="inline w-4 h-4" /> Câu chuyện ({stories.length})
+          <BookOpenIcon className="w-4 h-4 shrink-0" />
+          <span className="hidden sm:inline">Câu chuyện </span>
+          <span>({stories.length})</span>
         </a>
         <a
-          className={`tab ${activeTab === 'characters' ? 'tab-active' : ''}`}
+          className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'characters' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('characters')}
         >
-                    <UserIcon className="inline w-4 h-4" /> Nhân vật ({characters.length})
+          <UserIcon className="w-4 h-4 shrink-0" />
+          <span className="hidden sm:inline">Nhân vật </span>
+          <span>({characters.length})</span>
         </a>
         <a
-          className={`tab ${activeTab === 'locations' ? 'tab-active' : ''}`}
+          className={`tab flex-1 flex items-center justify-center gap-1 ${activeTab === 'locations' ? 'tab-active' : ''}`}
           onClick={() => onChangeTab('locations')}
         >
-                    <MapPinIcon className="inline w-4 h-4" /> Địa điểm ({locations.length})
+          <MapPinIcon className="w-4 h-4 shrink-0" />
+          <span className="hidden sm:inline">Địa điểm </span>
+          <span>({locations.length})</span>
         </a>
       </div>
 
@@ -382,6 +378,39 @@ function WorldDetailView({
             </div>
           ))}
           {locations.length === 0 && <p className="opacity-60 text-center">Chưa có địa điểm nào</p>}
+        </div>
+      )}
+
+      {/* Publish Modal */}
+      {publishTarget && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-sm">
+            <h3 className="font-bold text-lg mb-2">Publish thế giới</h3>
+            <p className="mb-4 text-sm opacity-70">Chọn chế độ hiển thị cho thế giới này:</p>
+            <div className="flex flex-col gap-2 mb-4">
+              <button
+                onClick={() => setPublishTarget('private')}
+                className={`btn btn-outline justify-start ${publishTarget === 'private' ? 'btn-active' : ''}`}
+              >
+                Riêng tư — Chỉ bạn có thể xem
+              </button>
+              <button
+                onClick={() => setPublishTarget('public')}
+                className={`btn btn-outline justify-start ${publishTarget === 'public' ? 'btn-active' : ''}`}
+              >
+                Công khai — Mọi người có thể xem
+              </button>
+            </div>
+            <div className="modal-action">
+              <button
+                className="btn btn-success"
+                onClick={() => { onPublish(publishTarget); setPublishTarget(null) }}
+              >
+                Xác nhận
+              </button>
+              <button className="btn btn-ghost" onClick={() => setPublishTarget(null)}>Hủy</button>
+            </div>
+          </div>
         </div>
       )}
 
