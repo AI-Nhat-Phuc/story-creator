@@ -1,43 +1,18 @@
 {
-  "phase": "DONE",
-  "current_feature": "world publish mode",
-  "task_dir": ".task/world_publish_mode",
+  "phase": "ANALYZE",
+  "current_feature": "fix api cold start",
+  "task_dir": ".task/fix_api_cold_start",
   "breakdown": [],
-  "spec_approved": true,
-  "design_approved": true,
-  "flow_summary_approved": true,
-  "last_flow_file": "frontend/src/containers/WorldDetailContainer.jsx",
+  "spec_approved": false,
+  "design_approved": false,
+  "flow_summary_approved": false,
+  "last_flow_file": "",
   "history": [
     {
       "from": "NONE",
       "to": "ANALYZE",
-      "at": "2026-04-03 18:29:30",
-      "feature": "world publish mode"
-    },
-    {
-      "from": "ANALYZE",
-      "to": "DESIGN",
-      "at": "2026-04-03 18:32:03"
-    },
-    {
-      "from": "DESIGN",
-      "to": "TEST",
-      "at": "2026-04-04 13:43:54"
-    },
-    {
-      "from": "TEST",
-      "to": "IMPLEMENT",
-      "at": "2026-04-04 13:47:53"
-    },
-    {
-      "from": "IMPLEMENT",
-      "to": "REVIEW",
-      "at": "2026-04-04 14:02:35"
-    },
-    {
-      "from": "REVIEW",
-      "to": "DONE",
-      "at": "2026-04-04 14:02:41"
+      "at": "2026-04-08 02:54:26",
+      "feature": "fix api cold start"
     }
   ]
 }
