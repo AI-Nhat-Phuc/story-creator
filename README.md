@@ -26,6 +26,7 @@ An interactive storytelling platform with a **React frontend** and **Flask API b
 
 - Create and manage worlds across genres: Fantasy, Sci-Fi, Modern, Historical
 - Write stories with automatic character detection and smart cross-story linking
+- Rich text story editor with formatting toolbar
 - Manage characters with attributes (Strength, Intelligence, Charisma)
 - Track locations with coordinates
 - Timeline visualization using the light cone (time cone) model
@@ -62,9 +63,20 @@ npm run install:all
 ### Configure (optional)
 
 ```bash
-# Add your OpenAI key to enable GPT features
-echo OPENAI_API_KEY=sk-your-key-here > .env
+# Copy and edit environment variables
+cp .env.example .env
+# Add your keys to .env
 ```
+
+Key variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENAI_API_KEY` | GPT features |
+| `GOOGLE_CLIENT_ID` | Google OAuth |
+| `FACEBOOK_APP_ID` | Facebook OAuth |
+| `JWT_SECRET` | Token signing |
+| `MONGODB_URI` | MongoDB (optional, for persistent storage) |
 
 ### Run
 
@@ -90,34 +102,51 @@ Access:
 
 ```
 story-creator/
-├── api/                         # Python Flask backend
-│   ├── app.py                   # Vercel serverless entrypoint
-│   ├── main.py                  # Local development entrypoint
+├── api/                          # Python Flask backend
+│   ├── app.py                    # Vercel serverless entrypoint
+│   ├── main.py                   # Local development entrypoint
 │   ├── requirements.txt
-│   ├── ai/                      # GPT-4o-mini integration
-│   ├── core/models/             # Domain models (World, Story, Entity, Location, TimeCone)
-│   ├── generators/              # Content generators and story linker
-│   ├── interfaces/              # Flask app + blueprint routes
-│   │   ├── api_backend.py       # Main Flask app (CORS, Swagger)
-│   │   └── routes/              # world, story, gpt, health, stats
-│   ├── services/                # Business logic (GPTService, CharacterService, ...)
-│   ├── storage/                 # TinyDB (NoSQL) storage
-│   └── visualization/           # Relationship diagrams
+│   ├── ai/                       # GPT-4o-mini integration
+│   ├── core/
+│   │   ├── models/               # Domain models (World, Story, Entity, Location, TimeCone)
+│   │   ├── exceptions.py         # Custom exception hierarchy (APIException subclasses)
+│   │   └── permissions.py        # Role/permission definitions
+│   ├── generators/               # Content generators and story linker
+│   ├── interfaces/               # Flask app + blueprint routes
+│   │   ├── api_backend.py        # Flask app factory + route registration
+│   │   ├── auth_middleware.py    # @token_required, @admin_required decorators
+│   │   ├── error_handlers.py     # Global exception → JSON response mapping
+│   │   ├── simulation_interface.py
+│   │   └── routes/               # world, story, auth, gpt, event routes
+│   ├── schemas/                  # Marshmallow validation schemas
+│   ├── services/                 # Business logic (GPTService, AuthService, ...)
+│   ├── storage/                  # TinyDB (default) and MongoDB backends
+│   ├── utils/
+│   │   ├── responses.py          # success_response, created_response, paginated_response
+│   │   └── validation.py         # @validate_request, @validate_query_params decorators
+│   └── visualization/            # Relationship diagrams
 │
-├── frontend/                    # React application
+├── frontend/                     # React application
+│   ├── e2e/                      # Playwright end-to-end tests
 │   ├── src/
-│   │   ├── components/          # Reusable UI components
-│   │   ├── containers/          # Data-fetching containers
-│   │   ├── pages/               # Dashboard, Worlds, Stories, detail pages
-│   │   ├── services/api.js      # Centralized Axios API client
-│   │   └── App.jsx              # Root component + React Router
+│   │   ├── components/           # Reusable UI components
+│   │   │   └── storyEditor/      # Story editor (NovelEditor, FormattingToolbar, ...)
+│   │   ├── containers/           # Data-fetching containers
+│   │   ├── contexts/             # AuthContext, GptTaskContext
+│   │   ├── hooks/                # useKeepAlive, and other custom hooks
+│   │   ├── pages/                # Dashboard, Worlds, Stories, detail pages
+│   │   ├── services/api.js       # Centralized Axios API client
+│   │   └── App.jsx               # Root component + React Router
+│   ├── playwright.config.cjs
 │   ├── vite.config.js
 │   └── package.json
 │
-├── docs/                        # Documentation
-├── vercel.json                  # Vercel deployment config
-├── package.json                 # Root npm scripts
-└── .env                         # Environment variables (not committed)
+├── .sdd/                         # SDD phase manager and hooks
+├── .task/                        # Per-feature task specs and design docs
+├── docs/                         # Documentation
+├── vercel.json                   # Vercel deployment config
+├── package.json                  # Root npm scripts
+└── .env                          # Environment variables (not committed)
 ```
 
 > **Note:** All Python code lives in `api/`. Internal imports use bare module names — `from core.models import World`, not `from api.core.models import World`.
@@ -156,28 +185,35 @@ vercel --prod   # production deploy
 - Builds the React frontend (`cd frontend && npm run build`)
 - Serves `frontend/dist` as static files
 - Routes `/api/*` to `api/app.py` as a Python serverless function
-- Database uses `/tmp/story_creator.db` on Vercel (ephemeral per instance)
-
-**Environment variables** (Vercel Dashboard → Settings → Environment Variables):
-
-| Variable | Purpose |
-|----------|---------|
-| `OPENAI_API_KEY` | GPT features |
-| `GOOGLE_CLIENT_ID` | Google OAuth |
-| `FACEBOOK_APP_ID` | Facebook OAuth |
-| `JWT_SECRET` | Token signing |
-| `MONGODB_URI` | MongoDB (optional, for persistent storage) |
+- Default storage: TinyDB at `/tmp/story_creator.db` (ephemeral per instance)
+- For persistent storage, set `MONGODB_URI` to use MongoDB instead
 
 ---
 
 ## Testing
 
+### Backend unit tests
+
 ```bash
-.venv\Scripts\python.exe api/test.py              # Core tests
-.venv\Scripts\python.exe api/test_nosql.py        # NoSQL storage tests
-.venv\Scripts\python.exe api/test_api_key.py      # API key validation
-.venv\Scripts\python.exe api/test_api.py          # API integration tests
-.venv\Scripts\python.exe api/test_permissions.py  # Permission system tests
+.venv\Scripts\python.exe api/test.py                   # Core functionality
+.venv\Scripts\python.exe api/test_nosql.py             # NoSQL storage
+.venv\Scripts\python.exe api/test_api_key.py           # API key validation
+.venv\Scripts\python.exe api/test_api.py               # API integration
+.venv\Scripts\python.exe api/test_permissions.py       # Permission system
+.venv\Scripts\python.exe api/test_collaboration.py     # Collaboration features
+.venv\Scripts\python.exe api/test_novel.py             # Novel editor
+.venv\Scripts\python.exe api/test_story_editor.py      # Story editor
+.venv\Scripts\python.exe api/test_cold_start.py        # API cold-start behavior
+.venv\Scripts\python.exe api/test_world_publish_mode.py # World publish mode
+```
+
+### Playwright E2E tests
+
+```bash
+cd frontend
+npx playwright test                  # Run all E2E tests
+npx playwright test e2e/login.spec.cjs        # Login flow
+npx playwright test e2e/storyEditor.spec.cjs  # Story editor flow
 ```
 
 ---
@@ -187,8 +223,9 @@ vercel --prod   # production deploy
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React 18, Vite 5, TailwindCSS 3.4 + DaisyUI 4.6, React Router 6, Axios |
-| Backend | Flask 3.0, TinyDB, OpenAI (GPT-4o-mini), PyJWT, Marshmallow, Flasgger |
+| Backend | Flask 3.0, TinyDB / MongoDB, OpenAI (GPT-4o-mini), PyJWT, Marshmallow, Flasgger |
 | Auth | Google OAuth, Facebook OAuth, JWT sessions |
+| Testing | pytest (backend), Playwright (E2E) |
 | Deploy | Vercel (static + serverless) |
 
 ---
@@ -259,9 +296,9 @@ python .sdd/sdd.py status
 |---------|-----------|
 | `python .sdd/sdd.py approve spec` | SPEC → DESIGN |
 | `python .sdd/sdd.py approve design` | DESIGN → TEST |
-| `python .sdd/sdd.py phase IMPLEMENT` | TEST → IMPLEMENT |
-| `python .sdd/sdd.py approve flow <file>` | Unlock a file for editing |
-| `python .sdd/sdd.py phase REVIEW` | IMPLEMENT → REVIEW |
+| `python .sdd/sdd.py phase IMPLEMENT` | TEST → IMPLEMENT (after red-state confirmed) |
+| `python .sdd/sdd.py approve flow <file>` | Unlock one service/route file for editing |
+| `python .sdd/sdd.py phase REVIEW` | IMPLEMENT → REVIEW (after all tests pass) |
 | `python .sdd/sdd.py done` | Mark feature complete |
 
 See [.sdd/PHASES.md](.sdd/PHASES.md) for the complete rules.
@@ -281,60 +318,6 @@ Additional guides in `docs/`:
 - [Development Guide](docs/DEVELOPMENT_GUIDE.md)
 
 ---
-
-## SDD — Specification-Driven Development
-
-This project uses a structured SDD workflow enforced by Claude Code hooks.
-Each feature follows 6 gated phases: **ANALYZE → SPEC → DESIGN → TEST → IMPLEMENT → REVIEW**.
-Hooks in `.claude/settings.local.json` automatically block out-of-phase file edits.
-
-### Quick start
-
-```bash
-# Begin a new feature
-python .sdd/sdd.py start "Feature name"
-
-# Check current phase and rules
-python .sdd/sdd.py status
-```
-
-### Phase transitions
-
-| Command | Transition |
-| ------- | ---------- |
-| `python .sdd/sdd.py approve spec` | SPEC → DESIGN |
-| `python .sdd/sdd.py approve design` | DESIGN → TEST |
-| `python .sdd/sdd.py phase IMPLEMENT` | TEST → IMPLEMENT (after red-state confirmed) |
-| `python .sdd/sdd.py approve flow <file>` | Unlock one service/route file for editing |
-| `python .sdd/sdd.py phase REVIEW` | IMPLEMENT → REVIEW (after all tests pass) |
-| `python .sdd/sdd.py done` | Mark feature complete |
-
-### Flow summary (required in IMPLEMENT)
-
-Before Claude edits any file in `api/services/` or `api/interfaces/routes/`, it must:
-
-1. Read the entire file
-2. Write a summary to `.sdd/flow_summary.md` (current logic + planned changes)
-3. Show the summary and wait for confirmation
-4. Run `python .sdd/sdd.py approve flow <file>` to unlock
-
-The hook will block the edit until step 4 is complete.
-
-### Files
-
-| Path | Purpose |
-| ---- | ------- |
-| `.sdd/sdd.py` | Phase manager CLI |
-| `.sdd/state.json` | Current phase state |
-| `.sdd/hooks/guard_phase.py` | Pre-edit guard (enforces phase rules) |
-| `.sdd/hooks/log_change.py` | Post-edit change logger |
-| `.sdd/PHASES.md` | Full rules for each phase |
-| `.sdd/spec.md` | Specification template |
-| `.sdd/design.md` | Design / interface template |
-| `.sdd/flow_summary.md` | Flow summary template |
-| `.sdd/changelog.log` | Auto-generated change log |
-
-See [.sdd/PHASES.md](.sdd/PHASES.md) for the complete rule set.
 
 ## License
 
