@@ -9,16 +9,12 @@ _VALID_ENVS = {"production", "staging", "development"}
 _SUFFIXES = {"production": "_prod", "staging": "_staging", "development": ""}
 
 
-def get_db_config() -> tuple:
-    """
-    Return (db_path, mongo_db_name) based on APP_ENV.
+def get_mongo_db_name() -> str:
+    """Return MongoDB database name based on APP_ENV.
 
-    APP_ENV=production  → story_creator_prod.db   / story_creator_prod
-    APP_ENV=staging     → story_creator_staging.db / story_creator_staging
-    APP_ENV=*           → story_creator.db          / story_creator_dev  (default)
-
-    STORY_DB_PATH overrides db_path.
-    VERCEL=1 adds /tmp/ prefix.
+    APP_ENV=production  → story_creator_prod
+    APP_ENV=staging     → story_creator_staging
+    APP_ENV=*           → story_creator_dev  (default)
     """
     env = os.environ.get("APP_ENV", "development").lower()
     if env not in _VALID_ENVS:
@@ -26,8 +22,16 @@ def get_db_config() -> tuple:
         env = "development"
 
     suffix = _SUFFIXES[env]
-    is_vercel = os.environ.get("VERCEL")
-    default_db = f"/tmp/story_creator{suffix}.db" if is_vercel else f"story_creator{suffix}.db"
-    db_path = os.environ.get("STORY_DB_PATH", default_db)
-    mongo_db_name = f"story_creator{suffix or '_dev'}"
-    return db_path, mongo_db_name
+    return f"story_creator{suffix or '_dev'}"
+
+
+def get_mongo_uri() -> str:
+    """Return MONGODB_URI environment variable or raise RuntimeError if missing."""
+    uri = os.environ.get("MONGODB_URI")
+    if not uri:
+        raise RuntimeError(
+            "MONGODB_URI environment variable is required. "
+            "Set it in your .env file or Vercel dashboard.\n"
+            "Example: mongodb+srv://user:pass@cluster.xxxxx.mongodb.net/story_creator"
+        )
+    return uri
