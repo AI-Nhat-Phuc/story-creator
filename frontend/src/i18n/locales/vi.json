@@ -161,6 +161,7 @@
       "analysisResult": "Kết quả phân tích",
       "noEntities": "Không phát hiện nhân vật hoặc địa điểm nào.",
       "createAndAnalyze": "Tạo & Phân tích",
+      "viewDetail": "Xem chi tiết",
       "deleteConfirm": "Bạn có chắc muốn xóa thế giới này?",
       "worldTypes": {
         "fantasy": "Fantasy - Thế giới phép thuật",

@@ -161,6 +161,7 @@
       "analysisResult": "Analysis result",
       "noEntities": "No characters or locations detected.",
       "createAndAnalyze": "Create & Analyze",
+      "viewDetail": "View details",
       "deleteConfirm": "Are you sure you want to delete this world?",
       "worldTypes": {
         "fantasy": "Fantasy - Magic world",
