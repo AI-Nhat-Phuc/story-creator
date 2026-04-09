@@ -357,21 +357,6 @@ function WorldsPage({ showToast }) {
                 </div>
               )}
 
-              {/* Preview analyze button */}
-              {formData.description && !gptEntities && (
-                <div className="mb-4">
-                  <GptButton
-                    onClick={analyzeWithGPT}
-                    loading={gptAnalyzing}
-                    loadingText={t('pages.worlds.gptAnalyzing')}
-                    variant="primary"
-                    size="sm"
-                  >
-                    {t('pages.worlds.previewAnalysis')}
-                  </GptButton>
-                </div>
-              )}
-
               {/* GPT Entities Preview */}
               {gptEntities && (
                 <div className="bg-base-200/50 mb-4 p-4 border border-base-300 rounded-xl">
