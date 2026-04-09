@@ -79,15 +79,20 @@ class MongoStorage:
         with self._lock:
             if self.db is not None:
                 return
-            _ensure_pymongo()
-            self.client = _mongo_client_class(
-                self.uri,
-                serverSelectionTimeoutMS=5000,
-                connectTimeoutMS=5000,
-                socketTimeoutMS=10000,
-                maxPoolSize=10,
-                retryWrites=True
-            )
+            if self.uri.startswith('mongomock://'):
+                # In-memory mock for local dev / testing — no network required
+                import mongomock
+                self.client = mongomock.MongoClient()
+            else:
+                _ensure_pymongo()
+                self.client = _mongo_client_class(
+                    self.uri,
+                    serverSelectionTimeoutMS=5000,
+                    connectTimeoutMS=5000,
+                    socketTimeoutMS=10000,
+                    maxPoolSize=10,
+                    retryWrites=True
+                )
             self.db = self.client[self.db_name]
             self.worlds = self.db['worlds']
             self.stories = self.db['stories']

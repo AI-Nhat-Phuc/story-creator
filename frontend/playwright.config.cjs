@@ -2,25 +2,29 @@
 const { defineConfig, devices } = require('@playwright/test')
 const fs = require('fs')
 
-// Resolve the correct chromium headless shell executable path.
-// In this dev environment, the binary may live under /root/.cache/ms-playwright
-// instead of /opt/pw-browsers (the default PLAYWRIGHT_BROWSERS_PATH).
-// We probe both locations so the config works across sessions without manual symlinks.
+// Ensure Playwright finds its browsers without downloading new ones.
+// /opt/pw-browsers contains pre-installed Playwright browser builds for this environment.
+if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
+  if (fs.existsSync('/opt/pw-browsers')) {
+    process.env.PLAYWRIGHT_BROWSERS_PATH = '/opt/pw-browsers'
+  }
+}
+
+// Resolve the correct chromium headless-shell executable path for environments
+// where the browsers are cached at a non-default location (/root/.cache/ms-playwright).
+// Only probes the NEW headless-shell format (Playwright ≥1.46):
+//   chromium_headless_shell-NNN/chrome-headless-shell-linux64/chrome-headless-shell
+// When PLAYWRIGHT_BROWSERS_PATH is already set (e.g. /opt/pw-browsers), Playwright
+// resolves its own browser paths and this function returns undefined (no override).
 function resolveChromiumExecutable() {
+  // If PLAYWRIGHT_BROWSERS_PATH is set, let Playwright handle browser discovery
+  if (process.env.PLAYWRIGHT_BROWSERS_PATH) return undefined
+
   const candidates = [
     // /root/.cache/ms-playwright/<latest headless shell>/
     ...(() => {
       try {
         const base = '/root/.cache/ms-playwright'
-        return fs.readdirSync(base)
-          .filter(d => d.startsWith('chromium_headless_shell-'))
-          .map(d => `${base}/${d}/chrome-headless-shell-linux64/chrome-headless-shell`)
-      } catch { return [] }
-    })(),
-    // /opt/pw-browsers/<latest headless shell>/
-    ...(() => {
-      try {
-        const base = '/opt/pw-browsers'
         return fs.readdirSync(base)
           .filter(d => d.startsWith('chromium_headless_shell-'))
           .map(d => `${base}/${d}/chrome-headless-shell-linux64/chrome-headless-shell`)
