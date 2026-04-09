@@ -140,7 +140,7 @@ function StoryDetailView({
                 {canEdit && (
                   <>
                     <Link to={`/stories/${story.story_id}/edit`} className="btn btn-sm btn-ghost">
-                      <PencilIcon className="inline w-4 h-4" /> Sửa
+                      <PencilIcon className="inline w-4 h-4" /> <span className="hidden sm:inline">Sửa</span>
                     </Link>
                     {onDeleteStory && (
                       <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost" title="Xóa">

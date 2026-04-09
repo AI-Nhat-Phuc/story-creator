@@ -141,7 +141,7 @@ function WorldDetailView({
                 )}
                 {canEdit && (
                   <button onClick={onEdit} className="btn btn-sm btn-ghost">
-                    <PencilIcon className="inline w-4 h-4" /> Sửa
+                    <PencilIcon className="inline w-4 h-4" /> <span className="hidden sm:inline">Sửa</span>
                   </button>
                 )}
               </div>

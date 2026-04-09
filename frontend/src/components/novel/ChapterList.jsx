@@ -77,7 +77,7 @@ function ChapterList({ chapters, canReorder, onReorder }) {
               className="btn btn-ghost btn-xs gap-1 shrink-0"
             >
               <PencilSquareIcon className="w-4 h-4" />
-              Edit
+              <span className="hidden sm:inline">Edit</span>
             </Link>
           </li>
         )
