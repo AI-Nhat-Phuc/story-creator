@@ -74,6 +74,9 @@ module.exports = defineConfig({
   } : {}),
   // Vercel cold starts can take 10-20 s; give each test enough headroom.
   timeout: 60000,
+  // Assertions (expect) get 15 s — matches actionTimeout and handles cold starts
+  // where the login API can take 5-15 s before responding.
+  expect: { timeout: 15000 },
   // Each navigation gets up to 20 s before Playwright times out.
   use: {
     baseURL,
