@@ -1,5 +1,5 @@
 {
-  "phase": "ANALYZE",
+  "phase": "SPEC",
   "current_feature": "add i18n meta tags theme refactor",
   "task_dir": ".task/add_i18n_meta_tags_theme_refactor",
   "breakdown": [],
@@ -13,6 +13,11 @@
       "to": "ANALYZE",
       "at": "2026-04-08 18:06:17",
       "feature": "add i18n meta tags theme refactor"
+    },
+    {
+      "from": "ANALYZE",
+      "to": "SPEC",
+      "at": "2026-04-09 00:56:47"
     }
   ]
 }
