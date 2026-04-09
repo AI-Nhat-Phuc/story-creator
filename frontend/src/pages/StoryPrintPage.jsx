@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { storiesAPI } from '../services/api'
 
 function renderContent(story) {
@@ -23,8 +26,10 @@ function renderContent(story) {
 
 function StoryPrintPage() {
   const { storyId } = useParams()
+  const { t } = useTranslation()
   const [story, setStory] = useState(null)
   const [notFound, setNotFound] = useState(false)
+  const pageTitle = usePageTitle('storyPrint', story?.title)
 
   useEffect(() => {
     storiesAPI.getById(storyId)
@@ -32,20 +37,15 @@ function StoryPrintPage() {
       .catch(() => setNotFound(true))
   }, [storyId])
 
-  // Trigger print once story is loaded
   useEffect(() => {
-    if (story) {
-      const prevTitle = document.title
-      document.title = story.title || 'Story'
-      window.print()
-      return () => { document.title = prevTitle }
-    }
+    if (story) window.print()
   }, [story])
 
   if (notFound) {
     return (
       <div className="p-8 font-serif">
-        <p>Story not found.</p>
+        <Helmet><title>{pageTitle}</title></Helmet>
+        <p>{t('pages.storyPrint.notFound')}</p>
       </div>
     )
   }
@@ -53,20 +53,25 @@ function StoryPrintPage() {
   if (!story) {
     return (
       <div className="p-8 font-serif">
-        <p>Loading…</p>
+        <Helmet><title>{pageTitle}</title></Helmet>
+        <p>{t('common.loading')}</p>
       </div>
     )
   }
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 font-serif">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={t('meta.storyPrint.description')} />
+      </Helmet>
       <h1 className="text-4xl font-bold mb-1">
         {story.title}
       </h1>
 
       {(story.author_name || story.world_name) && (
         <p className="text-gray-500 mb-8 text-sm">
-          {story.author_name && `By ${story.author_name}`}
+          {story.author_name && t('pages.storyPrint.by', { name: story.author_name })}
           {story.author_name && story.world_name && ' · '}
           {story.world_name && story.world_name}
         </p>

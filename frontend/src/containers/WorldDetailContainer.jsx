@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { worldsAPI, gptAPI, collaboratorsAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import WorldDetailView from '../components/worldDetail/WorldDetailView'
@@ -7,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useGptTasks } from '../contexts/GptTaskContext'
 
 function WorldDetailContainer({ showToast }) {
+  const { t } = useTranslation()
   const { worldId } = useParams()
   const { user, loading: authLoading } = useAuth()
   const { registerTask } = useGptTasks()
@@ -30,6 +34,7 @@ function WorldDetailContainer({ showToast }) {
   const [batchAnalyzing, setBatchAnalyzing] = useState(false)
   const [batchProgress, setBatchProgress] = useState(null)
   const [batchResult, setBatchResult] = useState(null)
+  const pageTitle = usePageTitle('worldDetail', world?.name)
 
   useEffect(() => {
     loadWorldDetails()
@@ -53,7 +58,7 @@ function WorldDetailContainer({ showToast }) {
       setCollaborators(collabRes.data || [])
       setEditForm({ name: worldRes.data.name, description: worldRes.data.description, visibility: worldRes.data.visibility || 'draft' })
     } catch (error) {
-      showToast('Không thể tải chi tiết thế giới', 'error')
+      showToast(t('pages.worldDetail.loadError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -66,24 +71,20 @@ function WorldDetailContainer({ showToast }) {
     if (!calendar) return null
 
     if (timeIndex === 0) {
-      return {
-        year: 0,
-        era: '',
-        year_name: '',
-        description: 'Chưa đặt thời gian'
-      }
+      return { year: 0, era: '', year_name: '', description: t('common.timeNotSet') }
     }
 
     const currentYear = calendar.current_year || 1
     const yearRange = 100
     const offset = Math.floor((timeIndex / 100) * yearRange) - Math.floor(yearRange / 2)
     const year = Math.max(1, currentYear + offset)
+    const yearLabel = calendar.year_name || t('common.year')
 
     return {
       year,
       era: calendar.current_era || '',
-      year_name: calendar.year_name || 'Năm',
-      description: `${calendar.year_name || 'Năm'} ${year}${calendar.current_era ? `, ${calendar.current_era}` : ''}`.trim()
+      year_name: yearLabel,
+      description: `${yearLabel} ${year}${calendar.current_era ? `, ${calendar.current_era}` : ''}`.trim()
     }
   }
 
@@ -97,13 +98,13 @@ function WorldDetailContainer({ showToast }) {
     const worldTime = getStoryWorldTime(story)
     if (worldTime) {
       return worldTime.year === 0
-        ? 'Chưa đặt thời gian'
-        : worldTime.description || `${worldTime.year_name || 'Năm'} ${worldTime.year}`
+        ? t('common.timeNotSet')
+        : worldTime.description || `${worldTime.year_name || t('common.year')} ${worldTime.year}`
     }
     if (story.time_index !== undefined && story.time_index !== null && story.time_index !== 0) {
-      return `Chỉ số ${story.time_index}`
+      return t('common.timeIndexLabel', { index: story.time_index })
     }
-    return 'Mốc thời gian chưa xác định'
+    return t('common.timelineUnknown')
   }
 
   const handleAutoLinkStories = async () => {
@@ -113,19 +114,18 @@ function WorldDetailContainer({ showToast }) {
       const { linked_count, links, unlinked_stories } = response.data
 
       if (linked_count > 0) {
-        showToast(`Đã liên kết ${linked_count} câu chuyện. Tìm thấy ${links.length} liên kết mới!`, 'success')
-        loadWorldDetails() // Reload to show updated links
+        showToast(t('pages.worldDetail.autoLinkSuccess', { count: linked_count, links: links.length }), 'success')
+        loadWorldDetails()
       } else if (unlinked_stories && unlinked_stories.length > 0) {
-        // Show unlinked stories modal for batch analysis
         setUnlinkedStories(unlinked_stories)
         setBatchResult(null)
         setBatchProgress(null)
         setShowUnlinkedModal(true)
       } else {
-        showToast('Không tìm thấy liên kết nào', 'info')
+        showToast(t('pages.worldDetail.autoLinkNone'), 'info')
       }
     } catch (error) {
-      showToast('Lỗi khi liên kết câu chuyện: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.worldDetail.autoLinkError') + ': ' + (error.response?.data?.error || error.message), 'error')
     } finally {
       setAutoLinking(false)
     }
@@ -133,7 +133,7 @@ function WorldDetailContainer({ showToast }) {
 
   const handleBatchAnalyze = async (storyIds) => {
     if (!user) {
-      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      showToast(t('pages.worldDetail.loginRequired'), 'warning')
       return
     }
     try {
@@ -147,7 +147,7 @@ function WorldDetailContainer({ showToast }) {
       const taskId = response.data.task_id
 
       registerTask(taskId, {
-        label: `Phân tích batch ${storyIds.length} truyện`,
+        label: `Batch analyze ${storyIds.length} stories`,
         task_type: 'batch_analyze',
         onComplete: (taskData) => {
           if (taskData.status === 'completed') {
@@ -162,13 +162,13 @@ function WorldDetailContainer({ showToast }) {
                 total_locations_found: (prev.total_locations_found || 0) + (taskData.result.total_locations_found || 0),
               }
             })
-            showToast(taskData.result.message || 'Phân tích hoàn tất!', 'success')
+            showToast(taskData.result.message || t('pages.worldDetail.batchDone'), 'success')
           }
           setBatchAnalyzing(false)
         }
       })
     } catch (error) {
-      showToast('Lỗi phân tích batch: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.worldDetail.batchError') + ': ' + (error.response?.data?.error || error.message), 'error')
       setBatchAnalyzing(false)
     }
   }
@@ -182,16 +182,14 @@ function WorldDetailContainer({ showToast }) {
   }
 
   const handleDeleteEntity = async (entityId, entityName) => {
-    if (!confirm(`Bạn có chắc muốn xóa nhân vật "${entityName}"? Hành động này không thể hoàn tác.`)) {
-      return
-    }
+    if (!confirm(t('common.deleteConfirm', { name: entityName }))) return
 
     try {
       await worldsAPI.deleteEntity(worldId, entityId)
       setCharacters(prev => prev.filter(c => c.entity_id !== entityId))
-      showToast(`Đã xóa nhân vật "${entityName}"`, 'success')
+      showToast(t('pages.worldDetail.deleteEntitySuccess', { name: entityName }), 'success')
     } catch (error) {
-      showToast('Lỗi khi xóa nhân vật: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.worldDetail.deleteEntityError') + ': ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
@@ -199,37 +197,33 @@ function WorldDetailContainer({ showToast }) {
     try {
       const response = await worldsAPI.updateEntity(worldId, entityId, updatedData)
       setCharacters(prev => prev.map(c => c.entity_id === entityId ? { ...c, ...response.data } : c))
-      showToast('Đã cập nhật nhân vật!', 'success')
+      showToast(t('pages.worldDetail.updateEntitySuccess'), 'success')
     } catch (error) {
-      showToast('Lỗi khi cập nhật nhân vật: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.worldDetail.updateEntityError') + ': ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
   const handleDeleteLocation = async (locationId, locationName) => {
-    if (!confirm(`Bạn có chắc muốn xóa địa điểm "${locationName}"? Hành động này không thể hoàn tác.`)) {
-      return
-    }
+    if (!confirm(t('common.deleteConfirm', { name: locationName }))) return
 
     try {
       await worldsAPI.deleteLocation(worldId, locationId)
       setLocations(prev => prev.filter(l => l.location_id !== locationId))
-      showToast(`Đã xóa địa điểm "${locationName}"`, 'success')
+      showToast(t('pages.worldDetail.deleteLocationSuccess', { name: locationName }), 'success')
     } catch (error) {
-      showToast('Lỗi khi xóa địa điểm: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.worldDetail.deleteLocationError') + ': ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
   const handleDeleteStory = async (storyId, storyTitle) => {
-    if (!confirm(`Bạn có chắc muốn xóa câu chuyện "${storyTitle}"? Hành động này không thể hoàn tác.`)) {
-      return
-    }
+    if (!confirm(t('common.deleteConfirm', { name: storyTitle }))) return
 
     try {
       await storiesAPI.delete(storyId)
       setStories(prev => prev.filter(s => s.story_id !== storyId))
-      showToast(`Đã xóa câu chuyện "${storyTitle}"`, 'success')
+      showToast(t('pages.worldDetail.deleteStorySuccess', { name: storyTitle }), 'success')
     } catch (error) {
-      showToast('Lỗi khi xóa câu chuyện: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.worldDetail.deleteStoryError') + ': ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
@@ -238,9 +232,9 @@ function WorldDetailContainer({ showToast }) {
       await worldsAPI.update(worldId, { visibility: newVisibility })
       setWorld(prev => ({ ...prev, visibility: newVisibility }))
       setEditForm(prev => ({ ...prev, visibility: newVisibility }))
-      showToast(`Đã publish thế giới: ${newVisibility === 'public' ? 'Công khai' : 'Riêng tư'}`, 'success')
+      showToast(t('pages.worldDetail.publishSuccess', { visibility: t(newVisibility === 'public' ? 'common.public' : 'common.private') }), 'success')
     } catch (error) {
-      showToast(`Lỗi publish: ${error.response?.data?.error || error.message}`, 'error')
+      showToast(t('pages.worldDetail.publishError') + ': ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
@@ -262,9 +256,9 @@ function WorldDetailContainer({ showToast }) {
       await worldsAPI.update(worldId, editForm)
       setWorld(prev => ({ ...prev, ...editForm }))
       setEditing(false)
-      showToast('Đã cập nhật thế giới!', 'success')
+      showToast(t('pages.worldDetail.updateSuccess'), 'success')
     } catch (error) {
-      showToast(`Lỗi cập nhật thế giới: ${error.response?.data?.error || error.message}`, 'error')
+      showToast(t('pages.worldDetail.updateError') + ': ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
@@ -276,12 +270,12 @@ function WorldDetailContainer({ showToast }) {
       if (newCollaborator) {
         setCollaborators(prev => [...prev, newCollaborator])
       }
-      showToast(`Invitation sent to ${usernameOrEmail}`, 'success')
+      showToast(t('pages.worldDetail.inviteSent', { name: usernameOrEmail }), 'success')
     } catch (err) {
       const status = err.response?.status
-      if (status === 404) showToast('User not found', 'error')
-      else if (status === 409) showToast('Already a co-author or invitation pending', 'warning')
-      else showToast('Failed to send invitation', 'error')
+      if (status === 404) showToast(t('pages.worldDetail.inviteNotFound'), 'error')
+      else if (status === 409) showToast(t('pages.worldDetail.invitePending'), 'warning')
+      else showToast(t('pages.worldDetail.inviteError'), 'error')
     } finally {
       setInviteLoading(false)
     }
@@ -291,19 +285,24 @@ function WorldDetailContainer({ showToast }) {
     try {
       await collaboratorsAPI.remove(worldId, userId)
       setCollaborators(prev => prev.filter(c => c.user_id !== userId))
-      showToast('Co-author removed', 'success')
+      showToast(t('pages.worldDetail.removeCollabSuccess'), 'success')
     } catch {
-      showToast('Failed to remove co-author', 'error')
+      showToast(t('pages.worldDetail.removeCollabError'), 'error')
     }
   }
 
   if (loading) return <LoadingSpinner />
-  if (!world) return <div>Không tìm thấy thế giới</div>
+  if (!world) return <div>{t('pages.worldDetail.notFound')}</div>
 
   const canEdit = !!(user && world && user.user_id === world.owner_id)
 
   return (
-    <WorldDetailView
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={t('meta.worldDetail.description')} />
+      </Helmet>
+      <WorldDetailView
       world={world}
       stories={stories}
       characters={characters}
@@ -344,6 +343,7 @@ function WorldDetailContainer({ showToast }) {
       onInviteCollaborator={handleInviteCollaborator}
       onRemoveCollaborator={handleRemoveCollaborator}
     />
+    </>
   )
 }
 

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { adminAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import LoadingSpinner from '../components/LoadingSpinner'
 import {
   ShieldCheckIcon,
@@ -15,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 function AdminPanel({ showToast }) {
+  const { t } = useTranslation()
   const { user, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -36,7 +39,7 @@ function AdminPanel({ showToast }) {
     }
 
     if (user?.role !== 'admin' && user?.role !== 'moderator') {
-      showToast('Bạn không có quyền truy cập trang này', 'error')
+      showToast(t('pages.admin.noAccess'), 'error')
       navigate('/')
       return
     }
@@ -59,10 +62,10 @@ function AdminPanel({ showToast }) {
     } catch (error) {
       console.error('Error loading admin data:', error)
       if (error.response?.status === 403) {
-        showToast('Không có quyền truy cập', 'error')
+        showToast(t('pages.admin.noPermission'), 'error')
         navigate('/')
       } else {
-        showToast('Không thể tải dữ liệu quản trị', 'error')
+        showToast(t('pages.admin.loadError'), 'error')
       }
     } finally {
       setLoading(false)
@@ -78,12 +81,12 @@ function AdminPanel({ showToast }) {
 
     try {
       await adminAPI.changeUserRole(selectedUser.user_id, newRole)
-      showToast(`Đã đổi role của ${selectedUser.username} thành ${newRole}`, 'success')
+      showToast(t('pages.admin.roleChangedSuccess', { name: selectedUser.username, role: newRole }), 'success')
       setShowRoleModal(false)
       setSelectedUser(null)
       loadData()
     } catch (error) {
-      showToast(error.response?.data?.message || 'Không thể đổi role', 'error')
+      showToast(error.response?.data?.message || t('pages.admin.roleChangeError'), 'error')
     }
   }
 
@@ -92,13 +95,13 @@ function AdminPanel({ showToast }) {
 
     try {
       await adminAPI.banUser(selectedUser.user_id, banned, banReason)
-      showToast(`Đã ${banned ? 'ban' : 'unban'} user ${selectedUser.username}`, 'success')
+      showToast(banned ? t('pages.admin.banSuccess', { name: selectedUser.username }) : t('pages.admin.unbanSuccess', { name: selectedUser.username }), 'success')
       setShowBanModal(false)
       setSelectedUser(null)
       setBanReason('')
       loadData()
     } catch (error) {
-      showToast(error.response?.data?.message || `Không thể ${banned ? 'ban' : 'unban'} user`, 'error')
+      showToast(error.response?.data?.message || (banned ? t('pages.admin.banError') : t('pages.admin.unbanError')), 'error')
     }
   }
 
@@ -118,12 +121,16 @@ function AdminPanel({ showToast }) {
 
   return (
     <div>
+      <Helmet>
+        <title>{t('meta.admin.title')}</title>
+        <meta name="description" content={t('meta.admin.description')} />
+      </Helmet>
       <div className="mb-6">
         <h1 className="flex items-center gap-2 mb-2 font-bold text-3xl">
           <span><ShieldCheckIcon className="inline w-7 h-7" /></span>
-          <span>Quản trị hệ thống</span>
+          <span>{t('pages.admin.title')}</span>
         </h1>
-        <p className="opacity-70">Quản lý người dùng và phân quyền</p>
+        <p className="opacity-70">{t('pages.admin.subtitle')}</p>
       </div>
 
       {/* Stats Cards */}
@@ -131,27 +138,27 @@ function AdminPanel({ showToast }) {
         <div className="gap-4 grid grid-cols-1 md:grid-cols-4 mb-6">
           <div className="bg-base-100 shadow rounded-box stat">
             <div className="text-primary stat-figure"><UsersIcon className="w-8 h-8" /></div>
-            <div className="stat-title">Tổng users</div>
+            <div className="stat-title">{t('pages.admin.totalUsers')}</div>
             <div className="text-primary stat-value">{stats.total_users}</div>
           </div>
 
           <div className="bg-base-100 shadow rounded-box stat">
             <div className="text-secondary stat-figure"><GlobeAltIcon className="w-8 h-8" /></div>
-            <div className="stat-title">Thế giới</div>
+            <div className="stat-title">{t('pages.admin.totalWorlds')}</div>
             <div className="text-secondary stat-value">{stats.total_worlds}</div>
-            <div className="stat-desc">{stats.public_worlds} công khai</div>
+            <div className="stat-desc">{t('pages.admin.publicCount', { count: stats.public_worlds })}</div>
           </div>
 
           <div className="bg-base-100 shadow rounded-box stat">
             <div className="text-accent stat-figure"><BookOpenIcon className="w-8 h-8" /></div>
-            <div className="stat-title">Câu chuyện</div>
+            <div className="stat-title">{t('pages.admin.totalStories')}</div>
             <div className="text-accent stat-value">{stats.total_stories}</div>
-            <div className="stat-desc">{stats.public_stories} công khai</div>
+            <div className="stat-desc">{t('pages.admin.publicCount', { count: stats.public_stories })}</div>
           </div>
 
           <div className="bg-base-100 shadow rounded-box stat">
             <div className="text-error stat-figure"><NoSymbolIcon className="w-8 h-8" /></div>
-            <div className="stat-title">Users bị ban</div>
+            <div className="stat-title">{t('pages.admin.bannedUsers')}</div>
             <div className="text-error stat-value">{stats.banned_users}</div>
           </div>
         </div>
@@ -164,7 +171,7 @@ function AdminPanel({ showToast }) {
             <div className="input-group">
               <input
                 type="text"
-                placeholder="Tìm username hoặc email..."
+                placeholder={t('pages.admin.searchPlaceholder')}
                 className="flex-1 input input-bordered"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -181,7 +188,7 @@ function AdminPanel({ showToast }) {
             value={roleFilter}
             onChange={(e) => { setRoleFilter(e.target.value); handleSearch() }}
           >
-            <option value="">Tất cả roles</option>
+            <option value="">{t('pages.admin.allRoles')}</option>
             {roles.map(role => (
               <option key={role.role} value={role.role}>
                 {role.icon} {role.label}
@@ -190,7 +197,7 @@ function AdminPanel({ showToast }) {
           </select>
 
           <button className="btn btn-primary" onClick={loadData}>
-                        <ArrowPathIcon className="inline w-4 h-4" /> Tải lại
+            <ArrowPathIcon className="inline w-4 h-4" /> {t('actions.refresh')}
           </button>
         </div>
       </div>
@@ -200,12 +207,12 @@ function AdminPanel({ showToast }) {
         <table className="table w-full">
           <thead>
             <tr>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Quota</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>{t('pages.admin.tableUsername')}</th>
+              <th>{t('pages.admin.tableEmail')}</th>
+              <th>{t('pages.admin.tableRole')}</th>
+              <th>{t('pages.admin.tableQuota')}</th>
+              <th>{t('pages.admin.tableStatus')}</th>
+              <th>{t('pages.admin.tableActions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -219,7 +226,7 @@ function AdminPanel({ showToast }) {
                 <td>{getRoleBadge(u.role)}</td>
                 <td>
                   {u.role === 'admin' ? (
-                    <div className="opacity-70 text-sm">Quản lý hệ thống</div>
+                    <div className="opacity-70 text-sm">{t('pages.admin.adminManages')}</div>
                   ) : (
                     <div className="text-sm">
                       <div><GlobeAltIcon className="inline w-4 h-4" /> {u.metadata?.public_worlds_count || 0}/{u.metadata?.public_worlds_limit || 0}</div>
@@ -229,9 +236,9 @@ function AdminPanel({ showToast }) {
                 </td>
                 <td>
                   {u.metadata?.banned ? (
-                    <span className="badge badge-error">Banned</span>
+                    <span className="badge badge-error">{t('pages.admin.statusBanned')}</span>
                   ) : (
-                    <span className="badge badge-success">Active</span>
+                    <span className="badge badge-success">{t('pages.admin.statusActive')}</span>
                   )}
                 </td>
                 <td>
@@ -241,14 +248,14 @@ function AdminPanel({ showToast }) {
                       onClick={() => { setSelectedUser(u); setShowRoleModal(true) }}
                       disabled={u.user_id === user.user_id}
                     >
-                      Đổi role
+                      {t('pages.admin.changeRole')}
                     </button>
                     <button
                       className={`btn btn-sm ${u.metadata?.banned ? 'btn-success' : 'btn-error'}`}
                       onClick={() => { setSelectedUser(u); setShowBanModal(true) }}
                       disabled={u.user_id === user.user_id || (user.role === 'moderator' && u.role === 'admin')}
                     >
-                      {u.metadata?.banned ? 'Unban' : 'Ban'}
+                      {u.metadata?.banned ? t('pages.admin.unban') : t('pages.admin.ban')}
                     </button>
                   </div>
                 </td>
@@ -259,7 +266,7 @@ function AdminPanel({ showToast }) {
 
         {users.length === 0 && (
           <div className="py-8 text-center">
-            <p className="opacity-60">Không tìm thấy user nào</p>
+            <p className="opacity-60">{t('pages.admin.noUsers')}</p>
           </div>
         )}
       </div>
@@ -269,12 +276,12 @@ function AdminPanel({ showToast }) {
         <div className="modal modal-open">
           <div className="modal-box">
             <h3 className="mb-4 font-bold text-lg">
-              Đổi role cho {selectedUser.username}
+              {t('pages.admin.changeRoleFor', { name: selectedUser.username })}
             </h3>
 
             <div className="mb-4">
-              <p className="opacity-70 mb-2">Role hiện tại: {getRoleBadge(selectedUser.role)}</p>
-              <p className="font-semibold">Chọn role mới:</p>
+              <p className="opacity-70 mb-2">{t('pages.admin.currentRole')}: {getRoleBadge(selectedUser.role)}</p>
+              <p className="font-semibold">{t('pages.admin.selectNewRole')}:</p>
             </div>
 
             <div className="gap-2 grid grid-cols-1">
@@ -305,7 +312,7 @@ function AdminPanel({ showToast }) {
                         </div>
                       )}
                     </div>
-                    {isCurrentRole && <span className="badge badge-sm">Hiện tại</span>}
+                    {isCurrentRole && <span className="badge badge-sm">{t('pages.admin.currentBadge')}</span>}
                   </button>
                 )
               })}
@@ -313,7 +320,7 @@ function AdminPanel({ showToast }) {
 
             <div className="modal-action">
               <button className="btn" onClick={() => { setShowRoleModal(false); setSelectedUser(null) }}>
-                Đóng
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -325,17 +332,19 @@ function AdminPanel({ showToast }) {
         <div className="modal modal-open">
           <div className="modal-box">
             <h3 className="mb-4 font-bold text-lg">
-              {selectedUser.metadata?.banned ? 'Unban' : 'Ban'} user {selectedUser.username}
+              {selectedUser.metadata?.banned
+                ? t('pages.admin.unbanUser', { name: selectedUser.username })
+                : t('pages.admin.banUser', { name: selectedUser.username })}
             </h3>
 
             {!selectedUser.metadata?.banned && (
               <div className="mb-4 form-control">
                 <label className="label">
-                  <span className="label-text">Lý do ban:</span>
+                  <span className="label-text">{t('pages.admin.banReason')}</span>
                 </label>
                 <textarea
                   className="textarea textarea-bordered"
-                  placeholder="Nhập lý do..."
+                  placeholder={t('pages.admin.banReasonPlaceholder')}
                   value={banReason}
                   onChange={(e) => setBanReason(e.target.value)}
                 />
@@ -345,8 +354,8 @@ function AdminPanel({ showToast }) {
             {selectedUser.metadata?.banned && (
               <div className="mb-4 alert alert-info">
                 <div>
-                  <p className="font-semibold">Lý do ban hiện tại:</p>
-                  <p>{selectedUser.metadata?.ban_reason || 'Không có lý do'}</p>
+                  <p className="font-semibold">{t('pages.admin.currentBanReason')}</p>
+                  <p>{selectedUser.metadata?.ban_reason || t('pages.admin.noBanReason')}</p>
                 </div>
               </div>
             )}
@@ -356,10 +365,10 @@ function AdminPanel({ showToast }) {
                 className={`btn ${selectedUser.metadata?.banned ? 'btn-success' : 'btn-error'}`}
                 onClick={() => handleBanUser(!selectedUser.metadata?.banned)}
               >
-                {selectedUser.metadata?.banned ? 'Unban' : 'Ban'} user
+                {selectedUser.metadata?.banned ? t('pages.admin.unban') : t('pages.admin.ban')} user
               </button>
               <button className="btn" onClick={() => { setShowBanModal(false); setSelectedUser(null); setBanReason('') }}>
-                Hủy
+                {t('common.cancel')}
               </button>
             </div>
           </div>

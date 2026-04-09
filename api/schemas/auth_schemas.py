@@ -50,7 +50,7 @@ class RegisterSchema(Schema):
     )
 
     @validates('username')
-    def validate_username(self, value):
+    def validate_username(self, value, **kwargs):
         """Validate username contains only allowed characters."""
         if not re.match(r'^[a-zA-Z0-9_-]+$', value):
             raise ValidationError(
@@ -99,7 +99,7 @@ class ChangePasswordSchema(Schema):
     )
 
     @validates('new_password')
-    def validate_passwords_different(self, value):
+    def validate_passwords_different(self, value, **kwargs):
         """Ensure new password is different from current password."""
         # Note: This is a basic check. In practice, you'd compare hashes
         # This validation happens before hashing, so we can only check if strings differ
@@ -123,7 +123,7 @@ class UpdateProfileSchema(Schema):
     )
 
     @validates('username')
-    def validate_username(self, value):
+    def validate_username(self, value, **kwargs):
         """Validate username contains only allowed characters."""
         if value and not re.match(r'^[a-zA-Z0-9_-]+$', value):
             raise ValidationError(

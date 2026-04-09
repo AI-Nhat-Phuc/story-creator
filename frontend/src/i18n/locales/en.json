@@ -1,0 +1,330 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "close": "Close",
+    "retry": "Retry",
+    "noData": "No data",
+    "notFound": "Not found",
+    "by": "By",
+    "public": "Public",
+    "private": "Private",
+    "shared": "Shared",
+    "fromOthers": "From others",
+    "yours": "Yours",
+    "everyoneSee": "Visible to everyone",
+    "unknown": "Unknown",
+    "year": "Year",
+    "timeNotSet": "Time not set",
+    "timeIndexLabel": "Index {{index}}",
+    "timelineUnknown": "Timeline unknown",
+    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This cannot be undone."
+  },
+  "actions": {
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View details",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "refresh": "Refresh",
+    "search": "Search",
+    "filter": "Filter",
+    "submit": "Submit",
+    "processing": "Processing..."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "worlds": "Worlds",
+    "stories": "Stories",
+    "admin": "Admin",
+    "login": "Login",
+    "logoutConfirmTitle": "Confirm logout",
+    "logoutConfirmMsg": "Are you sure you want to log out of your account?"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "custom": "Custom",
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "accent": "Accent",
+    "background": "Background",
+    "surface": "Surface",
+    "language": "Language",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "moderator": "Moderator",
+    "premium": "Premium",
+    "user": "User",
+    "guest": "Guest"
+  },
+  "meta": {
+    "dashboard": {
+      "title": "Dashboard – Story Creator",
+      "description": "Overview of your worlds, stories, and usage quota."
+    },
+    "worlds": {
+      "title": "Worlds – Story Creator",
+      "description": "Explore and manage your fictional worlds."
+    },
+    "worldDetail": {
+      "titleTemplate": "{{name}} – Story Creator",
+      "titleFallback": "World – Story Creator",
+      "description": "World details: characters, locations, and linked stories."
+    },
+    "novel": {
+      "titleTemplate": "Novel: {{name}} – Story Creator",
+      "titleFallback": "Novel – Story Creator",
+      "descriptionTemplate": "Read the compiled novel from world {{name}}.",
+      "descriptionFallback": "Read the compiled novel from this world."
+    },
+    "stories": {
+      "title": "Stories – Story Creator",
+      "description": "Browse all stories. Create and manage your works."
+    },
+    "storyCreate": {
+      "title": "New Story – Story Creator",
+      "description": "Write a new story with the AI-powered editor."
+    },
+    "storyEdit": {
+      "titleTemplate": "Edit: {{name}} – Story Creator",
+      "titleFallback": "Edit Story – Story Creator",
+      "description": "Edit story content."
+    },
+    "storyDetail": {
+      "titleTemplate": "{{name}} – Story Creator",
+      "titleFallback": "Story – Story Creator",
+      "description": "Story details: content, characters, and timeline."
+    },
+    "storyPrint": {
+      "titleTemplate": "Print: {{name}} – Story Creator",
+      "titleFallback": "Print Story – Story Creator",
+      "description": "Print preview for this story."
+    },
+    "login": {
+      "title": "Login – Story Creator",
+      "description": "Log in to Story Creator to manage your worlds and stories."
+    },
+    "register": {
+      "title": "Register – Story Creator",
+      "description": "Create a free Story Creator account."
+    },
+    "admin": {
+      "title": "Admin – Story Creator",
+      "description": "System administration panel."
+    }
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "loadError": "Failed to load statistics",
+      "noStats": "No statistics available",
+      "publicNote": "You are viewing public data",
+      "publicNoteDetail": "to see your private and shared content",
+      "totalWorlds": "Worlds",
+      "totalWorldsDesc": "Total worlds created",
+      "totalStories": "Stories",
+      "totalStoriesDesc": "Total stories",
+      "breakdown": "Data breakdown",
+      "publicBreakdown": "Public data",
+      "quota": "Your quota",
+      "publicWorlds": "Public worlds",
+      "publicStories": "Public stories",
+      "slotsRemaining": "{{count}} slots remaining"
+    },
+    "worlds": {
+      "title": "Worlds",
+      "createBtn": "+ Create new world",
+      "adminTooltip": "Admins manage the system and cannot create content",
+      "loginTooltip": "Please log in to create a world",
+      "emptyAuth": "No worlds yet. Create your first world!",
+      "emptyAnon": "No public worlds yet. Please log in to create one.",
+      "createModal": "Create new world",
+      "worldName": "World name *",
+      "worldType": "World type",
+      "description": "Description *",
+      "descPlaceholder": "Enter a world description or use GPT to generate one automatically...",
+      "charCount": "{{count}} characters",
+      "gptHint": "Click the button above to let GPT generate a description automatically",
+      "gptGenerating": "Generating...",
+      "gptAnalyzing": "Analyzing with GPT...",
+      "previewAnalysis": "Preview analysis",
+      "analysisResult": "Analysis result",
+      "noEntities": "No characters or locations detected.",
+      "createAndAnalyze": "Create & Analyze",
+      "deleteConfirm": "Are you sure you want to delete this world?",
+      "worldTypes": {
+        "fantasy": "Fantasy - Magic world",
+        "sci-fi": "Sci-Fi - Science fiction",
+        "modern": "Modern - Contemporary",
+        "historical": "Historical - Period setting"
+      },
+      "toast": {
+        "loadError": "Failed to load worlds",
+        "loginRequired": "Please log in to use GPT features",
+        "nameRequired": "Please enter a world name first",
+        "descRequired": "Please enter a world description",
+        "nameRequiredGpt": "Please enter a world name before using GPT",
+        "gptDescDone": "Description generated with GPT!",
+        "gptDescError": "Error generating description with GPT",
+        "gptAnalysisDone": "GPT analysis complete!",
+        "gptAnalysisError": "GPT analysis error",
+        "fillRequired": "Please fill in all required fields",
+        "loginToCreate": "Please log in to create a world",
+        "createSuccess": "World created! Detected {{chars}} characters, {{locs}} locations",
+        "createError": "Failed to create world",
+        "deleteSuccess": "World deleted",
+        "deleteError": "Failed to delete world"
+      }
+    },
+    "login": {
+      "title": "Login",
+      "username": "Username",
+      "password": "Password",
+      "loginBtn": "Login",
+      "loggingIn": "Logging in...",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Register now",
+      "orDivider": "OR",
+      "googleFailed": "Google login failed"
+    },
+    "register": {
+      "title": "Register",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "registerBtn": "Register",
+      "registering": "Registering...",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Login",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "googleFailed": "Google sign-up failed"
+    },
+    "admin": {
+      "title": "System Administration",
+      "subtitle": "Manage users and permissions",
+      "noAccess": "You do not have access to this page",
+      "noPermission": "Access denied",
+      "loadError": "Failed to load admin data",
+      "totalUsers": "Total users",
+      "totalWorlds": "Worlds",
+      "totalStories": "Stories",
+      "bannedUsers": "Banned users",
+      "publicCount": "{{count}} public",
+      "searchPlaceholder": "Search username or email...",
+      "allRoles": "All roles",
+      "tableUsername": "Username",
+      "tableEmail": "Email",
+      "tableRole": "Role",
+      "tableQuota": "Quota",
+      "tableStatus": "Status",
+      "tableActions": "Actions",
+      "adminManages": "System management",
+      "changeRole": "Change role",
+      "ban": "Ban",
+      "unban": "Unban",
+      "banUser": "Ban user {{name}}",
+      "unbanUser": "Unban user {{name}}",
+      "changeRoleFor": "Change role for {{name}}",
+      "currentRole": "Current role",
+      "selectNewRole": "Select new role",
+      "currentBadge": "Current",
+      "banReason": "Ban reason:",
+      "banReasonPlaceholder": "Enter reason...",
+      "currentBanReason": "Current ban reason:",
+      "noBanReason": "No reason provided",
+      "noUsers": "No users found",
+      "statusActive": "Active",
+      "statusBanned": "Banned",
+      "noContentCreation": "No content creation",
+      "perDay": "/day",
+      "roleChangedSuccess": "Changed role of {{name}} to {{role}}",
+      "roleChangeError": "Failed to change role",
+      "banSuccess": "Banned user {{name}}",
+      "unbanSuccess": "Unbanned user {{name}}",
+      "banError": "Failed to ban user",
+      "unbanError": "Failed to unban user"
+    },
+    "storyEditor": {
+      "newTitle": "New story",
+      "editTitle": "Edit story",
+      "accessDenied": "Access denied",
+      "storyNotFound": "Story not found",
+      "noWorld": "No world selected. Redirecting…",
+      "saveFirst": "Save the story first",
+      "published": "Story published!",
+      "publishError": "Failed to publish",
+      "gptError": "GPT error",
+      "signatureExists": "Signature already in document"
+    },
+    "storyPrint": {
+      "notFound": "Story not found.",
+      "by": "By {{name}}"
+    },
+    "stories": {
+      "loadError": "Failed to load data",
+      "unknownTime": "Time unknown"
+    },
+    "worldDetail": {
+      "loadError": "Failed to load world details",
+      "notFound": "World not found",
+      "loginRequired": "Please log in to use GPT analysis",
+      "autoLinkSuccess": "Linked {{count}} stories. Found {{links}} new links!",
+      "autoLinkNone": "No links found",
+      "autoLinkError": "Error linking stories",
+      "batchDone": "Analysis complete!",
+      "batchError": "Batch analysis error",
+      "deleteEntitySuccess": "Character \"{{name}}\" deleted",
+      "deleteEntityError": "Error deleting character",
+      "updateEntitySuccess": "Character updated!",
+      "updateEntityError": "Error updating character",
+      "deleteLocationSuccess": "Location \"{{name}}\" deleted",
+      "deleteLocationError": "Error deleting location",
+      "deleteStorySuccess": "Story \"{{name}}\" deleted",
+      "deleteStoryError": "Error deleting story",
+      "publishSuccess": "World published: {{visibility}}",
+      "publishError": "Publish error",
+      "updateSuccess": "World updated!",
+      "updateError": "Error updating world",
+      "inviteSent": "Invitation sent to {{name}}",
+      "inviteNotFound": "User not found",
+      "invitePending": "Already a co-author or invitation pending",
+      "inviteError": "Failed to send invitation",
+      "removeCollabSuccess": "Co-author removed",
+      "removeCollabError": "Failed to remove co-author"
+    },
+    "storyDetail": {
+      "loadError": "Failed to load story details",
+      "notFound": "Story not found",
+      "loginRequired": "Please log in to use GPT analysis",
+      "noContent": "No story content to analyze",
+      "gptError": "GPT analysis error",
+      "noAnalysis": "No analysis data yet",
+      "clearingLinks": "Cleared old links, re-analyzing...",
+      "reanalyzeError": "Re-analysis error",
+      "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This cannot be undone.",
+      "deleteSuccess": "Story \"{{name}}\" deleted",
+      "deleteError": "Error deleting story",
+      "linkSuccess": "Characters and locations linked!",
+      "linkSuccessWithCount": "Linked and created {{chars}} characters, {{locs}} locations!",
+      "linkError": "Link error"
+    },
+    "novel": {
+      "loadError": "Failed to load novel",
+      "updateSuccess": "Novel updated",
+      "updateError": "Failed to update novel",
+      "reorderError": "Failed to save chapter order"
+    }
+  }
+}

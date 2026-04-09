@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import { worldsAPI, gptAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -13,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 function WorldsPage({ showToast }) {
+  const { t } = useTranslation()
   const { isAuthenticated, user, loading: authLoading } = useAuth()
   const [worlds, setWorlds] = useState([])
   const [loading, setLoading] = useState(true)
@@ -35,7 +38,7 @@ function WorldsPage({ showToast }) {
       const response = await worldsAPI.getAll()
       setWorlds(response.data)
     } catch (error) {
-      showToast('Không thể tải danh sách thế giới', 'error')
+      showToast(t('pages.worlds.toast.loadError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -47,11 +50,11 @@ function WorldsPage({ showToast }) {
 
   const generateDescriptionWithGPT = async () => {
     if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập để sử dụng tính năng GPT', 'warning')
+      showToast(t('pages.worlds.toast.loginRequired'), 'warning')
       return
     }
     if (!formData.name) {
-      showToast('Vui lòng nhập tên thế giới trước', 'warning')
+      showToast(t('pages.worlds.toast.nameRequired'), 'warning')
       return
     }
 
@@ -78,7 +81,7 @@ function WorldsPage({ showToast }) {
             : (typeof resultData === 'string' ? resultData : '')
           console.log('[DEBUG] Generated desc:', generatedDesc)
           setFormData({ ...formData, description: generatedDesc })
-          showToast('Đã tạo mô tả bằng GPT!', 'success')
+          showToast(t('pages.worlds.toast.gptDescDone'), 'success')
           setGptAnalyzing(false)
         } else if (result.data.status === 'error') {
           showToast(result.data.result, 'error')
@@ -90,22 +93,22 @@ function WorldsPage({ showToast }) {
 
       checkResults()
     } catch (error) {
-      showToast('Lỗi tạo mô tả GPT', 'error')
+      showToast(t('pages.worlds.toast.gptDescError'), 'error')
       setGptAnalyzing(false)
     }
   }
 
   const analyzeWithGPT = async () => {
     if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      showToast(t('pages.worlds.toast.loginRequired'), 'warning')
       return
     }
     if (!formData.description) {
-      showToast('Vui lòng nhập mô tả thế giới', 'warning')
+      showToast(t('pages.worlds.toast.descRequired'), 'warning')
       return
     }
     if (!formData.name) {
-      showToast('Vui lòng nhập tên thế giới khi sử dụng GPT', 'warning')
+      showToast(t('pages.worlds.toast.nameRequiredGpt'), 'warning')
       return
     }
 
@@ -123,7 +126,7 @@ function WorldsPage({ showToast }) {
         const result = await gptAPI.getResults(taskId)
         if (result.data.status === 'completed') {
           setGptEntities(result.data.result)
-          showToast('Phân tích GPT hoàn tất!', 'success')
+          showToast(t('pages.worlds.toast.gptAnalysisDone'), 'success')
           setGptAnalyzing(false)
         } else if (result.data.status === 'error') {
           showToast(result.data.result, 'error')
@@ -135,7 +138,7 @@ function WorldsPage({ showToast }) {
 
       checkResults()
     } catch (error) {
-      showToast('Lỗi phân tích GPT', 'error')
+      showToast(t('pages.worlds.toast.gptAnalysisError'), 'error')
       setGptAnalyzing(false)
     }
   }
@@ -144,12 +147,12 @@ function WorldsPage({ showToast }) {
     e.preventDefault()
 
     if (!formData.name || !formData.description) {
-      showToast('Vui lòng điền đầy đủ thông tin', 'warning')
+      showToast(t('pages.worlds.toast.fillRequired'), 'warning')
       return
     }
 
     if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập để tạo thế giới', 'warning')
+      showToast(t('pages.worlds.toast.loginToCreate'), 'warning')
       return
     }
 
@@ -177,7 +180,7 @@ function WorldsPage({ showToast }) {
           }
 
           await worldsAPI.create(payload)
-          showToast(`Tạo thế giới thành công! Phát hiện ${entities.characters?.length || 0} nhân vật, ${entities.locations?.length || 0} địa điểm`, 'success')
+          showToast(t('pages.worlds.toast.createSuccess', { chars: entities.characters?.length || 0, locs: entities.locations?.length || 0 }), 'success')
           setShowCreateModal(false)
           resetForm()
           setGptAnalyzing(false)
@@ -192,7 +195,7 @@ function WorldsPage({ showToast }) {
 
       checkResults()
     } catch (error) {
-      showToast('Không thể tạo thế giới', 'error')
+      showToast(t('pages.worlds.toast.createError'), 'error')
       setGptAnalyzing(false)
     }
   }
@@ -203,14 +206,14 @@ function WorldsPage({ showToast }) {
   }
 
   const deleteWorld = async (worldId) => {
-    if (!confirm('Bạn có chắc muốn xóa thế giới này?')) return
+    if (!confirm(t('pages.worlds.deleteConfirm'))) return
 
     try {
       await worldsAPI.delete(worldId)
-      showToast('Đã xóa thế giới', 'success')
+      showToast(t('pages.worlds.toast.deleteSuccess'), 'success')
       loadWorlds()
     } catch (error) {
-      showToast('Không thể xóa thế giới', 'error')
+      showToast(t('pages.worlds.toast.deleteError'), 'error')
     }
   }
 
@@ -218,28 +221,32 @@ function WorldsPage({ showToast }) {
 
   return (
     <div>
+      <Helmet>
+        <title>{t('meta.worlds.title')}</title>
+        <meta name="description" content={t('meta.worlds.description')} />
+      </Helmet>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="font-bold text-3xl"><GlobeAltIcon className="inline w-8 h-8" /> Thế giới</h1>
+        <h1 className="font-bold text-3xl"><GlobeAltIcon className="inline w-8 h-8" /> {t('pages.worlds.title')}</h1>
         {authLoading ? (
           <button className="btn btn-primary" disabled>
             <span className="loading loading-spinner loading-xs"></span>
           </button>
         ) : isAuthenticated ? (
           user?.role === 'admin' ? (
-            <div className="tooltip-left tooltip" data-tip="Admin chỉ quản lý hệ thống, không tạo nội dung">
+            <div className="tooltip-left tooltip" data-tip={t('pages.worlds.adminTooltip')}>
               <button className="btn btn-primary btn-disabled">
-                + Tạo thế giới mới
+                {t('pages.worlds.createBtn')}
               </button>
             </div>
           ) : (
             <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
-              + Tạo thế giới mới
+              {t('pages.worlds.createBtn')}
             </button>
           )
         ) : (
-          <div className="tooltip-left tooltip" data-tip="Vui lòng đăng nhập để tạo thế giới">
+          <div className="tooltip-left tooltip" data-tip={t('pages.worlds.loginTooltip')}>
             <button className="btn btn-primary btn-disabled">
-              + Tạo thế giới mới
+              {t('pages.worlds.createBtn')}
             </button>
           </div>
         )}
@@ -254,11 +261,11 @@ function WorldsPage({ showToast }) {
               <p className="line-clamp-3">{world.description}</p>
               <div className="justify-end mt-4 card-actions">
                 <Link to={`/worlds/${world.world_id}`} className="btn btn-primary btn-sm">
-                  Xem chi tiết
+                  {t('pages.worlds.viewDetail')}
                 </Link>
                 {isAuthenticated && user?.user_id === world.owner_id && (
                   <button onClick={() => deleteWorld(world.world_id)} className="btn btn-error btn-sm">
-                    Xóa
+                    {t('actions.delete')}
                   </button>
                 )}
               </div>
@@ -270,9 +277,7 @@ function WorldsPage({ showToast }) {
       {worlds.length === 0 && (
         <div className="py-12 text-center">
           <p className="opacity-60 text-xl">
-            {isAuthenticated
-              ? 'Chưa có thế giới nào. Hãy tạo thế giới đầu tiên!'
-              : 'Chưa có thế giới công khai nào. Vui lòng đăng nhập để tạo thế giới.'}
+            {isAuthenticated ? t('pages.worlds.emptyAuth') : t('pages.worlds.emptyAnon')}
           </p>
         </div>
       )}
@@ -281,12 +286,12 @@ function WorldsPage({ showToast }) {
       {showCreateModal && (
         <div className="modal modal-open">
           <div className="max-w-2xl modal-box">
-            <h3 className="mb-4 font-bold text-lg">Tạo thế giới mới</h3>
+            <h3 className="mb-4 font-bold text-lg">{t('pages.worlds.createModal')}</h3>
 
             <form onSubmit={handleSubmit}>
               <div className="mb-4 form-control">
                 <label className="label">
-                  <span className="label-text">Tên thế giới *</span>
+                  <span className="label-text">{t('pages.worlds.worldName')}</span>
                 </label>
                 <input
                   type="text"
@@ -300,7 +305,7 @@ function WorldsPage({ showToast }) {
 
               <div className="mb-4 form-control">
                 <label className="label">
-                  <span className="label-text">Loại thế giới</span>
+                  <span className="label-text">{t('pages.worlds.worldType')}</span>
                 </label>
                 <select
                   name="world_type"
@@ -308,22 +313,22 @@ function WorldsPage({ showToast }) {
                   onChange={handleInputChange}
                   className="select-bordered select"
                 >
-                  <option value="fantasy">Fantasy - Thế giới phép thuật</option>
-                  <option value="sci-fi">Sci-Fi - Khoa học viễn tưởng</option>
-                  <option value="modern">Modern - Hiện đại</option>
-                  <option value="historical">Historical - Lịch sử</option>
+                  <option value="fantasy">{t('pages.worlds.worldTypes.fantasy')}</option>
+                  <option value="sci-fi">{t('pages.worlds.worldTypes.sci-fi')}</option>
+                  <option value="modern">{t('pages.worlds.worldTypes.modern')}</option>
+                  <option value="historical">{t('pages.worlds.worldTypes.historical')}</option>
                 </select>
               </div>
 
               <div className="mb-4 form-control">
                 <div className='flex justify-between items-center mb-1'>
                   <label className="label py-0">
-                    <span className="label-text">Mô tả *</span>
+                    <span className="label-text">{t('pages.worlds.description')}</span>
                   </label>
                   <GptButton
                     onClick={generateDescriptionWithGPT}
                     loading={gptAnalyzing}
-                    loadingText="Đang tạo..."
+                    loadingText={t('pages.worlds.gptGenerating')}
                     disabled={!formData.name}
                     variant="secondary"
                     size="xs"
@@ -336,19 +341,19 @@ function WorldsPage({ showToast }) {
                   value={formData.description}
                   onChange={handleInputChange}
                   className="h-32 textarea textarea-bordered"
-                  placeholder="Nhập mô tả thế giới hoặc dùng GPT để tự động tạo... Ví dụ: Một thế giới giả tưởng với ma thuật, rồng và các vương quốc cổ đại..."
+                  placeholder={t('pages.worlds.descPlaceholder')}
                   required
                 />
                 <label className="label">
-                  <span className="label-text-alt">{formData.description.length} ký tự</span>
-                  <span className="label-text-alt text-base-content/40">Click nút bên trên để GPT tạo mô tả tự động</span>
+                  <span className="label-text-alt">{t('pages.worlds.charCount', { count: formData.description.length })}</span>
+                  <span className="label-text-alt text-base-content/40">{t('pages.worlds.gptHint')}</span>
                 </label>
               </div>
 
               {gptAnalyzing && (
                 <div className="mb-4 alert alert-info">
                   <ArrowPathIcon className="w-5 h-5 animate-spin shrink-0" />
-                  <span>Đang phân tích với GPT...</span>
+                  <span>{t('pages.worlds.gptAnalyzing')}</span>
                 </div>
               )}
 
@@ -358,11 +363,11 @@ function WorldsPage({ showToast }) {
                   <GptButton
                     onClick={analyzeWithGPT}
                     loading={gptAnalyzing}
-                    loadingText="Đang phân tích..."
+                    loadingText={t('pages.worlds.gptAnalyzing')}
                     variant="primary"
                     size="sm"
                   >
-                    Xem trước phân tích
+                    {t('pages.worlds.previewAnalysis')}
                   </GptButton>
                 </div>
               )}
@@ -376,7 +381,7 @@ function WorldsPage({ showToast }) {
                         <span className="flex justify-center items-center bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full w-6 h-6 text-emerald-600">
                           <OpenAILogo className="w-3.5 h-3.5" />
                         </span>
-                        Kết quả phân tích
+                        {t('pages.worlds.analysisResult')}
                       </span>
                       <button
                         type="button"
@@ -411,7 +416,7 @@ function WorldsPage({ showToast }) {
                       </div>
                     )}
                     {(!gptEntities.characters?.length && !gptEntities.locations?.length) && (
-                      <p className="opacity-70 text-sm">Không phát hiện nhân vật hoặc địa điểm nào.</p>
+                      <p className="opacity-70 text-sm">{t('pages.worlds.noEntities')}</p>
                     )}
                   </div>
                 </div>
@@ -421,13 +426,13 @@ function WorldsPage({ showToast }) {
                 <GptButton
                   onClick={handleSubmit}
                   loading={gptAnalyzing}
-                  loadingText="Đang xử lý..."
+                  loadingText={t('actions.processing')}
                   variant="primary"
                   size="md"
                 >
-                  Tạo & Phân tích
+                  {t('pages.worlds.createAndAnalyze')}
                 </GptButton>
-                <button type="button" onClick={() => { setShowCreateModal(false); resetForm() }} className="btn" disabled={gptAnalyzing}>Hủy</button>
+                <button type="button" onClick={() => { setShowCreateModal(false); resetForm() }} className="btn" disabled={gptAnalyzing}>{t('common.cancel')}</button>
               </div>
             </form>
           </div>
