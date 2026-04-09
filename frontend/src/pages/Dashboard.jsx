@@ -37,7 +37,7 @@ function Dashboard({ showToast }) {
       console.log('[DEBUG] Stats response:', response.data)
       setStats(response.data)
     } catch (error) {
-      showToast('Không thể tải thống kê', 'error')
+      showToast(t('pages.dashboard.loadError'), 'error')
       console.error('Error loading stats:', error)
     } finally {
       setLoading(false)

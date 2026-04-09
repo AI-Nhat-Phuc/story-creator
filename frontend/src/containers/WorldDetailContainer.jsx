@@ -116,19 +116,18 @@ function WorldDetailContainer({ showToast }) {
       const { linked_count, links, unlinked_stories } = response.data
 
       if (linked_count > 0) {
-        showToast(`Đã liên kết ${linked_count} câu chuyện. Tìm thấy ${links.length} liên kết mới!`, 'success')
-        loadWorldDetails() // Reload to show updated links
+        showToast(t('pages.worldDetail.autoLinkSuccess', { count: linked_count, links: links.length }), 'success')
+        loadWorldDetails()
       } else if (unlinked_stories && unlinked_stories.length > 0) {
-        // Show unlinked stories modal for batch analysis
         setUnlinkedStories(unlinked_stories)
         setBatchResult(null)
         setBatchProgress(null)
         setShowUnlinkedModal(true)
       } else {
-        showToast('Không tìm thấy liên kết nào', 'info')
+        showToast(t('pages.worldDetail.autoLinkNone'), 'info')
       }
     } catch (error) {
-      showToast('Lỗi khi liên kết câu chuyện: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.worldDetail.autoLinkError') + ': ' + (error.response?.data?.error || error.message), 'error')
     } finally {
       setAutoLinking(false)
     }
@@ -136,7 +135,7 @@ function WorldDetailContainer({ showToast }) {
 
   const handleBatchAnalyze = async (storyIds) => {
     if (!user) {
-      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      showToast(t('pages.worldDetail.loginRequired'), 'warning')
       return
     }
     try {
@@ -150,7 +149,7 @@ function WorldDetailContainer({ showToast }) {
       const taskId = response.data.task_id
 
       registerTask(taskId, {
-        label: `Phân tích batch ${storyIds.length} truyện`,
+        label: `Batch analyze ${storyIds.length} stories`,
         task_type: 'batch_analyze',
         onComplete: (taskData) => {
           if (taskData.status === 'completed') {
@@ -165,13 +164,13 @@ function WorldDetailContainer({ showToast }) {
                 total_locations_found: (prev.total_locations_found || 0) + (taskData.result.total_locations_found || 0),
               }
             })
-            showToast(taskData.result.message || 'Phân tích hoàn tất!', 'success')
+            showToast(taskData.result.message || t('pages.worldDetail.batchDone'), 'success')
           }
           setBatchAnalyzing(false)
         }
       })
     } catch (error) {
-      showToast('Lỗi phân tích batch: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.worldDetail.batchError') + ': ' + (error.response?.data?.error || error.message), 'error')
       setBatchAnalyzing(false)
     }
   }

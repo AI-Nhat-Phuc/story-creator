@@ -199,7 +199,7 @@ function StoryEditorContainer({ showToast }) {
     } catch {
       showToast(t('pages.storyEditor.publishError'), 'error')
     }
-  }, [doSave, showToast])
+  }, [doSave, showToast, t])
 
   const handleBack = useCallback(() => {
     navigate(storyIdRef.current
@@ -226,7 +226,7 @@ function StoryEditorContainer({ showToast }) {
       showToast(t('pages.storyEditor.gptError'), 'error')
       setGpt(prev => ({ ...prev, isLoading: false, suggestions: [] }))
     }
-  }, [showToast])
+  }, [showToast, t])
 
   const handleParaphrase = useCallback(() => callGpt('paraphrase'), [callGpt])
   const handleExpand = useCallback(() => callGpt('expand'), [callGpt])
@@ -252,7 +252,7 @@ function StoryEditorContainer({ showToast }) {
       return
     }
     editorInstance.chain().focus().insertContent(`<p>— ${userSignature}</p>`).run()
-  }, [userSignature, showToast])
+  }, [userSignature, showToast, t])
 
   const gptProps = {
     ...gpt,

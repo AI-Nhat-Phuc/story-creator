@@ -121,6 +121,7 @@
   "pages": {
     "dashboard": {
       "title": "Dashboard",
+      "loadError": "Failed to load statistics",
       "noStats": "No statistics available",
       "publicNote": "You are viewing public data",
       "publicNoteDetail": "to see your private and shared content",
@@ -272,7 +273,13 @@
     },
     "worldDetail": {
       "loadError": "Failed to load world details",
-      "notFound": "World not found"
+      "notFound": "World not found",
+      "loginRequired": "Please log in to use GPT analysis",
+      "autoLinkSuccess": "Linked {{count}} stories. Found {{links}} new links!",
+      "autoLinkNone": "No links found",
+      "autoLinkError": "Error linking stories",
+      "batchDone": "Analysis complete!",
+      "batchError": "Batch analysis error"
     },
     "storyDetail": {
       "loadError": "Failed to load story details",

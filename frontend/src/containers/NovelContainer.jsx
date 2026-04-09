@@ -65,7 +65,7 @@ function NovelContainer({ showToast }) {
     } finally {
       setSavingMeta(false)
     }
-  }, [worldId, metaForm, showToast])
+  }, [worldId, metaForm, showToast, t])
 
   const handleMetaFormChange = useCallback((field, value) => {
     setMetaForm(prev => ({ ...prev, [field]: value }))

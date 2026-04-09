@@ -121,6 +121,7 @@
   "pages": {
     "dashboard": {
       "title": "Dashboard",
+      "loadError": "Không thể tải thống kê",
       "noStats": "Không có dữ liệu thống kê",
       "publicNote": "Bạn đang xem dữ liệu công khai",
       "publicNoteDetail": "để xem thêm nội dung riêng tư của bạn và được chia sẻ",
@@ -272,7 +273,13 @@
     },
     "worldDetail": {
       "loadError": "Không thể tải chi tiết thế giới",
-      "notFound": "Không tìm thấy thế giới"
+      "notFound": "Không tìm thấy thế giới",
+      "loginRequired": "Vui lòng đăng nhập để sử dụng tính năng phân tích GPT",
+      "autoLinkSuccess": "Đã liên kết {{count}} câu chuyện. Tìm thấy {{links}} liên kết mới!",
+      "autoLinkNone": "Không tìm thấy liên kết nào",
+      "autoLinkError": "Lỗi khi liên kết câu chuyện",
+      "batchDone": "Phân tích hoàn tất!",
+      "batchError": "Lỗi phân tích batch"
     },
     "storyDetail": {
       "loadError": "Không thể tải chi tiết câu chuyện",
