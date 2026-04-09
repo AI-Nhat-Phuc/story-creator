@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { storiesAPI, worldsAPI, gptAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StoryDetailView from '../components/storyDetail/StoryDetailView'
@@ -25,6 +26,7 @@ function StoryDetailContainer({ showToast }) {
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [analyzedEntities, setAnalyzedEntities] = useState(null)
   const [showAnalyzedModal, setShowAnalyzedModal] = useState(false)
+  const pageTitle = usePageTitle('storyDetail', story?.title)
 
   useEffect(() => {
     loadStoryDetails()
@@ -86,24 +88,20 @@ function StoryDetailContainer({ showToast }) {
     if (!calendar) return null
 
     if (normalizedIndex === 0) {
-      return {
-        year: 0,
-        era: '',
-        year_name: '',
-        description: 'Không xác định'
-      }
+      return { year: 0, era: '', year_name: '', description: t('common.unknown') }
     }
 
     const currentYear = calendar.current_year || 1
     const yearRange = 100
     const offset = Math.floor((normalizedIndex / 100) * yearRange) - Math.floor(yearRange / 2)
     const year = Math.max(1, currentYear + offset)
+    const yearLabel = calendar.year_name || t('common.year')
 
     return {
       year,
       era: calendar.current_era || '',
-      year_name: calendar.year_name || 'Năm',
-      description: `${calendar.year_name || 'Năm'} ${year}${calendar.current_era ? `, ${calendar.current_era}` : ''}`.trim()
+      year_name: yearLabel,
+      description: `${yearLabel} ${year}${calendar.current_era ? `, ${calendar.current_era}` : ''}`.trim()
     }
   }
 
@@ -117,15 +115,13 @@ function StoryDetailContainer({ showToast }) {
     const worldTime = getStoryWorldTime(currentStory)
     const normalizedIndex = normalizeTimeIndex(currentStory.time_index)
     if (worldTime) {
-      if (worldTime.year === 0) {
-        return worldTime.description || 'Không xác định'
-      }
-      return worldTime.description || `Năm ${worldTime.year}`
+      if (worldTime.year === 0) return worldTime.description || t('common.unknown')
+      return worldTime.description || `${worldTime.year_name || t('common.year')} ${worldTime.year}`
     }
     if (normalizedIndex !== null && normalizedIndex !== 0) {
-      return `Chỉ số: ${normalizedIndex}`
+      return t('common.timeIndexLabel', { index: normalizedIndex })
     }
-    return 'Mốc chưa xác định'
+    return t('pages.stories.unknownTime')
   }
 
   const handleAnalyzeStory = async () => {
@@ -284,9 +280,6 @@ function StoryDetailContainer({ showToast }) {
   const formattedWorldTime = formatWorldTime(story)
 
   const canEdit = !!(user && story && user.user_id === story.owner_id)
-  const pageTitle = story.title
-    ? t('meta.storyDetail.titleTemplate', { name: story.title })
-    : t('meta.storyDetail.titleFallback')
 
   return (
     <>

@@ -17,11 +17,17 @@ i18n
     interpolation: { escapeValue: false },
   })
 
-// Auto-persist language changes to localStorage
-i18n.on('languageChanged', (lang) => {
+const persistLang = (lang) => {
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem(LANG_KEY, lang)
   }
-})
+}
+
+i18n.on('languageChanged', persistLang)
+
+// Clean up listener on HMR module disposal to prevent accumulation
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => i18n.off('languageChanged', persistLang))
+}
 
 export default i18n

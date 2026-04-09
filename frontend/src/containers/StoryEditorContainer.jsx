@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { storiesAPI, gptAPI, authAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import StoryEditorView from '../components/storyEditor/StoryEditorView'
@@ -26,6 +27,7 @@ function StoryEditorContainer({ showToast }) {
   const [gpt, setGpt] = useState({ isLoading: false, suggestions: [], selectionLength: 0 })
   const [activeFormats, setActiveFormats] = useState({})
   const [userSignature, setUserSignature] = useState('')
+  const editTitle = usePageTitle('storyEdit', editor.title || null)
 
   // Refs — mirror mutable values so doSave is always reading current data (no stale closures)
   const storyIdRef = useRef(storyId || null)
@@ -262,9 +264,7 @@ function StoryEditorContainer({ showToast }) {
     onClear: handleClearSuggestions,
   }
 
-  const pageTitle = storyId
-    ? (editor.title ? t('meta.storyEdit.titleTemplate', { name: editor.title }) : t('meta.storyEdit.titleFallback'))
-    : t('meta.storyCreate.title')
+  const pageTitle = storyId ? editTitle : t('meta.storyCreate.title')
   const pageDescription = storyId ? t('meta.storyEdit.description') : t('meta.storyCreate.description')
 
   return (

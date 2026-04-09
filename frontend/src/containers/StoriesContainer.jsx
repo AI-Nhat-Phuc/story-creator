@@ -53,16 +53,17 @@ function StoriesContainer({ showToast }) {
     if (!world) return null
     const calendar = world.metadata?.calendar
     if (!calendar) return null
-    if (normalizedIndex === 0) return { year: 0, era: '', description: 'Không xác định', year_name: '' }
+    if (normalizedIndex === 0) return { year: 0, era: '', description: t('common.unknown'), year_name: '' }
     const currentYear = calendar.current_year || 1
     const yearRange = 100
     const offset = Math.floor((normalizedIndex / 100) * yearRange) - Math.floor(yearRange / 2)
     const year = Math.max(1, currentYear + offset)
+    const yearLabel = calendar.year_name || t('common.year')
     return {
       year,
       era: calendar.current_era || '',
-      year_name: calendar.year_name || 'Năm',
-      description: `${calendar.year_name || 'Năm'} ${year}${calendar.current_era ? `, ${calendar.current_era}` : ''}`.trim()
+      year_name: yearLabel,
+      description: `${yearLabel} ${year}${calendar.current_era ? `, ${calendar.current_era}` : ''}`.trim()
     }
   }
 
@@ -70,11 +71,11 @@ function StoriesContainer({ showToast }) {
     const worldTime = story.metadata?.world_time || computeWorldTimeFromIndex(story.world_id, story.time_index)
     const normalizedIndex = normalizeTimeIndex(story.time_index)
     if (worldTime) {
-      if (worldTime.year === 0) return worldTime.description || 'Không xác định'
-      return worldTime.description || `${worldTime.year_name || 'Năm'} ${worldTime.year}`
+      if (worldTime.year === 0) return worldTime.description || t('common.unknown')
+      return worldTime.description || `${worldTime.year_name || t('common.year')} ${worldTime.year}`
     }
-    if (normalizedIndex !== null && normalizedIndex !== 0) return `Chỉ số: ${normalizedIndex}`
-    return 'Mốc chưa xác định'
+    if (normalizedIndex !== null && normalizedIndex !== 0) return t('common.timeIndexLabel', { index: normalizedIndex })
+    return t('pages.stories.unknownTime')
   }
 
   if (loading) return <LoadingSpinner />

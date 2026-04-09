@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { novelAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import NovelView from '../components/novel/NovelView'
@@ -17,6 +18,10 @@ function NovelContainer({ showToast }) {
   const [editingMeta, setEditingMeta] = useState(false)
   const [metaForm, setMetaForm] = useState({ title: '', description: '' })
   const [savingMeta, setSavingMeta] = useState(false)
+  const novelTitle = usePageTitle('novel', novel?.title)
+  const novelDescription = novel?.title
+    ? t('meta.novel.descriptionTemplate', { name: novel.title })
+    : t('meta.novel.descriptionFallback')
 
   useEffect(() => {
     load()
@@ -84,13 +89,6 @@ function NovelContainer({ showToast }) {
       setChapters(previous)
     }
   }, [worldId, showToast, t])
-
-  const novelTitle = novel?.title
-    ? t('meta.novel.titleTemplate', { name: novel.title })
-    : t('meta.novel.titleFallback')
-  const novelDescription = novel?.title
-    ? t('meta.novel.descriptionTemplate', { name: novel.title })
-    : t('meta.novel.descriptionFallback')
 
   return (
     <>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { storiesAPI } from '../services/api'
 
 function renderContent(story) {
@@ -28,6 +29,7 @@ function StoryPrintPage() {
   const { t } = useTranslation()
   const [story, setStory] = useState(null)
   const [notFound, setNotFound] = useState(false)
+  const pageTitle = usePageTitle('storyPrint', story?.title)
 
   useEffect(() => {
     storiesAPI.getById(storyId)
@@ -35,21 +37,14 @@ function StoryPrintPage() {
       .catch(() => setNotFound(true))
   }, [storyId])
 
-  // Trigger print once story is loaded
   useEffect(() => {
-    if (story) {
-      window.print()
-    }
+    if (story) window.print()
   }, [story])
-
-  const pageTitle = story
-    ? t('meta.storyPrint.titleTemplate', { name: story.title })
-    : t('meta.storyPrint.titleFallback')
 
   if (notFound) {
     return (
       <div className="p-8 font-serif">
-        <Helmet><title>{t('meta.storyPrint.titleFallback')}</title></Helmet>
+        <Helmet><title>{pageTitle}</title></Helmet>
         <p>{t('pages.storyPrint.notFound')}</p>
       </div>
     )
@@ -58,7 +53,7 @@ function StoryPrintPage() {
   if (!story) {
     return (
       <div className="p-8 font-serif">
-        <Helmet><title>{t('meta.storyPrint.titleFallback')}</title></Helmet>
+        <Helmet><title>{pageTitle}</title></Helmet>
         <p>{t('common.loading')}</p>
       </div>
     )

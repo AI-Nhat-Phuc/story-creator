@@ -17,7 +17,12 @@
     "fromOthers": "From others",
     "yours": "Yours",
     "everyoneSee": "Visible to everyone",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "year": "Year",
+    "timeNotSet": "Time not set",
+    "timeIndexLabel": "Index {{index}}",
+    "timelineUnknown": "Timeline unknown",
+    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This cannot be undone."
   },
   "actions": {
     "create": "Create",
@@ -279,7 +284,25 @@
       "autoLinkNone": "No links found",
       "autoLinkError": "Error linking stories",
       "batchDone": "Analysis complete!",
-      "batchError": "Batch analysis error"
+      "batchError": "Batch analysis error",
+      "deleteEntitySuccess": "Character \"{{name}}\" deleted",
+      "deleteEntityError": "Error deleting character",
+      "updateEntitySuccess": "Character updated!",
+      "updateEntityError": "Error updating character",
+      "deleteLocationSuccess": "Location \"{{name}}\" deleted",
+      "deleteLocationError": "Error deleting location",
+      "deleteStorySuccess": "Story \"{{name}}\" deleted",
+      "deleteStoryError": "Error deleting story",
+      "publishSuccess": "World published: {{visibility}}",
+      "publishError": "Publish error",
+      "updateSuccess": "World updated!",
+      "updateError": "Error updating world",
+      "inviteSent": "Invitation sent to {{name}}",
+      "inviteNotFound": "User not found",
+      "invitePending": "Already a co-author or invitation pending",
+      "inviteError": "Failed to send invitation",
+      "removeCollabSuccess": "Co-author removed",
+      "removeCollabError": "Failed to remove co-author"
     },
     "storyDetail": {
       "loadError": "Failed to load story details",

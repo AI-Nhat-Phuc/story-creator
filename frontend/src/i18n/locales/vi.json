@@ -17,7 +17,12 @@
     "fromOthers": "Từ người khác",
     "yours": "Của bạn",
     "everyoneSee": "Mọi người xem được",
-    "unknown": "Không xác định"
+    "unknown": "Không xác định",
+    "year": "Năm",
+    "timeNotSet": "Chưa đặt thời gian",
+    "timeIndexLabel": "Chỉ số {{index}}",
+    "timelineUnknown": "Mốc thời gian chưa xác định",
+    "deleteConfirm": "Bạn có chắc muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác."
   },
   "actions": {
     "create": "Tạo mới",
@@ -279,7 +284,25 @@
       "autoLinkNone": "Không tìm thấy liên kết nào",
       "autoLinkError": "Lỗi khi liên kết câu chuyện",
       "batchDone": "Phân tích hoàn tất!",
-      "batchError": "Lỗi phân tích batch"
+      "batchError": "Lỗi phân tích batch",
+      "deleteEntitySuccess": "Đã xóa nhân vật \"{{name}}\"",
+      "deleteEntityError": "Lỗi khi xóa nhân vật",
+      "updateEntitySuccess": "Đã cập nhật nhân vật!",
+      "updateEntityError": "Lỗi khi cập nhật nhân vật",
+      "deleteLocationSuccess": "Đã xóa địa điểm \"{{name}}\"",
+      "deleteLocationError": "Lỗi khi xóa địa điểm",
+      "deleteStorySuccess": "Đã xóa câu chuyện \"{{name}}\"",
+      "deleteStoryError": "Lỗi khi xóa câu chuyện",
+      "publishSuccess": "Đã publish thế giới: {{visibility}}",
+      "publishError": "Lỗi publish",
+      "updateSuccess": "Đã cập nhật thế giới!",
+      "updateError": "Lỗi cập nhật thế giới",
+      "inviteSent": "Đã gửi lời mời đến {{name}}",
+      "inviteNotFound": "Không tìm thấy người dùng",
+      "invitePending": "Đã là đồng tác giả hoặc lời mời đang chờ",
+      "inviteError": "Không thể gửi lời mời",
+      "removeCollabSuccess": "Đã xóa đồng tác giả",
+      "removeCollabError": "Không thể xóa đồng tác giả"
     },
     "storyDetail": {
       "loadError": "Không thể tải chi tiết câu chuyện",
