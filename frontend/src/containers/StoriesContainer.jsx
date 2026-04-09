@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import { worldsAPI, storiesAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StoriesView from '../components/stories/StoriesView'
 import { useAuth } from '../contexts/AuthContext'
 
 function StoriesContainer({ showToast }) {
+  const { t } = useTranslation()
   const { user, loading: authLoading } = useAuth()
   const [worlds, setWorlds] = useState([])
   const [stories, setStories] = useState([])
@@ -24,7 +27,7 @@ function StoriesContainer({ showToast }) {
       setWorlds(worldsRes.data)
       setStories(storiesRes.data)
     } catch (error) {
-      showToast('Không thể tải dữ liệu', 'error')
+      showToast(t('pages.stories.loadError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -77,7 +80,12 @@ function StoriesContainer({ showToast }) {
   if (loading) return <LoadingSpinner />
 
   return (
-    <StoriesView
+    <>
+      <Helmet>
+        <title>{t('meta.stories.title')}</title>
+        <meta name="description" content={t('meta.stories.description')} />
+      </Helmet>
+      <StoriesView
       stories={stories}
       worlds={worlds}
       user={user}
@@ -85,6 +93,7 @@ function StoriesContainer({ showToast }) {
       formatWorldTime={formatWorldTime}
       getWorldName={getWorldName}
     />
+    </>
   )
 }
 

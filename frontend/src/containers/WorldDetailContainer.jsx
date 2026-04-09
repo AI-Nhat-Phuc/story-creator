@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import { worldsAPI, gptAPI, collaboratorsAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import WorldDetailView from '../components/worldDetail/WorldDetailView'
@@ -7,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useGptTasks } from '../contexts/GptTaskContext'
 
 function WorldDetailContainer({ showToast }) {
+  const { t } = useTranslation()
   const { worldId } = useParams()
   const { user, loading: authLoading } = useAuth()
   const { registerTask } = useGptTasks()
@@ -53,7 +56,7 @@ function WorldDetailContainer({ showToast }) {
       setCollaborators(collabRes.data || [])
       setEditForm({ name: worldRes.data.name, description: worldRes.data.description, visibility: worldRes.data.visibility || 'draft' })
     } catch (error) {
-      showToast('Không thể tải chi tiết thế giới', 'error')
+      showToast(t('pages.worldDetail.loadError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -298,12 +301,20 @@ function WorldDetailContainer({ showToast }) {
   }
 
   if (loading) return <LoadingSpinner />
-  if (!world) return <div>Không tìm thấy thế giới</div>
+  if (!world) return <div>{t('pages.worldDetail.notFound')}</div>
 
   const canEdit = !!(user && world && user.user_id === world.owner_id)
+  const pageTitle = world.name
+    ? t('meta.worldDetail.titleTemplate', { name: world.name })
+    : t('meta.worldDetail.titleFallback')
 
   return (
-    <WorldDetailView
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={t('meta.worldDetail.description')} />
+      </Helmet>
+      <WorldDetailView
       world={world}
       stories={stories}
       characters={characters}
@@ -344,6 +355,7 @@ function WorldDetailContainer({ showToast }) {
       onInviteCollaborator={handleInviteCollaborator}
       onRemoveCollaborator={handleRemoveCollaborator}
     />
+    </>
   )
 }
 

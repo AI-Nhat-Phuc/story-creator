@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   ShieldCheckIcon,
   StarIcon,
@@ -14,30 +15,32 @@ import {
  *   - size: string - Badge size (xs, sm, md, lg) - default: md
  */
 function RoleBadge({ role = 'user', size = 'md' }) {
+  const { t } = useTranslation()
+
   const getRoleInfo = (role) => {
     const roleMap = {
       admin: {
-        label: 'Quản trị viên',
+        labelKey: 'roles.admin',
         icon: <ShieldCheckIcon className="w-3.5 h-3.5" />,
         badgeColor: 'badge-error',
       },
       moderator: {
-        label: 'Kiểm duyệt viên',
+        labelKey: 'roles.moderator',
         icon: <ShieldCheckIcon className="w-3.5 h-3.5" />,
         badgeColor: 'badge-warning',
       },
       premium: {
-        label: 'Premium',
+        labelKey: 'roles.premium',
         icon: <StarIcon className="w-3.5 h-3.5" />,
         badgeColor: 'badge-primary',
       },
       user: {
-        label: 'Người dùng',
+        labelKey: 'roles.user',
         icon: <UserIcon className="w-3.5 h-3.5" />,
         badgeColor: 'badge-info',
       },
       guest: {
-        label: 'Khách',
+        labelKey: 'roles.guest',
         icon: <EyeIcon className="w-3.5 h-3.5" />,
         badgeColor: 'badge-ghost',
       }
@@ -52,7 +55,7 @@ function RoleBadge({ role = 'user', size = 'md' }) {
   return (
     <span className={`badge ${info.badgeColor} ${sizeClass} gap-1`}>
       <span>{info.icon}</span>
-      <span>{info.label}</span>
+      <span>{t(info.labelKey)}</span>
     </span>
   )
 }

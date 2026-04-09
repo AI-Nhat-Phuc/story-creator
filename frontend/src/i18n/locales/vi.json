@@ -1,0 +1,300 @@
+{
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Có lỗi xảy ra",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "confirm": "Xác nhận",
+    "close": "Đóng",
+    "retry": "Tải lại",
+    "noData": "Không có dữ liệu",
+    "notFound": "Không tìm thấy",
+    "by": "Bởi",
+    "public": "Công khai",
+    "private": "Riêng tư",
+    "shared": "Được chia sẻ",
+    "fromOthers": "Từ người khác",
+    "yours": "Của bạn",
+    "everyoneSee": "Mọi người xem được",
+    "unknown": "Không xác định"
+  },
+  "actions": {
+    "create": "Tạo mới",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "view": "Xem chi tiết",
+    "logout": "Đăng xuất",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "refresh": "Tải lại",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "submit": "Gửi",
+    "processing": "Đang xử lý..."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "worlds": "Thế giới",
+    "stories": "Câu chuyện",
+    "admin": "Admin",
+    "login": "Đăng nhập",
+    "logoutConfirmTitle": "Xác nhận đăng xuất",
+    "logoutConfirmMsg": "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?"
+  },
+  "theme": {
+    "light": "Sáng",
+    "dark": "Tối",
+    "custom": "Tuỳ chỉnh",
+    "primary": "Chính",
+    "secondary": "Phụ",
+    "accent": "Nhấn",
+    "background": "Nền",
+    "surface": "Bề mặt",
+    "language": "Ngôn ngữ",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "roles": {
+    "admin": "Quản trị viên",
+    "moderator": "Kiểm duyệt viên",
+    "premium": "Premium",
+    "user": "Người dùng",
+    "guest": "Khách"
+  },
+  "meta": {
+    "dashboard": {
+      "title": "Dashboard – Story Creator",
+      "description": "Tổng quan thống kê thế giới, câu chuyện và hạn mức của bạn."
+    },
+    "worlds": {
+      "title": "Thế giới – Story Creator",
+      "description": "Khám phá và quản lý các thế giới hư cấu của bạn."
+    },
+    "worldDetail": {
+      "titleTemplate": "{{name}} – Story Creator",
+      "titleFallback": "Thế giới – Story Creator",
+      "description": "Chi tiết thế giới: nhân vật, địa điểm, câu chuyện liên quan."
+    },
+    "novel": {
+      "titleTemplate": "Tiểu thuyết: {{name}} – Story Creator",
+      "titleFallback": "Tiểu thuyết – Story Creator",
+      "descriptionTemplate": "Đọc tiểu thuyết tổng hợp từ thế giới {{name}}.",
+      "descriptionFallback": "Đọc tiểu thuyết tổng hợp từ thế giới."
+    },
+    "stories": {
+      "title": "Câu chuyện – Story Creator",
+      "description": "Danh sách tất cả câu chuyện. Tạo và quản lý tác phẩm của bạn."
+    },
+    "storyCreate": {
+      "title": "Tạo câu chuyện – Story Creator",
+      "description": "Viết câu chuyện mới với trình soạn thảo tích hợp AI."
+    },
+    "storyEdit": {
+      "titleTemplate": "Chỉnh sửa: {{name}} – Story Creator",
+      "titleFallback": "Chỉnh sửa câu chuyện – Story Creator",
+      "description": "Chỉnh sửa nội dung câu chuyện."
+    },
+    "storyDetail": {
+      "titleTemplate": "{{name}} – Story Creator",
+      "titleFallback": "Câu chuyện – Story Creator",
+      "description": "Chi tiết câu chuyện: nội dung, nhân vật, dòng thời gian."
+    },
+    "storyPrint": {
+      "titleTemplate": "In: {{name}} – Story Creator",
+      "titleFallback": "In câu chuyện – Story Creator",
+      "description": "Xem trước bản in câu chuyện."
+    },
+    "login": {
+      "title": "Đăng nhập – Story Creator",
+      "description": "Đăng nhập vào Story Creator để quản lý thế giới và câu chuyện của bạn."
+    },
+    "register": {
+      "title": "Đăng ký – Story Creator",
+      "description": "Tạo tài khoản Story Creator miễn phí."
+    },
+    "admin": {
+      "title": "Quản trị – Story Creator",
+      "description": "Bảng điều khiển quản trị hệ thống."
+    }
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "noStats": "Không có dữ liệu thống kê",
+      "publicNote": "Bạn đang xem dữ liệu công khai",
+      "publicNoteDetail": "để xem thêm nội dung riêng tư của bạn và được chia sẻ",
+      "totalWorlds": "Thế giới",
+      "totalWorldsDesc": "Tổng số thế giới đã tạo",
+      "totalStories": "Câu chuyện",
+      "totalStoriesDesc": "Tổng số câu chuyện",
+      "breakdown": "Phân loại dữ liệu",
+      "publicBreakdown": "Dữ liệu công khai",
+      "quota": "Quota của bạn",
+      "publicWorlds": "Thế giới công khai",
+      "publicStories": "Câu chuyện công khai",
+      "slotsRemaining": "Còn {{count}} slot"
+    },
+    "worlds": {
+      "title": "Thế giới",
+      "createBtn": "+ Tạo thế giới mới",
+      "adminTooltip": "Admin chỉ quản lý hệ thống, không tạo nội dung",
+      "loginTooltip": "Vui lòng đăng nhập để tạo thế giới",
+      "emptyAuth": "Chưa có thế giới nào. Hãy tạo thế giới đầu tiên!",
+      "emptyAnon": "Chưa có thế giới công khai nào. Vui lòng đăng nhập để tạo thế giới.",
+      "createModal": "Tạo thế giới mới",
+      "worldName": "Tên thế giới *",
+      "worldType": "Loại thế giới",
+      "description": "Mô tả *",
+      "descPlaceholder": "Nhập mô tả thế giới hoặc dùng GPT để tự động tạo... Ví dụ: Một thế giới giả tưởng với ma thuật, rồng và các vương quốc cổ đại...",
+      "charCount": "{{count}} ký tự",
+      "gptHint": "Click nút bên trên để GPT tạo mô tả tự động",
+      "gptGenerating": "Đang tạo...",
+      "gptAnalyzing": "Đang phân tích với GPT...",
+      "previewAnalysis": "Xem trước phân tích",
+      "analysisResult": "Kết quả phân tích",
+      "noEntities": "Không phát hiện nhân vật hoặc địa điểm nào.",
+      "createAndAnalyze": "Tạo & Phân tích",
+      "deleteConfirm": "Bạn có chắc muốn xóa thế giới này?",
+      "worldTypes": {
+        "fantasy": "Fantasy - Thế giới phép thuật",
+        "sci-fi": "Sci-Fi - Khoa học viễn tưởng",
+        "modern": "Modern - Hiện đại",
+        "historical": "Historical - Lịch sử"
+      },
+      "toast": {
+        "loadError": "Không thể tải danh sách thế giới",
+        "loginRequired": "Vui lòng đăng nhập để sử dụng tính năng GPT",
+        "nameRequired": "Vui lòng nhập tên thế giới trước",
+        "descRequired": "Vui lòng nhập mô tả thế giới",
+        "nameRequiredGpt": "Vui lòng nhập tên thế giới khi sử dụng GPT",
+        "gptDescDone": "Đã tạo mô tả bằng GPT!",
+        "gptDescError": "Lỗi tạo mô tả GPT",
+        "gptAnalysisDone": "Phân tích GPT hoàn tất!",
+        "gptAnalysisError": "Lỗi phân tích GPT",
+        "fillRequired": "Vui lòng điền đầy đủ thông tin",
+        "loginToCreate": "Vui lòng đăng nhập để tạo thế giới",
+        "createSuccess": "Tạo thế giới thành công! Phát hiện {{chars}} nhân vật, {{locs}} địa điểm",
+        "createError": "Không thể tạo thế giới",
+        "deleteSuccess": "Đã xóa thế giới",
+        "deleteError": "Không thể xóa thế giới"
+      }
+    },
+    "login": {
+      "title": "Đăng nhập",
+      "username": "Tên đăng nhập",
+      "password": "Mật khẩu",
+      "loginBtn": "Đăng nhập",
+      "loggingIn": "Đang đăng nhập...",
+      "noAccount": "Chưa có tài khoản?",
+      "registerLink": "Đăng ký ngay",
+      "orDivider": "HOẶC",
+      "googleFailed": "Đăng nhập Google thất bại"
+    },
+    "register": {
+      "title": "Đăng ký",
+      "username": "Tên đăng nhập",
+      "email": "Email",
+      "password": "Mật khẩu",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "registerBtn": "Đăng ký",
+      "registering": "Đang đăng ký...",
+      "hasAccount": "Đã có tài khoản?",
+      "loginLink": "Đăng nhập",
+      "passwordMismatch": "Mật khẩu xác nhận không khớp",
+      "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự",
+      "googleFailed": "Đăng ký Google thất bại"
+    },
+    "admin": {
+      "title": "Quản trị hệ thống",
+      "subtitle": "Quản lý người dùng và phân quyền",
+      "noAccess": "Bạn không có quyền truy cập trang này",
+      "noPermission": "Không có quyền truy cập",
+      "loadError": "Không thể tải dữ liệu quản trị",
+      "totalUsers": "Tổng users",
+      "totalWorlds": "Thế giới",
+      "totalStories": "Câu chuyện",
+      "bannedUsers": "Users bị ban",
+      "publicCount": "{{count}} công khai",
+      "searchPlaceholder": "Tìm username hoặc email...",
+      "allRoles": "Tất cả roles",
+      "tableUsername": "Username",
+      "tableEmail": "Email",
+      "tableRole": "Role",
+      "tableQuota": "Quota",
+      "tableStatus": "Status",
+      "tableActions": "Actions",
+      "adminManages": "Quản lý hệ thống",
+      "changeRole": "Đổi role",
+      "ban": "Ban",
+      "unban": "Unban",
+      "banUser": "Ban user {{name}}",
+      "unbanUser": "Unban user {{name}}",
+      "changeRoleFor": "Đổi role cho {{name}}",
+      "currentRole": "Role hiện tại",
+      "selectNewRole": "Chọn role mới",
+      "currentBadge": "Hiện tại",
+      "banReason": "Lý do ban:",
+      "banReasonPlaceholder": "Nhập lý do...",
+      "currentBanReason": "Lý do ban hiện tại:",
+      "noBanReason": "Không có lý do",
+      "noUsers": "Không tìm thấy user nào",
+      "statusActive": "Active",
+      "statusBanned": "Banned",
+      "noContentCreation": "Không tạo nội dung",
+      "perDay": "/ngày",
+      "roleChangedSuccess": "Đã đổi role của {{name}} thành {{role}}",
+      "roleChangeError": "Không thể đổi role",
+      "banSuccess": "Đã ban user {{name}}",
+      "unbanSuccess": "Đã unban user {{name}}",
+      "banError": "Không thể ban user",
+      "unbanError": "Không thể unban user"
+    },
+    "storyEditor": {
+      "newTitle": "Tạo câu chuyện mới",
+      "editTitle": "Chỉnh sửa câu chuyện",
+      "accessDenied": "Không có quyền truy cập",
+      "storyNotFound": "Không tìm thấy câu chuyện",
+      "noWorld": "Chưa chọn thế giới. Đang chuyển hướng...",
+      "saveFirst": "Hãy lưu câu chuyện trước",
+      "published": "Đã phát hành câu chuyện!",
+      "publishError": "Không thể phát hành",
+      "gptError": "Lỗi GPT",
+      "signatureExists": "Chữ ký đã có trong tài liệu"
+    },
+    "storyPrint": {
+      "notFound": "Không tìm thấy câu chuyện.",
+      "by": "Bởi {{name}}"
+    },
+    "stories": {
+      "loadError": "Không thể tải dữ liệu",
+      "unknownTime": "Mốc chưa xác định"
+    },
+    "worldDetail": {
+      "loadError": "Không thể tải chi tiết thế giới",
+      "notFound": "Không tìm thấy thế giới"
+    },
+    "storyDetail": {
+      "loadError": "Không thể tải chi tiết câu chuyện",
+      "notFound": "Không tìm thấy câu chuyện",
+      "loginRequired": "Vui lòng đăng nhập để sử dụng tính năng phân tích GPT",
+      "noContent": "Không có mô tả câu chuyện để phân tích",
+      "gptError": "Lỗi phân tích GPT",
+      "noAnalysis": "Chưa có dữ liệu phân tích",
+      "clearingLinks": "Đã xóa liên kết cũ, đang phân tích lại...",
+      "reanalyzeError": "Lỗi phân tích lại",
+      "deleteConfirm": "Bạn có chắc muốn xóa câu chuyện \"{{name}}\"? Hành động này không thể hoàn tác.",
+      "deleteSuccess": "Đã xóa câu chuyện \"{{name}}\"",
+      "deleteError": "Lỗi khi xóa câu chuyện",
+      "linkSuccess": "Đã liên kết nhân vật và địa điểm!",
+      "linkSuccessWithCount": "Đã liên kết và tạo mới {{chars}} nhân vật, {{locs}} địa điểm!",
+      "linkError": "Lỗi liên kết"
+    },
+    "novel": {
+      "loadError": "Không thể tải tiểu thuyết",
+      "updateSuccess": "Đã cập nhật tiểu thuyết",
+      "updateError": "Không thể cập nhật tiểu thuyết",
+      "reorderError": "Không thể lưu thứ tự chương"
+    }
+  }
+}

@@ -16,10 +16,36 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import React, { Suspense } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+
+// Mock Google OAuth to avoid GoogleOAuthProvider requirement
+vi.mock('@react-oauth/google', () => ({
+  useGoogleLogin: () => () => {},
+  GoogleOAuthProvider: ({ children }) => children,
+}))
+
+// Mock Facebook Login to avoid context requirement
+vi.mock('@greatsumini/react-facebook-login', () => ({
+  default: () => null,
+}))
+
+// Silence API errors in tests — keep default export (Axios instance) intact
+vi.mock('./services/api', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    statsAPI: { get: () => Promise.reject(new Error('test')) },
+    authAPI: {
+      ...actual.authAPI,
+      verifyToken: () => Promise.reject(new Error('test')),
+      getCurrentUser: () => Promise.reject(new Error('test')),
+    },
+    invitationsAPI: { list: () => Promise.resolve({ data: [] }) },
+  }
+})
 
 // ─── §1: i18n module ─────────────────────────────────────────────────────────
 
@@ -200,55 +226,82 @@ describe('§1 — en.json key parity with vi.json', () => {
 describe('§2 — LoginPage renders with <title>', () => {
   it('sets document title to login meta title', async () => {
     const { default: LoginPage } = await import('./pages/LoginPage.jsx')
+    const { AuthProvider } = await import('./contexts/AuthContext.jsx')
+    const { ThemeProvider } = await import('./contexts/ThemeContext.jsx')
     const helmetContext = {}
 
-    render(
-      <HelmetProvider context={helmetContext}>
-        <MemoryRouter>
-          <LoginPage />
-        </MemoryRouter>
-      </HelmetProvider>
-    )
+    await act(async () => {
+      render(
+        <HelmetProvider context={helmetContext}>
+          <ThemeProvider>
+            <AuthProvider>
+              <MemoryRouter>
+                <LoginPage showToast={() => {}} />
+              </MemoryRouter>
+            </AuthProvider>
+          </ThemeProvider>
+        </HelmetProvider>
+      )
+    })
 
-    // react-helmet-async populates helmetContext.helmet on SSR;
-    // in jsdom, we check document.title directly after render
-    const title = document.title
-    expect(title).toContain('Đăng nhập')
-    expect(title).toContain('Story Creator')
+    await waitFor(() => {
+      expect(document.title).toContain('Đăng nhập')
+      expect(document.title).toContain('Story Creator')
+    })
   })
 })
 
 describe('§2 — RegisterPage renders with <title>', () => {
   it('sets document title to register meta title', async () => {
     const { default: RegisterPage } = await import('./pages/RegisterPage.jsx')
+    const { AuthProvider } = await import('./contexts/AuthContext.jsx')
+    const { ThemeProvider } = await import('./contexts/ThemeContext.jsx')
     const helmetContext = {}
 
-    render(
-      <HelmetProvider context={helmetContext}>
-        <MemoryRouter>
-          <RegisterPage />
-        </MemoryRouter>
-      </HelmetProvider>
-    )
+    await act(async () => {
+      render(
+        <HelmetProvider context={helmetContext}>
+          <ThemeProvider>
+            <AuthProvider>
+              <MemoryRouter>
+                <RegisterPage showToast={() => {}} />
+              </MemoryRouter>
+            </AuthProvider>
+          </ThemeProvider>
+        </HelmetProvider>
+      )
+    })
 
-    expect(document.title).toContain('Đăng ký')
-    expect(document.title).toContain('Story Creator')
+    await waitFor(() => {
+      expect(document.title).toContain('Đăng ký')
+      expect(document.title).toContain('Story Creator')
+    })
   })
 })
 
 describe('§2 — Dashboard renders with <title>', () => {
   it('sets document title to dashboard meta title', async () => {
     const { default: Dashboard } = await import('./pages/Dashboard.jsx')
+    const { AuthProvider } = await import('./contexts/AuthContext.jsx')
+    const { ThemeProvider } = await import('./contexts/ThemeContext.jsx')
 
-    render(
-      <HelmetProvider>
-        <MemoryRouter>
-          <Dashboard showToast={() => {}} />
-        </MemoryRouter>
-      </HelmetProvider>
-    )
+    await act(async () => {
+      render(
+        <HelmetProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <MemoryRouter>
+                <Dashboard showToast={() => {}} />
+              </MemoryRouter>
+            </AuthProvider>
+          </ThemeProvider>
+        </HelmetProvider>
+      )
+    })
 
-    expect(document.title).toContain('Story Creator')
+    await waitFor(() => {
+      expect(document.title).toContain('Story Creator')
+    })
   })
 })
 

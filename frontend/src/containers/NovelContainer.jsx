@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import { novelAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import NovelView from '../components/novel/NovelView'
 
 function NovelContainer({ showToast }) {
+  const { t } = useTranslation()
   const { worldId } = useParams()
   const { user } = useAuth()
 
@@ -28,7 +31,7 @@ function NovelContainer({ showToast }) {
       setChapters(data.chapters || [])
       setMetaForm({ title: data.title || '', description: data.description || '' })
     } catch {
-      showToast('Failed to load novel', 'error')
+      showToast(t('pages.novel.loadError'), 'error')
     } finally {
       setIsLoading(false)
     }
@@ -56,9 +59,9 @@ function NovelContainer({ showToast }) {
       const res = await novelAPI.update(worldId, metaForm)
       setNovel(prev => ({ ...prev, ...res.data }))
       setEditingMeta(false)
-      showToast('Novel updated', 'success')
+      showToast(t('pages.novel.updateSuccess'), 'success')
     } catch {
-      showToast('Failed to update novel', 'error')
+      showToast(t('pages.novel.updateError'), 'error')
     } finally {
       setSavingMeta(false)
     }
@@ -77,14 +80,26 @@ function NovelContainer({ showToast }) {
     try {
       await novelAPI.reorderChapters(worldId, reordered.map(c => c.story_id))
     } catch {
-      showToast('Failed to save chapter order', 'error')
+      showToast(t('pages.novel.reorderError'), 'error')
       setChapters(previous)
     }
-  }, [worldId, showToast])
+  }, [worldId, showToast, t])
+
+  const novelTitle = novel?.title
+    ? t('meta.novel.titleTemplate', { name: novel.title })
+    : t('meta.novel.titleFallback')
+  const novelDescription = novel?.title
+    ? t('meta.novel.descriptionTemplate', { name: novel.title })
+    : t('meta.novel.descriptionFallback')
 
   return (
-    <NovelView
-      worldId={worldId}
+    <>
+      <Helmet>
+        <title>{novelTitle}</title>
+        <meta name="description" content={novelDescription} />
+      </Helmet>
+      <NovelView
+        worldId={worldId}
       novel={novel}
       chapters={chapters}
       totalWordCount={totalWordCount}
@@ -100,6 +115,7 @@ function NovelContainer({ showToast }) {
       onMetaFormChange={handleMetaFormChange}
       onReorder={handleReorder}
     />
+    </>
   )
 }
 

@@ -1,5 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import { statsAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -15,6 +17,7 @@ import {
 // Lazy-load heavy @xyflow/react bundle — only fetched when timeline is rendered
 const EventTimelineSection = lazy(() => import('../components/timeline/EventTimelineSection'))
 function Dashboard({ showToast }) {
+  const { t } = useTranslation()
   const { isAuthenticated, user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -41,23 +44,34 @@ function Dashboard({ showToast }) {
     }
   }
 
-  if (loading) return <LoadingSpinner />
+  const helmet = (
+    <Helmet>
+      <title>{t('meta.dashboard.title')}</title>
+      <meta name="description" content={t('meta.dashboard.description')} />
+    </Helmet>
+  )
+
+  if (loading) return <>{helmet}<LoadingSpinner /></>
 
   if (!stats) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <p className="mb-4 text-xl">Không có dữ liệu thống kê</p>
-          <button onClick={loadStats} className="btn btn-primary">Tải lại</button>
+      <>
+        {helmet}
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <p className="mb-4 text-xl">{t('pages.dashboard.noStats')}</p>
+            <button onClick={loadStats} className="btn btn-primary">{t('actions.refresh')}</button>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   return (
     <div>
+      {helmet}
       <div className="flex justify-between items-center mb-4 md:mb-6">
-        <h1 className="font-bold text-2xl md:text-3xl"><ChartBarIcon className="inline w-7 h-7 md:w-8 md:h-8" /> Dashboard</h1>
+        <h1 className="font-bold text-2xl md:text-3xl"><ChartBarIcon className="inline w-7 h-7 md:w-8 md:h-8" /> {t('pages.dashboard.title')}</h1>
         <button onClick={loadStats} className="btn btn-circle btn-ghost btn-sm md:btn-md">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -65,16 +79,15 @@ function Dashboard({ showToast }) {
         </button>
       </div>
 
-      {/* Note for anonymous users */}
       {!isAuthenticated && (
         <div className="mb-4 md:mb-6 alert alert-info">
           <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <div>
-            <h3 className="font-bold">Bạn đang xem dữ liệu công khai</h3>
+            <h3 className="font-bold">{t('pages.dashboard.publicNote')}</h3>
             <div className="text-sm">
-              <Link to="/login" className="link">Đăng nhập</Link> để xem thêm nội dung riêng tư của bạn và được chia sẻ
+              <Link to="/login" className="link">{t('actions.login')}</Link> {t('pages.dashboard.publicNoteDetail')}
             </div>
           </div>
         </div>
@@ -87,9 +100,9 @@ function Dashboard({ showToast }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <div className="stat-title">Thế giới</div>
+          <div className="stat-title">{t('pages.dashboard.totalWorlds')}</div>
           <div className="text-primary stat-value">{stats?.total_worlds || 0}</div>
-          <div className="stat-desc">Tổng số thế giới đã tạo</div>
+          <div className="stat-desc">{t('pages.dashboard.totalWorldsDesc')}</div>
         </Link>
 
         <Link to="/stories" className="group bg-base-100 hover:bg-secondary/10 shadow rounded-box transition cursor-pointer stat">
@@ -98,29 +111,29 @@ function Dashboard({ showToast }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
-          <div className="stat-title">Câu chuyện</div>
+          <div className="stat-title">{t('pages.dashboard.totalStories')}</div>
           <div className="text-secondary group-hover:text-secondary-content transition-colors stat-value">{stats?.total_stories || 0}</div>
-          <div className="stat-desc">Tổng số câu chuyện</div>
+          <div className="stat-desc">{t('pages.dashboard.totalStoriesDesc')}</div>
         </Link>
       </div>
 
-      {/* Privacy Breakdown Section */}
       {stats?.breakdown && (
         <div className="bg-base-100 shadow mt-4 md:mt-8 p-4 md:p-6 rounded-box">
           <h2 className="mb-4 font-bold text-xl md:text-2xl">
-            {isAuthenticated ? <><LockClosedIcon className="inline w-5 h-5" /> Phân loại dữ liệu</> : <><GlobeAltIcon className="inline w-5 h-5" /> Dữ liệu công khai</>}
+            {isAuthenticated
+              ? <><LockClosedIcon className="inline w-5 h-5" /> {t('pages.dashboard.breakdown')}</>
+              : <><GlobeAltIcon className="inline w-5 h-5" /> {t('pages.dashboard.publicBreakdown')}</>}
           </h2>
 
           <div className="gap-4 md:gap-6 grid grid-cols-1 md:grid-cols-2">
-            {/* Worlds Breakdown */}
             <div className="bg-base-200 p-4 rounded-lg">
-              <h3 className="mb-3 font-semibold text-lg">Thế giới</h3>
+              <h3 className="mb-3 font-semibold text-lg">{t('pages.dashboard.totalWorlds')}</h3>
               <div className="space-y-2">
                 {isAuthenticated && stats.breakdown.worlds.private !== undefined && (
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2">
-                      <Tag color="primary" size="sm">Riêng tư</Tag>
-                      <span className="text-sm">Của bạn</span>
+                      <Tag color="primary" size="sm">{t('common.private')}</Tag>
+                      <span className="text-sm">{t('common.yours')}</span>
                     </span>
                     <span className="font-bold">{stats.breakdown.worlds.private}</span>
                   </div>
@@ -128,31 +141,30 @@ function Dashboard({ showToast }) {
                 {isAuthenticated && stats.breakdown.worlds.shared !== undefined && (
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2">
-                      <Tag color="info" size="sm">Được chia sẻ</Tag>
-                      <span className="text-sm">Từ người khác</span>
+                      <Tag color="info" size="sm">{t('common.shared')}</Tag>
+                      <span className="text-sm">{t('common.fromOthers')}</span>
                     </span>
                     <span className="font-bold">{stats.breakdown.worlds.shared}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-2">
-                    <Tag color="success" size="sm">Công khai</Tag>
-                    <span className="text-sm">Mọi người xem được</span>
+                    <Tag color="success" size="sm">{t('common.public')}</Tag>
+                    <span className="text-sm">{t('common.everyoneSee')}</span>
                   </span>
                   <span className="font-bold">{stats.breakdown.worlds.public}</span>
                 </div>
               </div>
             </div>
 
-            {/* Stories Breakdown */}
             <div className="bg-base-200 p-4 rounded-lg">
-              <h3 className="mb-3 font-semibold text-lg">Câu chuyện</h3>
+              <h3 className="mb-3 font-semibold text-lg">{t('pages.dashboard.totalStories')}</h3>
               <div className="space-y-2">
                 {isAuthenticated && stats.breakdown.stories.private !== undefined && (
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2">
-                      <Tag color="primary" size="sm">Riêng tư</Tag>
-                      <span className="text-sm">Của bạn</span>
+                      <Tag color="primary" size="sm">{t('common.private')}</Tag>
+                      <span className="text-sm">{t('common.yours')}</span>
                     </span>
                     <span className="font-bold">{stats.breakdown.stories.private}</span>
                   </div>
@@ -160,16 +172,16 @@ function Dashboard({ showToast }) {
                 {isAuthenticated && stats.breakdown.stories.shared !== undefined && (
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-2">
-                      <Tag color="info" size="sm">Được chia sẻ</Tag>
-                      <span className="text-sm">Từ người khác</span>
+                      <Tag color="info" size="sm">{t('common.shared')}</Tag>
+                      <span className="text-sm">{t('common.fromOthers')}</span>
                     </span>
                     <span className="font-bold">{stats.breakdown.stories.shared}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-2">
-                    <Tag color="success" size="sm">Công khai</Tag>
-                    <span className="text-sm">Mọi người xem được</span>
+                    <Tag color="success" size="sm">{t('common.public')}</Tag>
+                    <span className="text-sm">{t('common.everyoneSee')}</span>
                   </span>
                   <span className="font-bold">{stats.breakdown.stories.public}</span>
                 </div>
@@ -179,15 +191,13 @@ function Dashboard({ showToast }) {
         </div>
       )}
 
-      {/* User Quota Section (Only for authenticated users) */}
       {isAuthenticated && stats?.user_quota && (
         <div className="bg-base-100 shadow mt-4 md:mt-6 p-4 md:p-6 rounded-box">
-          <h2 className="mb-4 font-bold text-xl md:text-2xl"><ChartPieIcon className="inline w-6 h-6" /> Quota của bạn</h2>
+          <h2 className="mb-4 font-bold text-xl md:text-2xl"><ChartPieIcon className="inline w-6 h-6" /> {t('pages.dashboard.quota')}</h2>
           <div className="gap-4 md:gap-6 grid grid-cols-1 md:grid-cols-2">
-            {/* Worlds Quota */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold">Thế giới công khai</span>
+                <span className="font-semibold">{t('pages.dashboard.publicWorlds')}</span>
                 <span className="text-sm">
                   {stats.user_quota.worlds.current} / {stats.user_quota.worlds.limit}
                 </span>
@@ -198,14 +208,13 @@ function Dashboard({ showToast }) {
                 max={stats.user_quota.worlds.limit}
               ></progress>
               <p className="opacity-70 mt-1 text-xs">
-                Còn {stats.user_quota.worlds.limit - stats.user_quota.worlds.current} slot
+                {t('pages.dashboard.slotsRemaining', { count: stats.user_quota.worlds.limit - stats.user_quota.worlds.current })}
               </p>
             </div>
 
-            {/* Stories Quota */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold">Câu chuyện công khai</span>
+                <span className="font-semibold">{t('pages.dashboard.publicStories')}</span>
                 <span className="text-sm">
                   {stats.user_quota.stories.current} / {stats.user_quota.stories.limit}
                 </span>
@@ -216,7 +225,7 @@ function Dashboard({ showToast }) {
                 max={stats.user_quota.stories.limit}
               ></progress>
               <p className="opacity-70 mt-1 text-xs">
-                Còn {stats.user_quota.stories.limit - stats.user_quota.stories.current} slot
+                {t('pages.dashboard.slotsRemaining', { count: stats.user_quota.stories.limit - stats.user_quota.stories.current })}
               </p>
             </div>
           </div>

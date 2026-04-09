@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import { storiesAPI, worldsAPI, gptAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StoryDetailView from '../components/storyDetail/StoryDetailView'
@@ -7,6 +9,7 @@ import { useGptTasks } from '../contexts/GptTaskContext'
 import { useAuth } from '../contexts/AuthContext'
 
 function StoryDetailContainer({ showToast }) {
+  const { t } = useTranslation()
   const { storyId } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -63,7 +66,7 @@ function StoryDetailContainer({ showToast }) {
         setLinkedLocations([])
       }
     } catch (error) {
-      showToast('Không thể tải chi tiết câu chuyện', 'error')
+      showToast(t('pages.storyDetail.loadError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -127,11 +130,11 @@ function StoryDetailContainer({ showToast }) {
 
   const handleAnalyzeStory = async () => {
     if (!user) {
-      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      showToast(t('pages.storyDetail.loginRequired'), 'warning')
       return
     }
     if (!story?.content) {
-      showToast('Không có mô tả câu chuyện để phân tích', 'warning')
+      showToast(t('pages.storyDetail.noContent'), 'warning')
       return
     }
 
@@ -157,7 +160,7 @@ function StoryDetailContainer({ showToast }) {
         }
       })
     } catch (error) {
-      showToast('Lỗi phân tích GPT', 'error')
+      showToast(t('pages.storyDetail.gptError'), 'error')
       setGptAnalyzing(false)
     }
   }
@@ -177,7 +180,7 @@ function StoryDetailContainer({ showToast }) {
 
   const handleLinkEntities = async () => {
     if (!analyzedEntities) {
-      showToast('Chưa có dữ liệu phân tích', 'warning')
+      showToast(t('pages.storyDetail.noAnalysis'), 'warning')
       return
     }
 
@@ -197,25 +200,25 @@ function StoryDetailContainer({ showToast }) {
       setShowAnalyzedModal(false)
 
       if (createdCount > 0) {
-        showToast(`Đã liên kết và tạo mới ${created_entities?.length || 0} nhân vật, ${created_locations?.length || 0} địa điểm!`, 'success')
+        showToast(t('pages.storyDetail.linkSuccessWithCount', { chars: created_entities?.length || 0, locs: created_locations?.length || 0 }), 'success')
       } else {
-        showToast('Đã liên kết nhân vật và địa điểm!', 'success')
+        showToast(t('pages.storyDetail.linkSuccess'), 'success')
       }
 
       // Reload to get full character/location data
       loadStoryDetails()
     } catch (error) {
-      showToast('Lỗi liên kết: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.storyDetail.linkError') + ': ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
   const handleReanalyzeStory = async () => {
     if (!user) {
-      showToast('Vui lòng đăng nhập để sử dụng tính năng phân tích GPT', 'warning')
+      showToast(t('pages.storyDetail.loginRequired'), 'warning')
       return
     }
     if (!story?.content) {
-      showToast('Không có mô tả câu chuyện để phân tích', 'warning')
+      showToast(t('pages.storyDetail.noContent'), 'warning')
       return
     }
 
@@ -225,7 +228,7 @@ function StoryDetailContainer({ showToast }) {
       setLinkedCharacters([])
       setLinkedLocations([])
       setStory(prev => ({ ...prev, entities: [], locations: [] }))
-      showToast('Đã xóa liên kết cũ, đang phân tích lại...', 'info')
+      showToast(t('pages.storyDetail.clearingLinks'), 'info')
 
       // Step 2: Run GPT analysis
       setGptAnalyzing(true)
@@ -249,19 +252,19 @@ function StoryDetailContainer({ showToast }) {
         }
       })
     } catch (error) {
-      showToast('Lỗi phân tích lại: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.storyDetail.reanalyzeError') + ': ' + (error.response?.data?.error || error.message), 'error')
       setGptAnalyzing(false)
     }
   }
 
   const handleDeleteStory = async () => {
-    if (!confirm(`Bạn có chắc muốn xóa câu chuyện "${story.title}"? Hành động này không thể hoàn tác.`)) {
+    if (!confirm(t('pages.storyDetail.deleteConfirm', { name: story.title }))) {
       return
     }
 
     try {
       await storiesAPI.delete(storyId)
-      showToast(`Đã xóa câu chuyện "${story.title}"`, 'success')
+      showToast(t('pages.storyDetail.deleteSuccess', { name: story.title }), 'success')
       // Navigate back to world or stories list
       if (story.world_id) {
         navigate(`/worlds/${story.world_id}`)
@@ -269,21 +272,29 @@ function StoryDetailContainer({ showToast }) {
         navigate('/stories')
       }
     } catch (error) {
-      showToast('Lỗi khi xóa câu chuyện: ' + (error.response?.data?.error || error.message), 'error')
+      showToast(t('pages.storyDetail.deleteError') + ': ' + (error.response?.data?.error || error.message), 'error')
     }
   }
 
   if (loading) return <LoadingSpinner />
-  if (!story) return <div>Không tìm thấy câu chuyện</div>
+  if (!story) return <div>{t('pages.storyDetail.notFound')}</div>
 
   const displayWorldTime = getStoryWorldTime(story)
   const normalizedTimelineIndex = normalizeTimeIndex(story.time_index)
   const formattedWorldTime = formatWorldTime(story)
 
   const canEdit = !!(user && story && user.user_id === story.owner_id)
+  const pageTitle = story.title
+    ? t('meta.storyDetail.titleTemplate', { name: story.title })
+    : t('meta.storyDetail.titleFallback')
 
   return (
-    <StoryDetailView
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={t('meta.storyDetail.description')} />
+      </Helmet>
+      <StoryDetailView
       story={story}
       world={world}
       linkedCharacters={linkedCharacters}
@@ -305,6 +316,7 @@ function StoryDetailContainer({ showToast }) {
       highlightEventId={highlightEventId}
       highlightPosition={highlightPosition}
     />
+    </>
   )
 }
 

@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import { storiesAPI, gptAPI, authAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import StoryEditorView from '../components/storyEditor/StoryEditorView'
 
 function StoryEditorContainer({ showToast }) {
+  const { t } = useTranslation()
   const { storyId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -67,14 +70,14 @@ function StoryEditorContainer({ showToast }) {
       lastSavedRef.current = { title, content }
       setEditor({ title, content, saveStatus: 'idle', isPublished: data.visibility === 'public', isLoading: false })
     } catch (err) {
-      showToast(err.response?.status === 403 ? 'Access denied' : 'Story not found', 'error')
+      showToast(err.response?.status === 403 ? t('pages.storyEditor.accessDenied') : t('pages.storyEditor.storyNotFound'), 'error')
       navigate('/stories')
     }
   }
 
   const checkForDraft = async () => {
     if (!worldId) {
-      showToast('No world selected. Redirecting…', 'warning')
+      showToast(t('pages.storyEditor.noWorld'), 'warning')
       navigate('/worlds')
       return
     }
@@ -186,15 +189,15 @@ function StoryEditorContainer({ showToast }) {
   const handlePublish = useCallback(async () => {
     if (!storyIdRef.current) await doSave()
     if (!storyIdRef.current) {
-      showToast('Save the story first', 'warning')
+      showToast(t('pages.storyEditor.saveFirst'), 'warning')
       return
     }
     try {
       await storiesAPI.update(storyIdRef.current, { visibility: 'public' })
       setEditor(prev => ({ ...prev, isPublished: true }))
-      showToast('Story published!', 'success')
+      showToast(t('pages.storyEditor.published'), 'success')
     } catch {
-      showToast('Failed to publish', 'error')
+      showToast(t('pages.storyEditor.publishError'), 'error')
     }
   }, [doSave, showToast])
 
@@ -220,7 +223,7 @@ function StoryEditorContainer({ showToast }) {
         : res.data?.suggestions ?? [res.data?.result ?? '']
       setGpt(prev => ({ ...prev, isLoading: false, suggestions: suggestions.filter(Boolean) }))
     } catch {
-      showToast('GPT error', 'error')
+      showToast(t('pages.storyEditor.gptError'), 'error')
       setGpt(prev => ({ ...prev, isLoading: false, suggestions: [] }))
     }
   }, [showToast])
@@ -245,7 +248,7 @@ function StoryEditorContainer({ showToast }) {
     const editorInstance = editorRef.current
     if (!editorInstance || !userSignature) return
     if (editorInstance.getText().includes(`— ${userSignature}`)) {
-      showToast('Signature already in document', 'info')
+      showToast(t('pages.storyEditor.signatureExists'), 'info')
       return
     }
     editorInstance.chain().focus().insertContent(`<p>— ${userSignature}</p>`).run()
@@ -259,8 +262,18 @@ function StoryEditorContainer({ showToast }) {
     onClear: handleClearSuggestions,
   }
 
+  const pageTitle = storyId
+    ? (editor.title ? t('meta.storyEdit.titleTemplate', { name: editor.title }) : t('meta.storyEdit.titleFallback'))
+    : t('meta.storyCreate.title')
+  const pageDescription = storyId ? t('meta.storyEdit.description') : t('meta.storyCreate.description')
+
   return (
-    <StoryEditorView
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+      </Helmet>
+      <StoryEditorView
       editor={editor}
       wordCount={wordCount}
       readTime={readTime}
@@ -278,6 +291,7 @@ function StoryEditorContainer({ showToast }) {
       onInsertSignature={handleInsertSignature}
       initialFormat={initialFormat}
     />
+    </>
   )
 }
 
