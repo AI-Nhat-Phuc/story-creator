@@ -22,6 +22,11 @@ code {
 }
 
 @media (max-width: 639px) {
+  /* Prevent iOS auto-zoom on input focus (triggered when font-size < 16px) */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
   .modal-bottom-sheet {
     display: flex !important;
     align-items: flex-end !important;
