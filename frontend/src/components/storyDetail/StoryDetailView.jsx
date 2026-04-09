@@ -144,7 +144,7 @@ function StoryDetailView({
                     </Link>
                     {onDeleteStory && (
                       <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost" title="Xóa">
-                        <TrashIcon className="w-4 h-4" />
+                        <TrashIcon className="inline w-4 h-4" /> <span className="hidden sm:inline">Xóa</span>
                       </button>
                     )}
                   </>
