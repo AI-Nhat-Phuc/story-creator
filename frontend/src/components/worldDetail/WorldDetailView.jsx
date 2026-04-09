@@ -383,7 +383,7 @@ function WorldDetailView({
 
       {/* Publish Modal */}
       {publishTarget && (
-        <div className="modal modal-open">
+        <div className="modal modal-open modal-bottom-sheet">
           <div className="modal-box max-w-sm">
             <h3 className="font-bold text-lg mb-2">Publish thế giới</h3>
             <p className="mb-4 text-sm opacity-70">Chọn chế độ hiển thị cho thế giới này:</p>

@@ -16,6 +16,36 @@ code {
     monospace;
 }
 
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@media (max-width: 639px) {
+  .modal-bottom-sheet {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+  }
+
+  .modal-bottom-sheet > .modal-box {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 100px !important;
+    max-height: calc(100vh - 100px) !important;
+    overflow-y: auto !important;
+    animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .mobile-slide-up {
+    animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+
 @media print {
   nav, .navbar, .btn, .modal, .modal-backdrop, .toast,
   .dropdown, .tabs, .badge, [role="button"] { display: none !important; }

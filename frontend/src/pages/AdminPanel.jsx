@@ -273,7 +273,7 @@ function AdminPanel({ showToast }) {
 
       {/* Change Role Modal */}
       {showRoleModal && selectedUser && (
-        <div className="modal modal-open">
+        <div className="modal modal-open modal-bottom-sheet">
           <div className="modal-box">
             <h3 className="mb-4 font-bold text-lg">
               {t('pages.admin.changeRoleFor', { name: selectedUser.username })}
@@ -329,7 +329,7 @@ function AdminPanel({ showToast }) {
 
       {/* Ban/Unban Modal */}
       {showBanModal && selectedUser && (
-        <div className="modal modal-open">
+        <div className="modal modal-open modal-bottom-sheet">
           <div className="modal-box">
             <h3 className="mb-4 font-bold text-lg">
               {selectedUser.metadata?.banned

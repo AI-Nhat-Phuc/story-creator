@@ -201,7 +201,7 @@ function Navbar() {
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
-        <div className="modal modal-open">
+        <div className="modal modal-open modal-bottom-sheet">
           <div className="modal-box">
             <h3 className="font-bold text-lg">{t('nav.logoutConfirmTitle')}</h3>
             <p className="py-4">{t('nav.logoutConfirmMsg')}</p>

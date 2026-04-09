@@ -139,7 +139,7 @@ function StoriesView({
 
       {/* World picker modal — shown when user has multiple worlds */}
       {showWorldPicker && (
-        <div className="modal modal-open">
+        <div className="modal modal-open modal-bottom-sheet">
           <div className="modal-box max-w-sm">
             <h3 className="mb-4 font-bold text-lg">Chọn thế giới</h3>
             <p className="mb-4 text-sm text-base-content/70">Câu chuyện sẽ được tạo trong thế giới nào?</p>

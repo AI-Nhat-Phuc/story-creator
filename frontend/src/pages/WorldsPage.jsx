@@ -284,7 +284,7 @@ function WorldsPage({ showToast }) {
 
       {/* Create World Modal */}
       {showCreateModal && (
-        <div className="modal modal-open">
+        <div className="modal modal-open modal-bottom-sheet">
           <div className="max-w-2xl modal-box">
             <h3 className="mb-4 font-bold text-lg">{t('pages.worlds.createModal')}</h3>
 
@@ -340,7 +340,7 @@ function WorldsPage({ showToast }) {
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="h-32 textarea textarea-bordered"
+                  className="h-48 sm:h-32 textarea textarea-bordered"
                   placeholder={t('pages.worlds.descPlaceholder')}
                   required
                 />
