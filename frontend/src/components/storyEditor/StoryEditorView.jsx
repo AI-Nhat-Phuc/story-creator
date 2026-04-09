@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import EditorHeader from './EditorHeader'
 import LeftPanel from './LeftPanel'
 import NovelEditor from './NovelEditor'
@@ -48,7 +47,7 @@ function StoryEditorView({
         onBack={onBack}
       />
 
-      <FormattingToolbar editorRef={editorRef} activeFormats={activeFormats} />
+      <FormattingToolbar editorRef={editorRef} activeFormats={activeFormats} panelOpen={panelOpen} onTogglePanel={() => setPanelOpen(p => !p)} />
 
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel
@@ -72,13 +71,6 @@ function StoryEditorView({
             }
           }}
         >
-          <button
-            className="md:hidden fixed bottom-4 left-4 z-20 btn btn-circle btn-sm btn-primary shadow-lg"
-            onClick={() => setPanelOpen(p => !p)}
-            aria-label="Toggle sidebar"
-          >
-            {panelOpen ? <XMarkIcon className="w-4 h-4" /> : <Bars3Icon className="w-4 h-4" />}
-          </button>
           <NovelEditor
             initialContent={editor.content}
             format={initialFormat}
