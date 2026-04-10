@@ -54,7 +54,7 @@ class CreateStorySchema(Schema):
     )
 
     format = fields.Str(
-        validate=validate.OneOf(['plain', 'markdown', 'html']),
+        validate=validate.OneOf(['plain', 'markdown']),
         load_default='plain'
     )
 
@@ -91,19 +91,14 @@ class UpdateStorySchema(Schema):
         fields.Str(validate=validate.Length(max=50))
     )
 
-    content = fields.Str(
-        load_default=None,
-        allow_none=True
-    )
+    content = fields.Str()
 
     chapter_number = fields.Int(
-        validate=validate.Range(min=1),
-        load_default=None,
-        allow_none=True
+        validate=validate.Range(min=1)
     )
 
     format = fields.Str(
-        validate=validate.OneOf(['plain', 'markdown', 'html'])
+        validate=validate.OneOf(['plain', 'markdown'])
     )
 
     @validates_schema
