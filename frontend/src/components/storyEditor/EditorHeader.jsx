@@ -74,7 +74,7 @@ function EditorHeader({
         </span>
       )}
 
-      {(saveStatus === 'saved' || (saveStatus === 'error' && savedToDb)) && !isPublished && (
+      {savedToDb && !isPublished && (
         <button onClick={onPublish} className="btn btn-success btn-sm shrink-0">
           Xuất bản
         </button>
