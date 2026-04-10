@@ -13,14 +13,27 @@ async function loginAsTestUser(page) {
   await expect(page).not.toHaveURL(/\/login/, { timeout: 10000 })
 }
 
+/** Navigate to /worlds, wait for the enabled create button, open the modal. */
 async function openCreateModal(page) {
   await page.goto('/worlds')
-  // Wait for page to load (create button appears)
-  await expect(page.getByRole('button', { name: /tạo thế giới mới/i })).toBeVisible({ timeout: 10000 })
-  await page.getByRole('button', { name: /tạo thế giới mới/i }).click()
-  // Dialog should open
-  await expect(page.locator('dialog.modal')).toBeVisible({ timeout: 5000 })
+  // Wait for auth to settle and the enabled create button to appear.
+  // testuser is non-admin, so the button is clickable (no btn-disabled class).
+  const createBtn = page.locator('button.btn-primary:not(.btn-disabled)', {
+    hasText: /tạo thế giới mới/i,
+  })
+  await expect(createBtn).toBeVisible({ timeout: 15000 })
+  await createBtn.click()
+  // Dialog should open (native <dialog open> attribute)
+  await expect(page.locator('dialog.modal[open]')).toBeVisible({ timeout: 5000 })
 }
+
+// Scoped selectors inside the open dialog
+const dialogSel = 'dialog.modal[open]'
+const nameInput = (page) => page.locator(`${dialogSel} input[name="name"]`)
+const descTextarea = (page) => page.locator(`${dialogSel} textarea[name="description"]`)
+const worldTypeSelect = (page) => page.locator(`${dialogSel} select[name="world_type"]`)
+const createBtn = (page) => page.locator(`${dialogSel} button`).filter({ hasText: /phân tích/i })
+const cancelBtn = (page) => page.locator(`${dialogSel} button`).filter({ hasText: /hủy/i })
 
 // ── Suite ──────────────────────────────────────────────────────────────────
 
@@ -32,134 +45,116 @@ test.describe('Create World Modal', () => {
   // ── Modal Open / Close ────────────────────────────────────────────────────
 
   test('opens create-world modal when button is clicked', async ({ page }) => {
-    await page.goto('/worlds')
-    await page.getByRole('button', { name: /tạo thế giới mới/i }).click()
-    await expect(page.locator('dialog.modal')).toBeVisible()
-    await expect(page.getByRole('heading', { name: /tạo thế giới mới/i })).toBeVisible()
+    await openCreateModal(page)
+    await expect(page.locator(dialogSel)).toBeVisible()
+    // Modal heading is inside the open dialog
+    await expect(page.locator(`${dialogSel} h3`)).toContainText(/tạo thế giới mới/i)
   })
 
   test('cancel button closes the modal', async ({ page }) => {
     await openCreateModal(page)
-    const cancelBtn = page.getByRole('button', { name: /huỷ|hủy/i })
-    await expect(cancelBtn).toBeVisible()
-    await expect(cancelBtn).toBeEnabled()
-    await cancelBtn.click()
-    await expect(page.locator('dialog.modal')).not.toBeVisible({ timeout: 3000 })
+    await expect(cancelBtn(page)).toBeVisible()
+    await expect(cancelBtn(page)).toBeEnabled()
+    await cancelBtn(page).click()
+    await expect(page.locator('dialog.modal[open]')).not.toBeVisible({ timeout: 3000 })
   })
 
-  test('cancel button is clickable and resets form', async ({ page }) => {
+  test('cancel button resets form on close', async ({ page }) => {
     await openCreateModal(page)
 
     // Fill in some data
-    await page.getByLabel(/tên thế giới/i).fill('Test World Name')
+    await nameInput(page).fill('Test World Name')
+    await expect(nameInput(page)).toHaveValue('Test World Name')
 
-    // Click cancel
-    await page.getByRole('button', { name: /huỷ|hủy/i }).click()
+    // Cancel
+    await cancelBtn(page).click()
+    await expect(page.locator('dialog.modal[open]')).not.toBeVisible({ timeout: 3000 })
 
-    // Modal is gone
-    await expect(page.locator('dialog.modal')).not.toBeVisible({ timeout: 3000 })
-
-    // Re-open: form should be reset
-    await page.getByRole('button', { name: /tạo thế giới mới/i }).click()
-    await expect(page.locator('dialog.modal')).toBeVisible()
-    await expect(page.getByLabel(/tên thế giới/i)).toHaveValue('')
+    // Re-open: form should be empty
+    await openCreateModal(page)
+    await expect(nameInput(page)).toHaveValue('')
   })
 
   test('ESC key closes the modal', async ({ page }) => {
     await openCreateModal(page)
     await page.keyboard.press('Escape')
-    await expect(page.locator('dialog.modal')).not.toBeVisible({ timeout: 3000 })
+    await expect(page.locator('dialog.modal[open]')).not.toBeVisible({ timeout: 3000 })
   })
 
-  // ── Form Validation ───────────────────────────────────────────────────────
+  // ── Button States ─────────────────────────────────────────────────────────
 
-  test('create button is visible and enabled when modal opens', async ({ page }) => {
+  test('create-and-analyze button is visible and enabled in initial state', async ({ page }) => {
     await openCreateModal(page)
-    const createBtn = page.getByRole('button', { name: /tạo & phân tích/i })
-    await expect(createBtn).toBeVisible()
-    await expect(createBtn).toBeEnabled()
+    await expect(createBtn(page)).toBeVisible()
+    await expect(createBtn(page)).toBeEnabled()
   })
 
-  test('both buttons are clickable from the initial modal state', async ({ page }) => {
+  test('cancel button is visible and enabled in initial state', async ({ page }) => {
     await openCreateModal(page)
-
-    // Verify create button is enabled (not disabled or hidden)
-    const createBtn = page.getByRole('button', { name: /tạo & phân tích/i })
-    await expect(createBtn).toBeEnabled()
-    await expect(createBtn).toBeVisible()
-
-    // Verify cancel button is enabled
-    const cancelBtn = page.getByRole('button', { name: /huỷ|hủy/i })
-    await expect(cancelBtn).toBeEnabled()
-    await expect(cancelBtn).toBeVisible()
+    await expect(cancelBtn(page)).toBeVisible()
+    await expect(cancelBtn(page)).toBeEnabled()
   })
 
-  test('create button shows validation toast when fields are empty', async ({ page }) => {
+  test('both action buttons are clickable immediately after modal opens', async ({ page }) => {
     await openCreateModal(page)
-
-    // Click create without filling required fields
-    await page.getByRole('button', { name: /tạo & phân tích/i }).click()
-
-    // Should show a warning toast (not crash, not disable buttons)
-    // Modal stays open since validation failed
-    await expect(page.locator('dialog.modal')).toBeVisible({ timeout: 2000 })
-
-    // Buttons should still be enabled after a failed validation
-    await expect(page.getByRole('button', { name: /huỷ|hủy/i })).toBeEnabled()
+    // Neither button should be disabled or hidden initially
+    await expect(createBtn(page)).toBeEnabled()
+    await expect(cancelBtn(page)).toBeEnabled()
   })
 
-  // ── Form Interaction ─────────────────────────────────────────────────────
+  test('clicking create with empty fields keeps modal open (validation)', async ({ page }) => {
+    await openCreateModal(page)
+    await createBtn(page).click()
+    // Modal stays open after failed validation
+    await expect(page.locator(dialogSel)).toBeVisible({ timeout: 2000 })
+    // Buttons should still be enabled
+    await expect(cancelBtn(page)).toBeEnabled()
+  })
+
+  // ── Form Interaction ──────────────────────────────────────────────────────
 
   test('can type in name and description fields', async ({ page }) => {
     await openCreateModal(page)
 
-    await page.getByLabel(/tên thế giới/i).fill('Thế giới Tây du')
-    await expect(page.getByLabel(/tên thế giới/i)).toHaveValue('Thế giới Tây du')
+    await nameInput(page).fill('Thế giới Tây du')
+    await expect(nameInput(page)).toHaveValue('Thế giới Tây du')
 
-    await page.locator('textarea[name="description"]').fill('Thế giới tu tiên với nhiều nhân vật')
-    await expect(page.locator('textarea[name="description"]')).toHaveValue('Thế giới tu tiên với nhiều nhân vật')
+    await descTextarea(page).fill('Thế giới tu tiên với nhiều nhân vật')
+    await expect(descTextarea(page)).toHaveValue('Thế giới tu tiên với nhiều nhân vật')
   })
 
-  test('world type select has correct options', async ({ page }) => {
+  test('world type select has expected options', async ({ page }) => {
     await openCreateModal(page)
-
-    const select = page.locator('select[name="world_type"]')
-    await expect(select).toBeVisible()
-
-    // Verify options exist
-    await expect(select.locator('option[value="fantasy"]')).toHaveCount(1)
-    await expect(select.locator('option[value="sci-fi"]')).toHaveCount(1)
-    await expect(select.locator('option[value="modern"]')).toHaveCount(1)
-    await expect(select.locator('option[value="historical"]')).toHaveCount(1)
+    const sel = worldTypeSelect(page)
+    await expect(sel).toBeVisible()
+    await expect(sel.locator('option[value="fantasy"]')).toHaveCount(1)
+    await expect(sel.locator('option[value="sci-fi"]')).toHaveCount(1)
+    await expect(sel.locator('option[value="modern"]')).toHaveCount(1)
+    await expect(sel.locator('option[value="historical"]')).toHaveCount(1)
   })
 
   test('can change world type', async ({ page }) => {
     await openCreateModal(page)
-
-    const select = page.locator('select[name="world_type"]')
-    await select.selectOption('sci-fi')
-    await expect(select).toHaveValue('sci-fi')
+    const sel = worldTypeSelect(page)
+    await sel.selectOption('sci-fi')
+    await expect(sel).toHaveValue('sci-fi')
   })
 
-  // ── Mobile bottom-sheet layout ────────────────────────────────────────────
+  // ── Dialog element ────────────────────────────────────────────────────────
 
-  test('modal renders as dialog element (not div)', async ({ page }) => {
+  test('modal renders as native <dialog> element', async ({ page }) => {
     await openCreateModal(page)
-    // Verify it's actually a <dialog> element
-    const tagName = await page.locator('.modal').evaluate(el => el.tagName.toLowerCase())
+    const tagName = await page.locator(dialogSel).evaluate((el) => el.tagName.toLowerCase())
     expect(tagName).toBe('dialog')
   })
 
   test('buttons remain enabled after cancel-and-reopen cycle', async ({ page }) => {
     await openCreateModal(page)
-    await page.getByRole('button', { name: /huỷ|hủy/i }).click()
-    await expect(page.locator('dialog.modal')).not.toBeVisible()
+    await cancelBtn(page).click()
+    await expect(page.locator('dialog.modal[open]')).not.toBeVisible({ timeout: 3000 })
 
-    // Re-open
-    await page.getByRole('button', { name: /tạo thế giới mới/i }).click()
-    await expect(page.locator('dialog.modal')).toBeVisible()
-
-    await expect(page.getByRole('button', { name: /tạo & phân tích/i })).toBeEnabled()
-    await expect(page.getByRole('button', { name: /huỷ|hủy/i })).toBeEnabled()
+    await openCreateModal(page)
+    await expect(createBtn(page)).toBeEnabled()
+    await expect(cancelBtn(page)).toBeEnabled()
   })
 })
