@@ -1,5 +1,5 @@
 {
-  "phase": "REVIEW",
+  "phase": "DONE",
   "current_feature": "fix-session-loss-on-deploy",
   "task_dir": ".task/fix_session_loss_on_deploy",
   "breakdown": [],
@@ -33,6 +33,11 @@
       "from": "IMPLEMENT",
       "to": "REVIEW",
       "at": "2026-04-10 15:17:08"
+    },
+    {
+      "from": "REVIEW",
+      "to": "DONE",
+      "at": "2026-04-10 15:17:34"
     }
   ]
 }
