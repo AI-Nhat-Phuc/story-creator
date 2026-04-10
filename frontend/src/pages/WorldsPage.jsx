@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
@@ -27,10 +27,27 @@ function WorldsPage({ showToast }) {
   })
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [gptEntities, setGptEntities] = useState(null)
+  const dialogRef = useRef(null)
 
   useEffect(() => {
     loadWorlds()
   }, [isAuthenticated])
+
+  // Sync native <dialog> open/close state with React state
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (showCreateModal) {
+      if (!dialog.open) dialog.showModal()
+    } else {
+      if (dialog.open) dialog.close()
+    }
+  }, [showCreateModal])
+
+  const handleClose = () => {
+    setShowCreateModal(false)
+    resetForm()
+  }
 
   const loadWorlds = async () => {
     try {
@@ -70,24 +87,26 @@ function WorldsPage({ showToast }) {
 
       // Poll for results
       const checkResults = async () => {
-        const result = await gptAPI.getResults(taskId)
-        console.log('[DEBUG] GPT Result:', result.data)
-        if (result.data.status === 'completed') {
-          // Extract description from result object
-          const resultData = result.data.result
-          console.log('[DEBUG] Result data:', resultData)
-          const generatedDesc = 'description' in resultData
-            ? resultData.description
-            : (typeof resultData === 'string' ? resultData : '')
-          console.log('[DEBUG] Generated desc:', generatedDesc)
-          setFormData({ ...formData, description: generatedDesc })
-          showToast(t('pages.worlds.toast.gptDescDone'), 'success')
+        try {
+          const result = await gptAPI.getResults(taskId)
+          if (result.data.status === 'completed') {
+            // Extract description from result object
+            const resultData = result.data.result
+            const generatedDesc = 'description' in resultData
+              ? resultData.description
+              : (typeof resultData === 'string' ? resultData : '')
+            setFormData(prev => ({ ...prev, description: generatedDesc }))
+            showToast(t('pages.worlds.toast.gptDescDone'), 'success')
+            setGptAnalyzing(false)
+          } else if (result.data.status === 'error') {
+            showToast(result.data.result, 'error')
+            setGptAnalyzing(false)
+          } else {
+            setTimeout(checkResults, 500)
+          }
+        } catch (err) {
+          showToast(t('pages.worlds.toast.gptDescError'), 'error')
           setGptAnalyzing(false)
-        } else if (result.data.status === 'error') {
-          showToast(result.data.result, 'error')
-          setGptAnalyzing(false)
-        } else {
-          setTimeout(checkResults, 500)
         }
       }
 
@@ -123,16 +142,21 @@ function WorldsPage({ showToast }) {
 
       // Poll for results
       const checkResults = async () => {
-        const result = await gptAPI.getResults(taskId)
-        if (result.data.status === 'completed') {
-          setGptEntities(result.data.result)
-          showToast(t('pages.worlds.toast.gptAnalysisDone'), 'success')
+        try {
+          const result = await gptAPI.getResults(taskId)
+          if (result.data.status === 'completed') {
+            setGptEntities(result.data.result)
+            showToast(t('pages.worlds.toast.gptAnalysisDone'), 'success')
+            setGptAnalyzing(false)
+          } else if (result.data.status === 'error') {
+            showToast(result.data.result, 'error')
+            setGptAnalyzing(false)
+          } else {
+            setTimeout(checkResults, 500)
+          }
+        } catch (err) {
+          showToast(t('pages.worlds.toast.gptAnalysisError'), 'error')
           setGptAnalyzing(false)
-        } else if (result.data.status === 'error') {
-          showToast(result.data.result, 'error')
-          setGptAnalyzing(false)
-        } else {
-          setTimeout(checkResults, 500)
         }
       }
 
@@ -169,27 +193,31 @@ function WorldsPage({ showToast }) {
 
       // Poll for GPT results
       const checkResults = async () => {
-        const result = await gptAPI.getResults(taskId)
-        if (result.data.status === 'completed') {
-          const entities = result.data.result
+        try {
+          const result = await gptAPI.getResults(taskId)
+          if (result.data.status === 'completed') {
+            const entities = result.data.result
 
-          // Create world with GPT entities
-          const payload = {
-            ...formData,
-            gpt_entities: entities
+            // Create world with GPT entities
+            const payload = {
+              ...formData,
+              gpt_entities: entities
+            }
+
+            await worldsAPI.create(payload)
+            showToast(t('pages.worlds.toast.createSuccess', { chars: entities.characters?.length || 0, locs: entities.locations?.length || 0 }), 'success')
+            setShowCreateModal(false)
+            setGptAnalyzing(false)
+            loadWorlds()
+          } else if (result.data.status === 'error') {
+            showToast(t('pages.worlds.toast.createError'), 'error')
+            setGptAnalyzing(false)
+          } else {
+            setTimeout(checkResults, 500)
           }
-
-          await worldsAPI.create(payload)
-          showToast(t('pages.worlds.toast.createSuccess', { chars: entities.characters?.length || 0, locs: entities.locations?.length || 0 }), 'success')
-          setShowCreateModal(false)
-          resetForm()
+        } catch (err) {
+          showToast(t('pages.worlds.toast.createError'), 'error')
           setGptAnalyzing(false)
-          loadWorlds()
-        } else if (result.data.status === 'error') {
-          showToast('Lỗi phân tích GPT: ' + result.data.result, 'error')
-          setGptAnalyzing(false)
-        } else {
-          setTimeout(checkResults, 500)
         }
       }
 
@@ -283,8 +311,13 @@ function WorldsPage({ showToast }) {
       )}
 
       {/* Create World Modal */}
-      {showCreateModal && (
-        <div className="modal modal-open modal-bottom-sheet">
+      <dialog
+        ref={dialogRef}
+        className="modal modal-bottom-sheet"
+        onClose={handleClose}
+        onCancel={(e) => { if (gptAnalyzing) e.preventDefault() }}
+        onClick={(e) => { if (e.target === dialogRef.current && !gptAnalyzing) dialogRef.current.close() }}
+      >
           <div className="max-w-2xl modal-box">
             <h3 className="mb-4 font-bold text-lg">{t('pages.worlds.createModal')}</h3>
 
@@ -410,12 +443,11 @@ function WorldsPage({ showToast }) {
                 >
                   {t('pages.worlds.createAndAnalyze')}
                 </GptButton>
-                <button type="button" onClick={() => { setShowCreateModal(false); resetForm() }} className="btn" disabled={gptAnalyzing}>{t('common.cancel')}</button>
+                <button type="button" onClick={() => dialogRef.current?.close()} className="btn" disabled={gptAnalyzing}>{t('common.cancel')}</button>
               </div>
             </form>
           </div>
-        </div>
-      )}
+      </dialog>
     </div>
   )
 }
