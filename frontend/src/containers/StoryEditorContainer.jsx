@@ -19,10 +19,9 @@ function StoryEditorContainer({ showToast }) {
   const [editor, setEditor] = useState({
     title: '',
     content: '',
-    saveStatus: 'idle',
+    saveStatus: storyId ? 'idle' : 'new',
     isPublished: false,
     isLoading: true,
-    savedToDb: !!storyId,
   })
   const [initialFormat, setInitialFormat] = useState('html')
   const [gpt, setGpt] = useState({ isLoading: false, suggestions: [], selectionLength: 0 })
@@ -71,7 +70,7 @@ function StoryEditorContainer({ showToast }) {
       setInitialFormat(data.format || 'plain')
       editorDataRef.current = { title, content }
       lastSavedRef.current = { title, content }
-      setEditor({ title, content, saveStatus: 'idle', isPublished: data.visibility === 'public', isLoading: false, savedToDb: true })
+      setEditor({ title, content, saveStatus: 'idle', isPublished: data.visibility === 'public', isLoading: false })
     } catch (err) {
       showToast(err.response?.status === 403 ? t('pages.storyEditor.accessDenied') : t('pages.storyEditor.storyNotFound'), 'error')
       navigate('/stories')
@@ -133,7 +132,7 @@ function StoryEditorContainer({ showToast }) {
         })
         storyIdRef.current = res.data.story_id
         lastSavedRef.current = { title, content }
-        setEditor(prev => ({ ...prev, saveStatus: 'saved', savedToDb: true }))
+        setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
       } else {
         await storiesAPI.patch(storyIdRef.current, { title, content })
         lastSavedRef.current = { title, content }
