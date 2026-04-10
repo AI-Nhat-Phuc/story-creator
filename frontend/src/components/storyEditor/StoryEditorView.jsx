@@ -45,6 +45,7 @@ function StoryEditorView({
         onPublish={onPublish}
         isPublished={editor.isPublished}
         onBack={onBack}
+        onTitleFocus={() => setPanelOpen(false)}
       />
 
       <FormattingToolbar editorRef={editorRef} activeFormats={activeFormats} panelOpen={panelOpen} onTogglePanel={() => setPanelOpen(p => !p)} />
@@ -61,6 +62,7 @@ function StoryEditorView({
 
         <main
           className="flex-1 overflow-y-auto cursor-text"
+          onFocus={() => setPanelOpen(false)}
           onClick={(e) => {
             // Focus editor when clicking outside the actual ProseMirror content area
             if (!e.target.closest('.ProseMirror')) {
