@@ -1,5 +1,5 @@
-import React from 'react'
-import { SparklesIcon } from '@heroicons/react/24/outline'
+import React, { useState } from 'react'
+import { SparklesIcon, EyeIcon } from '@heroicons/react/24/outline'
 import LoadingSpinner from '../LoadingSpinner'
 
 function GptToolsPanel({
@@ -12,6 +12,16 @@ function GptToolsPanel({
   onClear,
 }) {
   const canUseGpt = selectionLength >= 10
+  const [previewIdx, setPreviewIdx] = useState(null)
+
+  function closePreview() {
+    setPreviewIdx(null)
+  }
+
+  function handleApply(s) {
+    closePreview()
+    onApply(s)
+  }
 
   return (
     <div className="space-y-3">
@@ -60,14 +70,54 @@ function GptToolsPanel({
           {suggestions.map((s, i) => (
             <div key={i} className="bg-base-200 rounded p-2 text-sm space-y-1">
               <p className="text-base-content line-clamp-3">{s}</p>
-              <button
-                onMouseDown={(e) => { e.preventDefault(); onApply(s) }}
-                className="btn btn-xs btn-primary w-full"
-              >
-                Áp dụng
-              </button>
+              <div className="flex gap-1">
+                <button
+                  onMouseDown={(e) => { e.preventDefault(); setPreviewIdx(i) }}
+                  className="btn btn-xs btn-outline flex-1 gap-1"
+                >
+                  <EyeIcon className="w-3 h-3" />
+                  Xem trước
+                </button>
+                <button
+                  onMouseDown={(e) => { e.preventDefault(); handleApply(s) }}
+                  className="btn btn-xs btn-primary flex-1"
+                >
+                  Áp dụng
+                </button>
+              </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Preview modal */}
+      {previewIdx !== null && suggestions[previewIdx] !== undefined && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closePreview()
+          }}
+        >
+          <div className="bg-base-100 rounded-xl shadow-2xl w-full max-w-sm flex flex-col gap-4 p-4 max-h-[70vh]">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-sm">Xem trước</span>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); closePreview() }}
+                className="btn btn-ghost btn-xs btn-circle"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-sm text-base-content leading-relaxed overflow-y-auto whitespace-pre-wrap flex-1">
+              {suggestions[previewIdx]}
+            </p>
+            <button
+              onMouseDown={(e) => { e.preventDefault(); handleApply(suggestions[previewIdx]) }}
+              className="btn btn-primary btn-sm w-full"
+            >
+              Áp dụng
+            </button>
+          </div>
         </div>
       )}
     </div>
