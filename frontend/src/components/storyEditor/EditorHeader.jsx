@@ -81,7 +81,7 @@ function EditorHeader({
           </span>
         )}
 
-        {saveStatus !== 'new' && !isPublished && (
+        {saveStatus !== 'new' && !isPublished && title.trim() && wordCount > 0 && (
           <button onClick={onPublish} className="btn btn-success btn-sm shrink-0">
             Xuất bản
           </button>
