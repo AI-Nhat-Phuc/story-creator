@@ -11,6 +11,7 @@ const STATUS_BADGE = {
 function EditorHeader({
   title,
   saveStatus,
+  savedToDb,
   wordCount,
   readTime,
   isPublished,
@@ -73,7 +74,7 @@ function EditorHeader({
         </span>
       )}
 
-      {(saveStatus === 'saved' || saveStatus === 'error') && !isPublished && (
+      {(saveStatus === 'saved' || (saveStatus === 'error' && savedToDb)) && !isPublished && (
         <button onClick={onPublish} className="btn btn-success btn-sm shrink-0">
           Xuất bản
         </button>

@@ -38,6 +38,7 @@ function StoryEditorView({
       <EditorHeader
         title={editor.title}
         saveStatus={editor.saveStatus}
+        savedToDb={editor.savedToDb}
         wordCount={wordCount}
         readTime={readTime}
         onTitleChange={onTitleChange}

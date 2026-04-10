@@ -266,6 +266,7 @@
       "saveFirst": "Save the story first",
       "published": "Story published!",
       "publishError": "Failed to publish",
+      "saveError": "Failed to save",
       "gptError": "GPT error",
       "signatureExists": "Signature already in document"
     },

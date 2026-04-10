@@ -22,6 +22,7 @@ function StoryEditorContainer({ showToast }) {
     saveStatus: 'idle',
     isPublished: false,
     isLoading: true,
+    savedToDb: !!storyId,
   })
   const [initialFormat, setInitialFormat] = useState('html')
   const [gpt, setGpt] = useState({ isLoading: false, suggestions: [], selectionLength: 0 })
@@ -70,7 +71,7 @@ function StoryEditorContainer({ showToast }) {
       setInitialFormat(data.format || 'plain')
       editorDataRef.current = { title, content }
       lastSavedRef.current = { title, content }
-      setEditor({ title, content, saveStatus: 'idle', isPublished: data.visibility === 'public', isLoading: false })
+      setEditor({ title, content, saveStatus: 'idle', isPublished: data.visibility === 'public', isLoading: false, savedToDb: true })
     } catch (err) {
       showToast(err.response?.status === 403 ? t('pages.storyEditor.accessDenied') : t('pages.storyEditor.storyNotFound'), 'error')
       navigate('/stories')
@@ -131,15 +132,19 @@ function StoryEditorContainer({ showToast }) {
           format: 'html',
         })
         storyIdRef.current = res.data.story_id
+        lastSavedRef.current = { title, content }
+        setEditor(prev => ({ ...prev, saveStatus: 'saved', savedToDb: true }))
       } else {
         await storiesAPI.patch(storyIdRef.current, { title, content })
+        lastSavedRef.current = { title, content }
+        setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
       }
-      lastSavedRef.current = { title, content }
-      setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
-    } catch {
+    } catch (err) {
+      const msg = err.response?.data?.message || t('pages.storyEditor.saveError')
+      showToast(msg, 'error')
       setEditor(prev => ({ ...prev, saveStatus: 'error' }))
     }
-  }, [])
+  }, [showToast, t])
 
   const scheduleAutoSave = useCallback(() => {
     clearTimeout(saveTimerRef.current)
@@ -274,23 +279,23 @@ function StoryEditorContainer({ showToast }) {
         <meta name="description" content={pageDescription} />
       </Helmet>
       <StoryEditorView
-      editor={editor}
-      wordCount={wordCount}
-      readTime={readTime}
-      headings={headings}
-      editorRef={editorRef}
-      gpt={gptProps}
-      activeFormats={activeFormats}
-      userSignature={userSignature}
-      onTitleChange={handleTitleChange}
-      onContentUpdate={handleContentUpdate}
-      onSelectionChange={handleSelectionChange}
-      onSave={handleSave}
-      onPublish={handlePublish}
-      onBack={handleBack}
-      onInsertSignature={handleInsertSignature}
-      initialFormat={initialFormat}
-    />
+        editor={editor}
+        wordCount={wordCount}
+        readTime={readTime}
+        headings={headings}
+        editorRef={editorRef}
+        gpt={gptProps}
+        activeFormats={activeFormats}
+        userSignature={userSignature}
+        onTitleChange={handleTitleChange}
+        onContentUpdate={handleContentUpdate}
+        onSelectionChange={handleSelectionChange}
+        onSave={handleSave}
+        onPublish={handlePublish}
+        onBack={handleBack}
+        onInsertSignature={handleInsertSignature}
+        initialFormat={initialFormat}
+      />
     </>
   )
 }
