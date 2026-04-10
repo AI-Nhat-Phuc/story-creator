@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 const STATUS_BADGE = {
+  new:     { cls: 'badge-ghost',    label: 'New'      },
   idle:    { cls: 'badge-warning',  label: 'Draft'    },
   saving:  { cls: '',               label: 'Saving…'  },
   saved:   { cls: '',               label: 'Saved'    },
@@ -73,7 +74,7 @@ function EditorHeader({
         </span>
       )}
 
-      {(saveStatus === 'saved' || saveStatus === 'error') && !isPublished && (
+      {saveStatus !== 'new' && !isPublished && (
         <button onClick={onPublish} className="btn btn-success btn-sm shrink-0">
           Xuất bản
         </button>

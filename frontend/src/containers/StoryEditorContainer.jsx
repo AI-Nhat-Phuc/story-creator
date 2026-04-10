@@ -19,7 +19,7 @@ function StoryEditorContainer({ showToast }) {
   const [editor, setEditor] = useState({
     title: '',
     content: '',
-    saveStatus: 'idle',
+    saveStatus: storyId ? 'idle' : 'new',
     isPublished: false,
     isLoading: true,
   })
@@ -131,15 +131,19 @@ function StoryEditorContainer({ showToast }) {
           format: 'html',
         })
         storyIdRef.current = res.data.story_id
+        lastSavedRef.current = { title, content }
+        setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
       } else {
         await storiesAPI.patch(storyIdRef.current, { title, content })
+        lastSavedRef.current = { title, content }
+        setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
       }
-      lastSavedRef.current = { title, content }
-      setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
-    } catch {
+    } catch (err) {
+      const msg = err.response?.data?.message || t('pages.storyEditor.saveError')
+      showToast(msg, 'error')
       setEditor(prev => ({ ...prev, saveStatus: 'error' }))
     }
-  }, [])
+  }, [showToast, t])
 
   const scheduleAutoSave = useCallback(() => {
     clearTimeout(saveTimerRef.current)
@@ -274,23 +278,23 @@ function StoryEditorContainer({ showToast }) {
         <meta name="description" content={pageDescription} />
       </Helmet>
       <StoryEditorView
-      editor={editor}
-      wordCount={wordCount}
-      readTime={readTime}
-      headings={headings}
-      editorRef={editorRef}
-      gpt={gptProps}
-      activeFormats={activeFormats}
-      userSignature={userSignature}
-      onTitleChange={handleTitleChange}
-      onContentUpdate={handleContentUpdate}
-      onSelectionChange={handleSelectionChange}
-      onSave={handleSave}
-      onPublish={handlePublish}
-      onBack={handleBack}
-      onInsertSignature={handleInsertSignature}
-      initialFormat={initialFormat}
-    />
+        editor={editor}
+        wordCount={wordCount}
+        readTime={readTime}
+        headings={headings}
+        editorRef={editorRef}
+        gpt={gptProps}
+        activeFormats={activeFormats}
+        userSignature={userSignature}
+        onTitleChange={handleTitleChange}
+        onContentUpdate={handleContentUpdate}
+        onSelectionChange={handleSelectionChange}
+        onSave={handleSave}
+        onPublish={handlePublish}
+        onBack={handleBack}
+        onInsertSignature={handleInsertSignature}
+        initialFormat={initialFormat}
+      />
     </>
   )
 }

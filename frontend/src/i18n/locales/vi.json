@@ -266,6 +266,7 @@
       "saveFirst": "Hãy lưu câu chuyện trước",
       "published": "Đã phát hành câu chuyện!",
       "publishError": "Không thể phát hành",
+      "saveError": "Lưu thất bại",
       "gptError": "Lỗi GPT",
       "signatureExists": "Chữ ký đã có trong tài liệu"
     },
