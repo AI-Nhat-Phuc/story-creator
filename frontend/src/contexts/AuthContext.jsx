@@ -57,8 +57,12 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error('Token verification failed:', error)
-          localStorage.removeItem('auth_token')
-          setToken(null)
+          // Chỉ xóa token khi server từ chối rõ ràng (401).
+          // Lỗi mạng / 5xx (cold start Vercel) không xóa token.
+          if (error.response?.status === 401) {
+            localStorage.removeItem('auth_token')
+            setToken(null)
+          }
         }
       }
       setLoading(false)
