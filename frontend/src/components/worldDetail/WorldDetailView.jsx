@@ -131,9 +131,9 @@ function WorldDetailView({
           </>
         ) : (
           <>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+            <div className="flex justify-between items-center gap-2 mb-2">
               <h1 className="font-bold text-2xl md:text-3xl">{world.name}</h1>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 shrink-0">
                 {canEdit && world.visibility !== 'public' && (
                   <button onClick={() => setPublishTarget(world.visibility === 'draft' ? 'private' : 'public')} className="btn btn-success btn-sm">
                     Publish
@@ -141,7 +141,7 @@ function WorldDetailView({
                 )}
                 {canEdit && (
                   <button onClick={onEdit} className="btn btn-sm btn-ghost">
-                    <PencilIcon className="inline w-4 h-4" /> Sửa
+                    <PencilIcon className="inline w-4 h-4" /> <span className="hidden sm:inline">Sửa</span>
                   </button>
                 )}
               </div>
@@ -383,7 +383,7 @@ function WorldDetailView({
 
       {/* Publish Modal */}
       {publishTarget && (
-        <div className="modal modal-open">
+        <div className="modal modal-open modal-bottom-sheet">
           <div className="modal-box max-w-sm">
             <h3 className="font-bold text-lg mb-2">Publish thế giới</h3>
             <p className="mb-4 text-sm opacity-70">Chọn chế độ hiển thị cho thế giới này:</p>

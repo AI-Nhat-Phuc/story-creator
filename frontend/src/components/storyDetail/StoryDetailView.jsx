@@ -140,7 +140,7 @@ function StoryDetailView({
                 {canEdit && (
                   <>
                     <Link to={`/stories/${story.story_id}/edit`} className="btn btn-sm btn-ghost">
-                      <PencilIcon className="inline w-4 h-4" /> Sửa
+                      <PencilIcon className="inline w-4 h-4" /> <span className="hidden sm:inline">Sửa</span>
                     </Link>
                     {onDeleteStory && (
                       <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost" title="Xóa">
@@ -221,9 +221,9 @@ function StoryDetailView({
           </div>
         </div>
 
-        {/* Analysis panel toggle */}
+        {/* Desktop: Analysis panel sidebar (hidden on mobile) */}
         {story.content && (
-          <div className="flex items-start ml-2 mt-0">
+          <div className="hidden sm:flex items-start ml-2 mt-0">
             <button
               onClick={() => setShowAnalysisPanel(v => !v)}
               className="btn btn-ghost btn-sm px-1.5 py-6 h-auto rounded-l-lg rounded-r-none border border-base-300 border-r-0 bg-base-100 shadow"
@@ -234,7 +234,6 @@ function StoryDetailView({
               </span>
             </button>
 
-            {/* Analysis panel */}
             {showAnalysisPanel && (
               <div className="bg-base-100 shadow-xl border border-base-300 rounded-r-box w-72 shrink-0 overflow-hidden">
                 <div className="bg-base-200 px-4 py-3 border-b border-base-300">
@@ -244,35 +243,20 @@ function StoryDetailView({
                   </h3>
                 </div>
                 <div className="p-4 space-y-4">
-                  {/* Analyze buttons */}
                   {!analyzedEntities && (
                     <>
                       {!hasLinks && (
-                        <GptButton
-                          onClick={onAnalyzeStory}
-                          loading={gptAnalyzing}
-                          loadingText="Đang phân tích..."
-                          variant="primary"
-                          size="sm"
-                        >
+                        <GptButton onClick={onAnalyzeStory} loading={gptAnalyzing} loadingText="Đang phân tích..." variant="primary" size="sm">
                           Phân tích nhân vật & địa điểm
                         </GptButton>
                       )}
                       {hasLinks && (
-                        <GptButton
-                          onClick={onReanalyzeStory}
-                          loading={gptAnalyzing}
-                          loadingText="Đang phân tích lại..."
-                          variant="warning"
-                          size="sm"
-                        >
+                        <GptButton onClick={onReanalyzeStory} loading={gptAnalyzing} loadingText="Đang phân tích lại..." variant="warning" size="sm">
                           Phân tích lại
                         </GptButton>
                       )}
                     </>
                   )}
-
-                  {/* Linked characters */}
                   {linkedCharacters.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
@@ -280,15 +264,11 @@ function StoryDetailView({
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {linkedCharacters.map((char) => (
-                          <Tag key={char.entity_id} color="primary" size="sm" icon={UserIcon}>
-                            {char.name}
-                          </Tag>
+                          <Tag key={char.entity_id} color="primary" size="sm" icon={UserIcon}>{char.name}</Tag>
                         ))}
                       </div>
                     </div>
                   )}
-
-                  {/* Linked locations */}
                   {linkedLocations.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
@@ -296,19 +276,13 @@ function StoryDetailView({
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {linkedLocations.map((loc) => (
-                          <Tag key={loc.location_id} color="secondary" size="sm" icon={MapPinIcon}>
-                            {loc.name}
-                          </Tag>
+                          <Tag key={loc.location_id} color="secondary" size="sm" icon={MapPinIcon}>{loc.name}</Tag>
                         ))}
                       </div>
                     </div>
                   )}
-
-                  {/* Empty state */}
                   {!hasLinks && !gptAnalyzing && !analyzedEntities && (
-                    <p className="text-base-content/40 text-xs italic">
-                      Chưa có liên kết nhân vật hay địa điểm nào.
-                    </p>
+                    <p className="text-base-content/40 text-xs italic">Chưa có liên kết nhân vật hay địa điểm nào.</p>
                   )}
                 </div>
               </div>
@@ -316,6 +290,81 @@ function StoryDetailView({
           </div>
         )}
       </div>
+
+      {/* Mobile: FAB to open analysis bottom sheet */}
+      {story.content && (
+        <button
+          onClick={() => setShowAnalysisPanel(v => !v)}
+          className="sm:hidden fixed bottom-24 right-4 z-40 btn btn-circle shadow-lg bg-base-100 border border-base-300"
+          title="Phân tích AI"
+        >
+          <SparklesIcon className="w-5 h-5 text-warning" />
+        </button>
+      )}
+
+      {/* Mobile: Analysis bottom sheet modal */}
+      {story.content && showAnalysisPanel && (
+        <div
+          className="sm:hidden modal modal-open modal-bottom-sheet"
+          onClick={() => setShowAnalysisPanel(false)}
+        >
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="flex items-center gap-2 font-semibold">
+                <SparklesIcon className="w-4 h-4 text-warning" />
+                Phân tích AI
+              </h3>
+              <button className="btn btn-ghost btn-sm btn-circle" onClick={() => setShowAnalysisPanel(false)}>
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {!analyzedEntities && (
+                <>
+                  {!hasLinks && (
+                    <GptButton onClick={onAnalyzeStory} loading={gptAnalyzing} loadingText="Đang phân tích..." variant="primary" size="sm">
+                      Phân tích nhân vật & địa điểm
+                    </GptButton>
+                  )}
+                  {hasLinks && (
+                    <GptButton onClick={onReanalyzeStory} loading={gptAnalyzing} loadingText="Đang phân tích lại..." variant="warning" size="sm">
+                      Phân tích lại
+                    </GptButton>
+                  )}
+                </>
+              )}
+              {linkedCharacters.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
+                    <UserIcon className="w-3.5 h-3.5" /> Nhân vật
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {linkedCharacters.map((char) => (
+                      <Tag key={char.entity_id} color="primary" size="sm" icon={UserIcon}>{char.name}</Tag>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {linkedLocations.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
+                    <MapPinIcon className="w-3.5 h-3.5" /> Địa điểm
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {linkedLocations.map((loc) => (
+                      <Tag key={loc.location_id} color="secondary" size="sm" icon={MapPinIcon}>{loc.name}</Tag>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {!hasLinks && !gptAnalyzing && !analyzedEntities && (
+                <p className="text-base-content/40 text-sm italic">Chưa có liên kết nhân vật hay địa điểm nào.</p>
+              )}
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={() => setShowAnalysisPanel(false)}></div>
+        </div>
+      )}
 
       {/* GPT Analyzed Entities Modal */}
       <AnalyzedEntitiesEditor

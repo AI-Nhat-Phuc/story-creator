@@ -284,7 +284,7 @@ function WorldsPage({ showToast }) {
 
       {/* Create World Modal */}
       {showCreateModal && (
-        <div className="modal modal-open">
+        <div className="modal modal-open modal-bottom-sheet">
           <div className="max-w-2xl modal-box">
             <h3 className="mb-4 font-bold text-lg">{t('pages.worlds.createModal')}</h3>
 
@@ -340,7 +340,7 @@ function WorldsPage({ showToast }) {
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="h-32 textarea textarea-bordered"
+                  className="h-48 sm:h-32 textarea textarea-bordered"
                   placeholder={t('pages.worlds.descPlaceholder')}
                   required
                 />
@@ -349,28 +349,6 @@ function WorldsPage({ showToast }) {
                   <span className="label-text-alt text-base-content/40">{t('pages.worlds.gptHint')}</span>
                 </label>
               </div>
-
-              {gptAnalyzing && (
-                <div className="mb-4 alert alert-info">
-                  <ArrowPathIcon className="w-5 h-5 animate-spin shrink-0" />
-                  <span>{t('pages.worlds.gptAnalyzing')}</span>
-                </div>
-              )}
-
-              {/* Preview analyze button */}
-              {formData.description && !gptEntities && (
-                <div className="mb-4">
-                  <GptButton
-                    onClick={analyzeWithGPT}
-                    loading={gptAnalyzing}
-                    loadingText={t('pages.worlds.gptAnalyzing')}
-                    variant="primary"
-                    size="sm"
-                  >
-                    {t('pages.worlds.previewAnalysis')}
-                  </GptButton>
-                </div>
-              )}
 
               {/* GPT Entities Preview */}
               {gptEntities && (

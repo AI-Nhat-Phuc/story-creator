@@ -11,8 +11,8 @@ import React from 'react';
 export default function Modal({ open, onClose, title, children, className = '' }) {
   if (!open) return null;
   return (
-    <div className="z-50 fixed inset-0 flex justify-center items-center bg-black/40">
-      <div className={`bg-base-100 rounded-lg shadow-lg max-w-lg w-full p-6 relative ${className}`}>
+    <div className="z-50 fixed inset-0 flex justify-center items-end sm:items-center bg-black/40">
+      <div className={`bg-base-100 rounded-t-2xl rounded-b-none sm:rounded-lg shadow-lg sm:max-w-lg w-full p-6 relative mt-[100px] sm:mt-0 max-h-[calc(100vh-100px)] sm:max-h-[85vh] overflow-y-auto mobile-slide-up sm:animate-none ${className}`}>
         <button
           className="top-2 right-2 absolute btn btn-sm btn-circle btn-ghost"
           onClick={onClose}
