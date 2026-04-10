@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
 import Tag from '../Tag'
+import { marked } from 'marked'
 import {
   GlobeAltIcon,
   UserIcon,
@@ -52,12 +53,13 @@ function StoryDetailView({
   const renderStoryContent = () => {
     if (!story.content) return null
 
-    // HTML format — rendered by novel/TipTap editor
-    if (story.format === 'html') {
+    // HTML or markdown — render as rich HTML
+    if (story.format === 'html' || story.format === 'markdown') {
+      const html = story.format === 'markdown' ? marked.parse(story.content) : story.content
       return (
         <div
           className="prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: story.content }}
+          dangerouslySetInnerHTML={{ __html: html }}
         />
       )
     }

@@ -4,15 +4,17 @@ import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { storiesAPI } from '../services/api'
+import { marked } from 'marked'
 
 function renderContent(story) {
   if (!story.content) return null
 
-  if (story.format === 'html') {
+  if (story.format === 'html' || story.format === 'markdown') {
+    const html = story.format === 'markdown' ? marked.parse(story.content) : story.content
     return (
       <div
         className="prose prose-lg max-w-none"
-        dangerouslySetInnerHTML={{ __html: story.content }}
+        dangerouslySetInnerHTML={{ __html: html }}
       />
     )
   }
