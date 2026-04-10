@@ -93,7 +93,7 @@ Only apply changes after user approval. Finish with `python .sdd/sdd.py done`.
 
 ## Project Overview
 
-Interactive storytelling system with React frontend and Flask API backend, deployed as a Vercel monorepo. Features GPT-4o-mini integration for character simulation and content generation, TinyDB storage, and Facebook Graph API integration.
+Interactive storytelling system with React frontend and Flask API backend, deployed as a Vercel monorepo. Features GPT-4o-mini integration for character simulation and content generation, MongoDB Atlas storage, and Facebook Graph API integration.
 
 **Live**: https://story-creator-cyan.vercel.app
 
@@ -188,7 +188,7 @@ story-creator/
 │   │   └── routes/               # Blueprint files (world, story, auth, gpt, etc.)
 │   ├── schemas/                  # Marshmallow validation schemas
 │   ├── services/                 # Business logic layer (CRITICAL)
-│   ├── storage/                  # TinyDB (NoSQL) and MongoDB storage
+│   ├── storage/                  # MongoDB Atlas storage (MongoStorage + BaseStorage)
 │   ├── utils/
 │   │   ├── responses.py          # success_response, created_response, paginated_response
 │   │   └── validation.py         # @validate_request, @validate_query_params decorators
@@ -217,7 +217,7 @@ story-creator/
 ```python
 # ✅ CORRECT (inside api/ code)
 from core.models import World, Entity, Story, Location
-from storage import NoSQLStorage
+from storage import MongoStorage
 from services import GPTService, CharacterService, AuthService
 from ai.gpt_client import GPTIntegration
 from generators import WorldGenerator, StoryLinker
@@ -244,14 +244,16 @@ from api.storage import NoSQLStorage
 
 ### Storage Layer
 
-**Default**: TinyDB (NoSQL) via `NoSQLStorage` class
-- Single file database: `story_creator.db`
-- On Vercel: `/tmp/story_creator.db` (ephemeral storage)
-- Query pattern: `from tinydb import Query; WorldQuery = Query(); worlds.search(WorldQuery.world_id == world_id)`
-
-**Alternative**: MongoDB via `MongoStorage` class
+**Primary**: MongoDB Atlas via `MongoStorage` class (`api/storage/mongo_storage.py`)
 - Requires `MONGODB_URI` environment variable
-- Used for production persistent storage
+- Local dev fallback: `mongomock` (in-memory) when `MONGODB_URI` not set
+- Lazy connection: thread-safe singleton, defers connection to first operation
+- Auto-creates indexes on `story_id`, `world_id`, `visibility`, `owner_id`, `shared_with`
+- Collections: `worlds`, `stories`, `locations`, `entities`, `time_cones`, `events`, `event_analysis_cache`, `users`, `gpt_tasks`
+- Save pattern: `stories.replace_one({'story_id': id}, data, upsert=True)` (atomic upsert)
+- MongoDB `_id` field stripped before returning to API via `_clean_doc()`
+
+**Abstraction**: `BaseStorage` (`api/storage/base_storage.py`) — abstract interface allowing storage backend swaps
 
 ### Frontend API Client
 
@@ -288,13 +290,14 @@ JWT-based authentication with:
 - `GOOGLE_CLIENT_ID` - for Google OAuth
 - `FACEBOOK_APP_ID` - for Facebook OAuth
 - `JWT_SECRET` - for token signing
-- `MONGODB_URI` - for MongoDB storage (optional)
+- `MONGODB_URI` - for MongoDB Atlas (required for persistent storage; falls back to mongomock in dev)
 
 ## Key Technologies
 
 ### Backend
 - **Flask** 3.0+ - Web framework
-- **TinyDB** 4.8+ - NoSQL database
+- **MongoDB Atlas** + **pymongo** - Primary database
+- **mongomock** - In-memory MongoDB for local dev (no URI needed)
 - **OpenAI** 1.0+ - GPT-4o-mini integration
 - **PyJWT** 2.8+ - JWT authentication
 - **Marshmallow** 3.20+ - Request validation schemas

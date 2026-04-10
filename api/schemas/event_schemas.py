@@ -1,6 +1,6 @@
 """Validation schemas for event-related endpoints."""
 
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, validates_schema, ValidationError
 
 
 class UpdateEventSchema(Schema):
@@ -11,10 +11,16 @@ class UpdateEventSchema(Schema):
     year = fields.Int()
     era = fields.Str(validate=validate.Length(max=50))
     story_position = fields.Int(validate=validate.Range(min=0))
-    characters = fields.List(fields.Raw())
-    locations = fields.List(fields.Raw())
+    characters = fields.List(fields.Str())
+    locations = fields.List(fields.Str())
     connections = fields.List(fields.Raw())
     metadata = fields.Dict(keys=fields.Str(), values=fields.Raw())
+
+    @validates_schema
+    def validate_not_empty(self, data, **kwargs):
+        """Ensure at least one field is being updated."""
+        if not data:
+            raise ValidationError('At least one field must be provided for update')
 
 
 class AddEventConnectionSchema(Schema):
