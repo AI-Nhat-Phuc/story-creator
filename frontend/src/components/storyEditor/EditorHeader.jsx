@@ -19,6 +19,7 @@ function EditorHeader({
   onSave,
   onPublish,
   onBack,
+  onTitleFocus,
 }) {
   const titleRef = useRef(null)
   const [titleError, setTitleError] = useState(false)
@@ -55,6 +56,7 @@ function EditorHeader({
           type="text"
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
+          onFocus={onTitleFocus}
           placeholder="Tiêu đề câu chuyện…"
           className={`input input-ghost input-sm w-full font-semibold text-base focus:outline-none focus:bg-base-100 rounded ${titleError ? 'input-error' : ''}`}
         />
