@@ -137,6 +137,33 @@ class MongoStorage:
         except Exception as e:
             logger.warning(f"Index creation warning (may already exist): {e}")
 
+    # Whitelist of collection names callers may resolve by string.
+    # Keeps getattr-based lookup off the attack surface — a caller that
+    # passes an arbitrary string can never reach Python internals via
+    # collection_name injection.
+    _COLLECTION_WHITELIST = (
+        'worlds',
+        'stories',
+        'locations',
+        'entities',
+        'time_cones',
+        'events',
+        'event_analysis_cache',
+        'users',
+        'gpt_tasks',
+    )
+
+    def get_collection(self, name: str):
+        """Resolve a MongoDB collection by name using the whitelist.
+
+        Raises:
+            ValueError: if ``name`` is not a known collection.
+        """
+        if name not in self._COLLECTION_WHITELIST:
+            raise ValueError(f"Unknown collection name: {name!r}")
+        self._connect()
+        return getattr(self, name)
+
     @staticmethod
     def _clean_doc(doc: Optional[Dict]) -> Optional[Dict[str, Any]]:
         """Remove MongoDB's internal _id field from a document."""
@@ -188,8 +215,7 @@ class MongoStorage:
         return list(self.worlds.find(query, projection))
 
     def count_visible(self, collection_name: str, user_id: Optional[str] = None) -> dict:
-        self._connect()
-        coll = getattr(self, collection_name)
+        coll = self.get_collection(collection_name)
         public_count = coll.count_documents({'visibility': 'public'})
         if user_id is None:
             return {'total': public_count, 'public': public_count}
