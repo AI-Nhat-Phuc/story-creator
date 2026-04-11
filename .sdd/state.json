@@ -1,10 +1,10 @@
 {
-  "phase": "DESIGN",
+  "phase": "TEST",
   "current_feature": "backend security hardening",
   "task_dir": ".task/backend_security_hardening",
   "breakdown": [],
   "spec_approved": true,
-  "design_approved": false,
+  "design_approved": true,
   "flow_summary_approved": false,
   "last_flow_file": "",
   "history": [
@@ -23,6 +23,11 @@
       "from": "SPEC",
       "to": "DESIGN",
       "at": "2026-04-11 10:02:15"
+    },
+    {
+      "from": "DESIGN",
+      "to": "TEST",
+      "at": "2026-04-11 10:08:21"
     }
   ]
 }
