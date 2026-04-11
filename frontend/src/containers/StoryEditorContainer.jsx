@@ -79,7 +79,7 @@ function StoryEditorContainer({ showToast }) {
       setInitialFormat('html')
       editorDataRef.current = { title, content: editorContent }
       lastSavedRef.current = { title, content: markdownBaseline }
-      setEditor({ title, content: editorContent, saveStatus: 'idle', isPublished: data.visibility === 'public', isLoading: false })
+      setEditor({ title, content: editorContent, saveStatus: 'saved', isPublished: data.visibility === 'public', isLoading: false })
     } catch (err) {
       showToast(err.response?.status === 403 ? t('pages.storyEditor.accessDenied') : t('pages.storyEditor.storyNotFound'), 'error')
       navigate('/stories')
