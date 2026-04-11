@@ -383,6 +383,15 @@ def create_story_bp(storage, story_generator, flush_data):
                 story_data[field] = data[field]
         if data.get('chapter_number') is not None:
             story_data['chapter_number'] = data['chapter_number']
+        if data.get('time_index') is not None:
+            story_data['time_index'] = data['time_index']
+            world_data_for_time = storage.load_world(story_data.get('world_id'))
+            if world_data_for_time:
+                world_for_time = World.from_dict(world_data_for_time)
+                class _Proxy:
+                    def __init__(self, d):
+                        self.metadata = d.setdefault('metadata', {})
+                _set_world_time(_Proxy(story_data), world_for_time, data['time_index'])
 
         story_data['updated_at'] = datetime.now().isoformat()
         storage.save_story(story_data)

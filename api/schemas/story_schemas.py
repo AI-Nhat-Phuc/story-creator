@@ -101,6 +101,10 @@ class UpdateStorySchema(Schema):
         validate=validate.OneOf(['plain', 'markdown', 'html'])
     )
 
+    time_index = fields.Int(
+        validate=validate.Range(min=0, max=100)
+    )
+
     @validates_schema
     def validate_not_empty(self, data, **kwargs):
         """Ensure at least one field is being updated."""

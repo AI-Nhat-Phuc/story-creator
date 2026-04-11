@@ -1,9 +1,10 @@
 import React from 'react'
 import GptToolsPanel from './GptToolsPanel'
 import DocumentOutline from './DocumentOutline'
+import StoryTimeSelector from './StoryTimeSelector'
 import { PencilSquareIcon } from '@heroicons/react/24/outline'
 
-function LeftPanel({ gpt, headings, userSignature, onInsertSignature, panelOpen, onClosePanel }) {
+function LeftPanel({ gpt, headings, userSignature, timeIndex, worldCalendar, onInsertSignature, onTimeIndexChange, panelOpen, onClosePanel }) {
   return (
     <>
       {/* Mobile backdrop — tap to close */}
@@ -31,6 +32,14 @@ function LeftPanel({ gpt, headings, userSignature, onInsertSignature, panelOpen,
         <div className="md:hidden flex justify-center -mt-1 mb-1 shrink-0">
           <div className="w-10 h-1 rounded-full bg-base-300" />
         </div>
+
+        <StoryTimeSelector
+          timeIndex={timeIndex ?? 0}
+          onChange={onTimeIndexChange}
+          worldCalendar={worldCalendar}
+        />
+
+        <div className="divider my-0" />
 
         <GptToolsPanel {...gpt} />
 
