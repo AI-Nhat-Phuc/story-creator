@@ -112,14 +112,14 @@ function StoryDetailView({
   const hasLinks = linkedCharacters.length > 0 || linkedLocations.length > 0
 
   return (
-    <div>
-      <div className="flex gap-2 mb-4">
+    <div className="overflow-x-hidden">
+      <div className="flex flex-wrap gap-2 mb-4">
         <Link to="/stories" className="btn btn-ghost btn-sm">
           ← Quay lại danh sách
         </Link>
         {world && (
-          <Link to={`/worlds/${world.world_id}`} className="btn btn-ghost btn-sm">
-            <GlobeAltIcon className="inline w-4 h-4" /> Về thế giới {world.name}
+          <Link to={`/worlds/${world.world_id}`} className="btn btn-ghost btn-sm max-w-[60vw] truncate">
+            <GlobeAltIcon className="inline w-4 h-4 shrink-0" /> Về thế giới {world.name}
           </Link>
         )}
       </div>

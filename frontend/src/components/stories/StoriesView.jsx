@@ -6,6 +6,18 @@ import {
   ClockIcon,
   DocumentTextIcon,
 } from '@heroicons/react/24/outline'
+import { marked } from 'marked'
+
+function toPlainText(content) {
+  if (!content) return ''
+  // Parse markdown → HTML then strip tags for a clean plain text preview
+  try {
+    const html = marked.parse(content)
+    return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  } catch {
+    return content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  }
+}
 
 function StoriesView({
   stories,
@@ -99,7 +111,7 @@ function StoriesView({
                     <div className="flex-1 overflow-hidden">
                       {story.content ? (
                         <p className="text-base-content/80 text-sm line-clamp-4 leading-relaxed">
-                          {story.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}
+                          {toPlainText(story.content)}
                         </p>
                       ) : (
                         <p className="text-base-content/40 text-sm italic">Chưa có mô tả...</p>
