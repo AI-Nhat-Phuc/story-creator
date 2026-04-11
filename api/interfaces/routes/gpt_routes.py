@@ -1,5 +1,6 @@
 """GPT routes for the API backend."""
 
+import logging
 from flask import Blueprint, request, jsonify
 from core.exceptions import (
     ResourceNotFoundError,
@@ -11,9 +12,15 @@ from utils.responses import success_response
 from utils.validation import validate_request
 from interfaces.auth_middleware import token_required
 from services import BatchAnalyzeService
-from schemas.gpt_schemas import GptParaphraseSchema
+from schemas.gpt_schemas import (
+    GptParaphraseSchema,
+    GenerateDescriptionSchema,
+    GptAnalyzeSchema,
+)
 import uuid
 import threading
+
+logger = logging.getLogger(__name__)
 
 
 def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=None):
@@ -37,6 +44,7 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
     @gpt_bp.route('/api/gpt/generate-description', methods=['POST'])
     @_gpt_limit
     @token_required
+    @validate_request(GenerateDescriptionSchema)
     def gpt_generate_description():
         """Generate world or story description with GPT.
         ---
@@ -85,7 +93,7 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
         if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
 
-        data = request.json
+        data = request.validated_data
         gen_type = data.get('type', 'world')
 
         task_id = str(uuid.uuid4())
@@ -125,7 +133,9 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
                     )
 
                     description = response.choices[0].message.content.strip()
-                    print(f"[DEBUG] Generated world description: {description[:100]}..." if len(description) > 100 else f"[DEBUG] Generated world description: {description}")
+                    logger.debug(
+                        "Generated world description (%d chars)", len(description)
+                    )
 
                     gpt_results[task_id] = {
                         'status': 'completed',
@@ -171,17 +181,22 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
                     )
 
                     description = response.choices[0].message.content.strip()
-                    print(f"[DEBUG] Generated story description: {description[:100]}..." if len(description) > 100 else f"[DEBUG] Generated story description: {description}")
+                    logger.debug(
+                        "Generated story description (%d chars)", len(description)
+                    )
 
                     gpt_results[task_id] = {
                         'status': 'completed',
                         'result': {'story_description': description}
                     }
 
-            except Exception as e:
+            except Exception:
+                logger.error(
+                    "GPT generate-description task failed", exc_info=True
+                )
                 gpt_results[task_id] = {
                     'status': 'error',
-                    'result': str(e)
+                    'result': 'GPT request failed',
                 }
 
         thread = threading.Thread(target=generate_description)
@@ -193,6 +208,7 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
     @gpt_bp.route('/api/gpt/analyze', methods=['POST'])
     @_gpt_limit
     @token_required
+    @validate_request(GptAnalyzeSchema)
     def gpt_analyze():
         """Analyze world or story description with GPT to extract entities and locations.
         ---
@@ -233,10 +249,11 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
         if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
 
-        data = request.json
+        data = request.validated_data
         world_description = data.get('world_description', '')
-        story_description = data.get('story_description', '')
-        world_type = data.get('world_type', 'fantasy')
+        # Accept either story_description (frontend) or story_content (legacy).
+        story_description = data.get('story_description', '') or data.get('story_content', '')
+        world_type = data.get('world_type', '') or 'fantasy'
         story_title = data.get('story_title', '')
         story_genre = data.get('story_genre', '')
 
@@ -255,7 +272,11 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
             gpt_results[task_id] = {'status': 'completed', 'result': result}
 
         def on_error(error):
-            gpt_results[task_id] = {'status': 'error', 'result': str(error)}
+            logger.error("GPT analyze task failed: %s", error, exc_info=True)
+            gpt_results[task_id] = {
+                'status': 'error',
+                'result': 'GPT request failed',
+            }
 
         if story_description:
             backend.gpt_service.analyze_story_entities(
@@ -271,6 +292,7 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
         return jsonify({'task_id': task_id})
 
     @gpt_bp.route('/api/gpt/results/<task_id>', methods=['GET'])
+    @_gpt_limit
     def gpt_get_results(task_id):
         """Get GPT task results.
         ---
@@ -382,8 +404,12 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
 
                 gpt_results[task_id] = {'status': 'completed', 'result': result}
 
-            except Exception as e:
-                gpt_results[task_id] = {'status': 'error', 'result': str(e)}
+            except Exception:
+                logger.error("GPT batch-analyze task failed", exc_info=True)
+                gpt_results[task_id] = {
+                    'status': 'error',
+                    'result': 'GPT request failed',
+                }
 
         thread = threading.Thread(target=batch_analyze, daemon=True)
         thread.start()
@@ -507,8 +533,9 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
                     suggestions.append(cleaned)
             # Ensure exactly 3
             suggestions = (suggestions + [raw, raw, raw])[:3]
-        except Exception as e:
-            raise ExternalServiceError('GPT', str(e))
+        except Exception:
+            logger.error("GPT paraphrase failed", exc_info=True)
+            raise ExternalServiceError('GPT', 'GPT request failed')
 
         return success_response({'suggestions': suggestions})
 

@@ -112,9 +112,11 @@ class GenerateDescriptionSchema(Schema):
 class GptAnalyzeSchema(Schema):
     """Schema for POST /api/gpt/analyze.
 
-    Accepts either a world description or a story content block for
-    entity/location extraction. At least one of the two must be
-    provided; the existing route logic handles the branching.
+    Accepts either a world description or a story block (under either
+    ``story_content`` or ``story_description`` — the route accepts both
+    aliases so the schema stays non-breaking for the frontend) for
+    entity/location extraction. At least one of the text fields must
+    be provided; the existing route logic handles the branching.
     """
 
     world_description = fields.Str(
@@ -122,6 +124,10 @@ class GptAnalyzeSchema(Schema):
         validate=validate.Length(max=10000)
     )
     story_content = fields.Str(
+        load_default='',
+        validate=validate.Length(max=10000)
+    )
+    story_description = fields.Str(
         load_default='',
         validate=validate.Length(max=10000)
     )
@@ -133,14 +139,25 @@ class GptAnalyzeSchema(Schema):
         load_default='',
         validate=validate.Length(max=200)
     )
+    story_genre = fields.Str(
+        load_default='',
+        validate=validate.Length(max=50)
+    )
+    world_type = fields.Str(
+        load_default='',
+        validate=validate.Length(max=50)
+    )
 
     @post_load
     def _sanitize(self, data, **_kwargs):
         for key in (
             'world_description',
             'story_content',
+            'story_description',
             'world_name',
             'story_title',
+            'story_genre',
+            'world_type',
         ):
             if key in data:
                 data[key] = _sanitize_prompt_text(data[key])
