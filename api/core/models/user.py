@@ -76,15 +76,40 @@ class User:
             'metadata': self.metadata
         }
 
+    # Metadata keys exposed via to_safe_dict(). Everything else in
+    # self.metadata (including moderation fields such as `banned`,
+    # `ban_reason`, `banned_by`) is stripped before the user object
+    # leaves the API. See spec SUB-5 Business Rule 10.
+    _SAFE_METADATA_KEYS = (
+        'oauth_accounts',
+        'public_worlds_limit',
+        'public_worlds_count',
+        'public_stories_limit',
+        'public_stories_count',
+        'gpt_requests_per_day',
+        'gpt_requests_today',
+        'gpt_last_reset',
+    )
+
     def to_safe_dict(self) -> Dict[str, Any]:
-        """Convert User to dictionary without sensitive data (no password_hash)."""
+        """Convert User to dictionary without sensitive data (no password_hash).
+
+        Metadata is filtered to a strict whitelist of fields needed by
+        the frontend (OAuth linkage + quota counters). Moderation fields
+        are never exposed via this method.
+        """
+        safe_metadata = {
+            k: self.metadata[k]
+            for k in self._SAFE_METADATA_KEYS
+            if k in self.metadata
+        }
         return {
             'user_id': self.user_id,
             'username': self.username,
             'email': self.email,
             'role': self.role,
             'created_at': self.created_at,
-            'metadata': self.metadata
+            'metadata': safe_metadata
         }
 
     def to_json(self) -> str:
