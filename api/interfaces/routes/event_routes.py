@@ -52,6 +52,7 @@ def create_event_bp(storage, gpt_results, backend):
         return success_response(timeline)
 
     @event_bp.route('/api/worlds/<world_id>/events/extract', methods=['POST'])
+    @token_required
     def extract_world_events(world_id):
         """Extract events from all stories in a world using GPT.
         ---
@@ -115,6 +116,7 @@ def create_event_bp(storage, gpt_results, backend):
         })
 
     @event_bp.route('/api/stories/<story_id>/events/extract', methods=['POST'])
+    @token_required
     def extract_story_events(story_id):
         """Extract events from a single story using GPT.
         ---
@@ -173,6 +175,7 @@ def create_event_bp(storage, gpt_results, backend):
         })
 
     @event_bp.route('/api/stories/<story_id>/events/cache', methods=['DELETE'])
+    @token_required
     def clear_story_event_cache(story_id):
         """Clear GPT analysis cache for a story.
         ---
@@ -249,6 +252,7 @@ def create_event_bp(storage, gpt_results, backend):
         return success_response(updated, "Event updated successfully")
 
     @event_bp.route('/api/events/<event_id>', methods=['DELETE'])
+    @token_required
     def delete_event(event_id):
         """Delete an event.
         ---
