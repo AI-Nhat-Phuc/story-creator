@@ -25,12 +25,31 @@ class AuthService:
             secret_key: Secret key for JWT signing (defaults to env var or random)
         """
         self.storage = storage
-        self.secret_key = secret_key or os.environ.get('JWT_SECRET_KEY', 'dev-secret-key-change-in-production')
+
+        # Resolve JWT signing secret with environment-aware safety rails.
+        # Prod/staging: JWT_SECRET_KEY is mandatory — fail fast if unset.
+        # Dev: generate a random per-process key so local runs work without
+        # configuration, at the cost of sessions not surviving restarts.
+        env_secret = os.environ.get('JWT_SECRET_KEY')
+        if secret_key:
+            self.secret_key = secret_key
+        elif env_secret:
+            self.secret_key = env_secret
+        elif os.environ.get('FLASK_ENV') == 'development':
+            self.secret_key = os.urandom(32).hex()
+            logger.warning(
+                "JWT_SECRET_KEY not set — generated ephemeral dev key. "
+                "Sessions will not persist across restarts."
+            )
+        else:
+            raise RuntimeError(
+                "JWT_SECRET_KEY environment variable is required in "
+                "non-development environments. Set JWT_SECRET_KEY to a "
+                "strong random value before starting the API."
+            )
+
         self.algorithm = 'HS256'
         self.token_expiry_hours = 24  # Tokens expire after 24 hours
-
-        if self.secret_key == 'dev-secret-key-change-in-production':
-            logger.warning("Using default JWT secret key! Set JWT_SECRET_KEY in production.")
 
     def hash_password(self, password: str) -> str:
         """
