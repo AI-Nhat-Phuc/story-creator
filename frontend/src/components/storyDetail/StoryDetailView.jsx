@@ -118,8 +118,9 @@ function StoryDetailView({
           ← Quay lại danh sách
         </Link>
         {world && (
-          <Link to={`/worlds/${world.world_id}`} className="btn btn-ghost btn-sm max-w-[60vw] truncate">
-            <GlobeAltIcon className="inline w-4 h-4 shrink-0" /> Về thế giới {world.name}
+          <Link to={`/worlds/${world.world_id}`} className="btn btn-ghost btn-sm min-w-0 max-w-[65vw]">
+            <GlobeAltIcon className="w-4 h-4 shrink-0" />
+            <span className="truncate">Về thế giới {world.name}</span>
           </Link>
         )}
       </div>
