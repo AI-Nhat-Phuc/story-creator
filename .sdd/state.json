@@ -1,5 +1,5 @@
 {
-  "phase": "ANALYZE",
+  "phase": "SPEC",
   "current_feature": "backend security hardening",
   "task_dir": ".task/backend_security_hardening",
   "breakdown": [],
@@ -13,6 +13,11 @@
       "to": "ANALYZE",
       "at": "2026-04-11 09:35:36",
       "feature": "backend security hardening"
+    },
+    {
+      "from": "ANALYZE",
+      "to": "SPEC",
+      "at": "2026-04-11 09:56:49"
     }
   ]
 }
