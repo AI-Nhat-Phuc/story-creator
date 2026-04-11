@@ -111,7 +111,7 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
                       {onDeleteStory && (
                         <button
                           onClick={(e) => { e.preventDefault(); onDeleteStory(story.story_id, story.title) }}
-                          className="opacity-40 hover:opacity-100 text-error btn btn-ghost btn-xs"
+                          className="text-error btn btn-ghost btn-xs"
                           title="Xóa câu chuyện"
                         >
                           <TrashIcon className="w-4 h-4" />

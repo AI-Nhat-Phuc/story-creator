@@ -54,7 +54,7 @@ class CreateStorySchema(Schema):
     )
 
     format = fields.Str(
-        validate=validate.OneOf(['plain', 'markdown']),
+        validate=validate.OneOf(['plain', 'markdown', 'html']),
         load_default='plain'
     )
 
@@ -98,7 +98,11 @@ class UpdateStorySchema(Schema):
     )
 
     format = fields.Str(
-        validate=validate.OneOf(['plain', 'markdown'])
+        validate=validate.OneOf(['plain', 'markdown', 'html'])
+    )
+
+    time_index = fields.Int(
+        validate=validate.Range(min=0, max=100)
     )
 
     @validates_schema

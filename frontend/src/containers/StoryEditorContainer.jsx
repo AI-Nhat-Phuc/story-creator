@@ -3,9 +3,14 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { usePageTitle } from '../hooks/usePageTitle'
-import { storiesAPI, gptAPI, authAPI } from '../services/api'
+import { storiesAPI, gptAPI, authAPI, worldsAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import StoryEditorView from '../components/storyEditor/StoryEditorView'
+import TurndownService from 'turndown'
+import { marked } from 'marked'
+
+const turndownSvc = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-' })
+const toMarkdown = (html) => turndownSvc.turndown(html || '')
 
 function StoryEditorContainer({ showToast }) {
   const { t } = useTranslation()
@@ -24,6 +29,8 @@ function StoryEditorContainer({ showToast }) {
     isLoading: true,
   })
   const [initialFormat, setInitialFormat] = useState('html')
+  const [timeIndex, setTimeIndex] = useState(0)
+  const [worldCalendar, setWorldCalendar] = useState(null)
   const [gpt, setGpt] = useState({ isLoading: false, suggestions: [], selectionLength: 0 })
   const [activeFormats, setActiveFormats] = useState({})
   const [userSignature, setUserSignature] = useState('')
@@ -32,8 +39,9 @@ function StoryEditorContainer({ showToast }) {
   // Refs — mirror mutable values so doSave is always reading current data (no stale closures)
   const storyIdRef = useRef(storyId || null)
   const worldIdRef = useRef(worldId)
+  const timeIndexRef = useRef(0)
   const editorDataRef = useRef({ title: '', content: '' })
-  const lastSavedRef = useRef({ title: '', content: '' })
+  const lastSavedRef = useRef({ title: '', content: '', timeIndex: 0 })
   const saveTimerRef = useRef(null)
   const editorRef = useRef(null)
   const gptSelectionRef = useRef(null)
@@ -65,12 +73,20 @@ function StoryEditorContainer({ showToast }) {
       const res = await storiesAPI.getById(storyId)
       const data = res.data
       const title = data.title || ''
-      const content = data.content || ''
+      const rawContent = data.content || ''
+      // Always load into the editor as HTML; convert markdown→HTML when needed
+      const editorContent = data.format === 'markdown' ? marked.parse(rawContent) : rawContent
+      // lastSavedRef tracks markdown so dirty-check works after round-trip
+      const markdownBaseline = data.format === 'markdown' ? rawContent : toMarkdown(rawContent)
+      const savedTimeIndex = data.time_index || 0
       storyIdRef.current = storyId
-      setInitialFormat(data.format || 'plain')
-      editorDataRef.current = { title, content }
-      lastSavedRef.current = { title, content }
-      setEditor({ title, content, saveStatus: 'idle', isPublished: data.visibility === 'public', isLoading: false })
+      timeIndexRef.current = savedTimeIndex
+      setInitialFormat('html')
+      editorDataRef.current = { title, content: editorContent }
+      lastSavedRef.current = { title, content: markdownBaseline, timeIndex: savedTimeIndex }
+      setTimeIndex(savedTimeIndex)
+      setEditor({ title, content: editorContent, saveStatus: 'saved', isPublished: data.visibility === 'public', isLoading: false })
+      if (data.world_id) loadWorldCalendar(data.world_id)
     } catch (err) {
       showToast(err.response?.status === 403 ? t('pages.storyEditor.accessDenied') : t('pages.storyEditor.storyNotFound'), 'error')
       navigate('/stories')
@@ -84,6 +100,16 @@ function StoryEditorContainer({ showToast }) {
       return
     }
     setEditor(prev => ({ ...prev, isLoading: false }))
+    loadWorldCalendar(worldId)
+  }
+
+  const loadWorldCalendar = async (wId) => {
+    try {
+      const res = await worldsAPI.getById(wId)
+      setWorldCalendar(res.data?.metadata?.calendar || null)
+    } catch {
+      // not critical
+    }
   }
 
   const loadUserSignature = async () => {
@@ -115,9 +141,11 @@ function StoryEditorContainer({ showToast }) {
 
   // doSave reads from refs — stable callback, no stale closure issues
   const doSave = useCallback(async () => {
-    const { title, content } = editorDataRef.current
-    const last = lastSavedRef.current
-    if (title === last.title && content === last.content) return
+    const { title, content } = editorDataRef.current  // HTML from editor
+    const markdownContent = toMarkdown(content)
+    const last = lastSavedRef.current  // markdown baseline
+    const currentTimeIndex = timeIndexRef.current
+    if (title === last.title && markdownContent === last.content && currentTimeIndex === last.timeIndex) return
     if (!storyIdRef.current && !title.trim()) return
 
     setEditor(prev => ({ ...prev, saveStatus: 'saving' }))
@@ -126,16 +154,17 @@ function StoryEditorContainer({ showToast }) {
         const res = await storiesAPI.create({
           world_id: worldIdRef.current,
           title: title.trim(),
-          content,
+          content: markdownContent,
           visibility: 'draft',
-          format: 'html',
+          format: 'markdown',
+          time_index: currentTimeIndex,
         })
         storyIdRef.current = res.data.story_id
-        lastSavedRef.current = { title, content }
+        lastSavedRef.current = { title, content: markdownContent, timeIndex: currentTimeIndex }
         setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
       } else {
-        await storiesAPI.patch(storyIdRef.current, { title, content })
-        lastSavedRef.current = { title, content }
+        await storiesAPI.patch(storyIdRef.current, { title, content: markdownContent, format: 'markdown', time_index: currentTimeIndex })
+        lastSavedRef.current = { title, content: markdownContent, timeIndex: currentTimeIndex }
         setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
       }
     } catch (err) {
@@ -250,6 +279,13 @@ function StoryEditorContainer({ showToast }) {
     setGpt(prev => ({ ...prev, suggestions: [] }))
   }, [])
 
+  const handleTimeIndexChange = useCallback((val) => {
+    timeIndexRef.current = val
+    setTimeIndex(val)
+    setEditor(prev => ({ ...prev, saveStatus: 'idle' }))
+    scheduleAutoSave()
+  }, [scheduleAutoSave])
+
   const handleInsertSignature = useCallback(() => {
     const editorInstance = editorRef.current
     if (!editorInstance || !userSignature) return
@@ -286,6 +322,8 @@ function StoryEditorContainer({ showToast }) {
         gpt={gptProps}
         activeFormats={activeFormats}
         userSignature={userSignature}
+        timeIndex={timeIndex}
+        worldCalendar={worldCalendar}
         onTitleChange={handleTitleChange}
         onContentUpdate={handleContentUpdate}
         onSelectionChange={handleSelectionChange}
@@ -293,6 +331,7 @@ function StoryEditorContainer({ showToast }) {
         onPublish={handlePublish}
         onBack={handleBack}
         onInsertSignature={handleInsertSignature}
+        onTimeIndexChange={handleTimeIndexChange}
         initialFormat={initialFormat}
       />
     </>

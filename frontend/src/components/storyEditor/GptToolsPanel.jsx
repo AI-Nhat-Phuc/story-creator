@@ -74,9 +74,10 @@ function GptToolsPanel({
                 <button
                   onMouseDown={(e) => { e.preventDefault(); setPreviewIdx(i) }}
                   className="btn btn-xs btn-outline flex-1 gap-1"
+                  title="Xem trước"
                 >
                   <EyeIcon className="w-3 h-3" />
-                  Xem trước
+                  <span className="hidden sm:inline">Xem trước</span>
                 </button>
                 <button
                   onMouseDown={(e) => { e.preventDefault(); handleApply(s) }}

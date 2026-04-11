@@ -107,15 +107,15 @@ def create_stats_bp(storage, has_gpt):
                 }
             }
 
-            # Add user quota info
+            # Add user quota info — derive current counts from DB totals (always accurate)
             if user_data:
                 result['user_quota'] = {
                     'worlds': {
-                        'current': user_data.get('metadata', {}).get('public_worlds_count', 0),
+                        'current': worlds_counts['public'],
                         'limit': user_data.get('metadata', {}).get('public_worlds_limit', 1)
                     },
                     'stories': {
-                        'current': user_data.get('metadata', {}).get('public_stories_count', 0),
+                        'current': stories_counts['public'],
                         'limit': user_data.get('metadata', {}).get('public_stories_limit', 20)
                     }
                 }

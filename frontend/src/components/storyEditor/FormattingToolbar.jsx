@@ -1,5 +1,5 @@
 import React from 'react'
-import { ListBulletIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ListBulletIcon } from '@heroicons/react/24/outline'
 
 function ToolbarBtn({ active, onMouseDown, title, children }) {
   return (
@@ -17,7 +17,7 @@ function Sep() {
   return <div className="w-px h-5 bg-base-300 mx-1 shrink-0" />
 }
 
-function FormattingToolbar({ editorRef, activeFormats = {}, panelOpen, onTogglePanel }) {
+function FormattingToolbar({ editorRef, activeFormats = {} }) {
   // e.preventDefault() on mousedown keeps editor focus + selection intact.
   // Do NOT call .focus() in the chain — it can collapse the text selection
   // before the mark/command is applied, causing styles to hit the whole block.
@@ -151,16 +151,6 @@ function FormattingToolbar({ editorRef, activeFormats = {}, panelOpen, onToggleP
         <AlignRightIcon />
       </ToolbarBtn>
 
-      {/* Mobile: panel toggle at far right of toolbar */}
-      {onTogglePanel && (
-        <button
-          onMouseDown={e => { e.preventDefault(); onTogglePanel() }}
-          className="md:hidden ml-auto btn btn-xs btn-ghost h-7 min-h-0 px-2"
-          aria-label="Toggle sidebar"
-        >
-          {panelOpen ? <XMarkIcon className="w-4 h-4" /> : <Bars3Icon className="w-4 h-4" />}
-        </button>
-      )}
     </div>
   )
 }

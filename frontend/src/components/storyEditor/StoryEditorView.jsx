@@ -4,6 +4,7 @@ import LeftPanel from './LeftPanel'
 import NovelEditor from './NovelEditor'
 import FormattingToolbar from './FormattingToolbar'
 import LoadingSpinner from '../LoadingSpinner'
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 
 function StoryEditorView({
   editor,
@@ -14,6 +15,8 @@ function StoryEditorView({
   gpt,
   activeFormats,
   userSignature,
+  timeIndex,
+  worldCalendar,
   onTitleChange,
   onContentUpdate,
   onSelectionChange,
@@ -21,6 +24,7 @@ function StoryEditorView({
   onPublish,
   onBack,
   onInsertSignature,
+  onTimeIndexChange,
   initialFormat,
 }) {
   const [panelOpen, setPanelOpen] = useState(false)
@@ -48,14 +52,28 @@ function StoryEditorView({
         onTitleFocus={() => setPanelOpen(false)}
       />
 
-      <FormattingToolbar editorRef={editorRef} activeFormats={activeFormats} panelOpen={panelOpen} onTogglePanel={() => setPanelOpen(p => !p)} />
+      <FormattingToolbar editorRef={editorRef} activeFormats={activeFormats} />
+
+      {/* Mobile FAB — opens left panel as bottom sheet */}
+      <button
+        onClick={() => setPanelOpen(p => !p)}
+        className="md:hidden fixed bottom-6 right-4 z-40 btn btn-circle shadow-lg bg-base-100 border border-base-300"
+        aria-label="Toggle panel"
+      >
+        {panelOpen
+          ? <XMarkIcon className="w-5 h-5" />
+          : <Bars3Icon className="w-5 h-5" />}
+      </button>
 
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel
           gpt={gpt}
           headings={headings}
           userSignature={userSignature}
+          timeIndex={timeIndex}
+          worldCalendar={worldCalendar}
           onInsertSignature={onInsertSignature}
+          onTimeIndexChange={onTimeIndexChange}
           panelOpen={panelOpen}
           onClosePanel={() => setPanelOpen(false)}
         />
