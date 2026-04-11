@@ -114,8 +114,9 @@ function StoryDetailView({
   return (
     <div className="overflow-x-hidden">
       <div className="flex flex-wrap gap-2 mb-4">
-        <Link to="/stories" className="btn btn-ghost btn-sm">
-          ← Quay lại danh sách
+        <Link to="/stories" className="btn btn-ghost btn-sm btn-square sm:w-auto sm:px-3">
+          <span aria-hidden="true">←</span>
+          <span className="hidden sm:inline">Quay lại danh sách</span>
         </Link>
         {world && (
           <Link to={`/worlds/${world.world_id}`} className="btn btn-ghost btn-sm min-w-0 max-w-[65vw]">
