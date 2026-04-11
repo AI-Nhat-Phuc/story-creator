@@ -1,43 +1,48 @@
 {
   "phase": "DONE",
-  "current_feature": "fix-session-loss-on-deploy",
-  "task_dir": ".task/fix_session_loss_on_deploy",
+  "current_feature": "backend security hardening",
+  "task_dir": ".task/backend_security_hardening",
   "breakdown": [],
   "spec_approved": true,
   "design_approved": true,
-  "flow_summary_approved": false,
-  "last_flow_file": "",
+  "flow_summary_approved": true,
+  "last_flow_file": "api/interfaces/routes/gpt_routes.py",
   "history": [
     {
       "from": "NONE",
       "to": "ANALYZE",
-      "at": "2026-04-10 13:42:54",
-      "feature": "fix-session-loss-on-deploy"
+      "at": "2026-04-11 09:35:36",
+      "feature": "backend security hardening"
     },
     {
       "from": "ANALYZE",
+      "to": "SPEC",
+      "at": "2026-04-11 09:56:49"
+    },
+    {
+      "from": "SPEC",
       "to": "DESIGN",
-      "at": "2026-04-10 15:13:30"
+      "at": "2026-04-11 10:02:15"
     },
     {
       "from": "DESIGN",
       "to": "TEST",
-      "at": "2026-04-10 15:15:40"
+      "at": "2026-04-11 10:08:21"
     },
     {
       "from": "TEST",
       "to": "IMPLEMENT",
-      "at": "2026-04-10 15:16:51"
+      "at": "2026-04-11 10:23:38"
     },
     {
       "from": "IMPLEMENT",
       "to": "REVIEW",
-      "at": "2026-04-10 15:17:08"
+      "at": "2026-04-11 10:44:22"
     },
     {
       "from": "REVIEW",
       "to": "DONE",
-      "at": "2026-04-10 15:17:34"
+      "at": "2026-04-11 10:45:50"
     }
   ]
 }

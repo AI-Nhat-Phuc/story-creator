@@ -1,5 +1,6 @@
 """Authentication routes for user registration, login, and token verification."""
 
+import os
 from flask import Blueprint, request, jsonify, g
 import requests
 import logging
@@ -30,10 +31,11 @@ def create_auth_bp(storage, auth_service, limiter=None):
     """
     auth_bp = Blueprint('auth', __name__)
 
-    # Tighter limit on auth endpoints (brute-force protection)
-    # 30/min allows automated e2e test suites (18+ tests × 2 workers) while
-    # still protecting against brute-force attacks in production.
-    _auth_limit = limiter.limit("30 per minute") if limiter else (lambda f: f)
+    # Tighter limit on auth endpoints: 10/min/IP for brute-force protection.
+    # Frontend login is one request per user action, so 10/min is comfortable
+    # for real users while rejecting credential-stuffing bots. Test suites
+    # can disable rate limiting via RATELIMIT_ENABLED=False.
+    _auth_limit = limiter.limit("10 per minute") if limiter else (lambda f: f)
 
     @auth_bp.route('/api/auth/register', methods=['POST'])
     @_auth_limit
@@ -305,6 +307,39 @@ def create_auth_bp(storage, auth_service, limiter=None):
             raise APIValidationError('Missing Google token')
 
         try:
+            # Verify the access token was issued for THIS application.
+            # Without this check, any valid Google access token from any
+            # OAuth client could be replayed to log in as its owner's email.
+            client_id = os.environ.get('GOOGLE_CLIENT_ID')
+            if not client_id:
+                if os.environ.get('FLASK_ENV') == 'development':
+                    logger.warning(
+                        "GOOGLE_CLIENT_ID not set — skipping Google audience "
+                        "check (dev only)"
+                    )
+                else:
+                    raise ExternalServiceError(
+                        'Google',
+                        'GOOGLE_CLIENT_ID not configured'
+                    )
+            else:
+                tokeninfo_resp = requests.get(
+                    'https://oauth2.googleapis.com/tokeninfo',
+                    params={'access_token': google_token},
+                    timeout=10
+                )
+                if tokeninfo_resp.status_code != 200:
+                    raise APIValidationError('Invalid Google token')
+                tokeninfo = tokeninfo_resp.json()
+                if tokeninfo.get('aud') != client_id:
+                    raise APIValidationError('Google token audience mismatch')
+                try:
+                    expires_in = int(tokeninfo.get('expires_in', 0))
+                except (TypeError, ValueError):
+                    expires_in = 0
+                if expires_in <= 0:
+                    raise APIValidationError('Google token expired')
+
             response = requests.get(
                 'https://www.googleapis.com/oauth2/v3/userinfo',
                 headers={'Authorization': f'Bearer {google_token}'},

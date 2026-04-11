@@ -21,11 +21,15 @@ from interfaces.routes import (
     create_admin_bp,
     create_collaborator_bp,
 )
+import logging
 import os
+import re
 import signal
 import threading
 import psutil
 import time
+
+logger = logging.getLogger(__name__)
 
 # Module-level lazy-init sentinels
 _gpt_initialized = False
@@ -51,10 +55,19 @@ class APIBackend:
             "http://localhost:3000",
             "http://127.0.0.1:3000",
         ]
-        # Add Vercel production URL if set
+        # Add Vercel production URL only if it matches the expected shape.
+        # Without this check, a tampered / typo'd VERCEL_URL would land in the
+        # CORS allowlist unchallenged.
         vercel_url = os.environ.get("VERCEL_URL")
         if vercel_url:
-            allowed_origins.append(f"https://{vercel_url}")
+            if re.match(r'^[a-zA-Z0-9.-]+\.vercel\.app$', vercel_url):
+                allowed_origins.append(f"https://{vercel_url}")
+            else:
+                logger.warning(
+                    "VERCEL_URL %r does not match expected pattern — "
+                    "skipping CORS entry",
+                    vercel_url,
+                )
         CORS(self.app, resources={
             r"/api/*": {
                 "origins": allowed_origins,
@@ -153,6 +166,31 @@ class APIBackend:
         # Register before_request hooks for lazy init
         backend = self
 
+        @self.app.after_request
+        def _add_security_headers(response):
+            """Set defensive HTTP headers on every response.
+
+            Uses ``setdefault`` so a route that already set a specific
+            header (e.g. a bespoke Content-Security-Policy) is not
+            clobbered. HSTS is only emitted when the request was served
+            over HTTPS (directly or via a proxy) to avoid broadcasting
+            it over plain HTTP in local dev.
+            """
+            response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+            response.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+            response.headers.setdefault(
+                'Referrer-Policy', 'strict-origin-when-cross-origin'
+            )
+            is_https = request.is_secure or (
+                request.headers.get('X-Forwarded-Proto', '').lower() == 'https'
+            )
+            if is_https:
+                response.headers.setdefault(
+                    'Strict-Transport-Security',
+                    'max-age=31536000; includeSubDomains',
+                )
+            return response
+
         @self.app.before_request
         def _lazy_init():
             path = request.path
@@ -179,57 +217,48 @@ class APIBackend:
 
     def _ensure_default_admin(self):
         """
-        Ensure a default admin account exists in the database.
-        This admin account will be created automatically if no admin exists,
-        even after database truncation.
+        Ensure a default admin account exists, gated on INITIAL_ADMIN_PASSWORD.
 
-        Default credentials:
-        - Username: admin
-        - Email: admin@storycreator.com
-        - Password: Admin@123
-        - Role: admin
+        - If an admin already exists: no-op (unchanged behavior on prod).
+        - If no admin AND INITIAL_ADMIN_PASSWORD is unset: log a warning and
+          skip — operators must set the env var to seed the initial admin.
+        - If no admin AND INITIAL_ADMIN_PASSWORD is set: create an admin
+          with that password. The password is never logged or printed.
         """
-        # Check if any admin user exists
         all_users = self.storage.list_users()
         admin_users = [u for u in all_users if u.get('role') == 'admin']
 
-        if not admin_users:
-            # No admin found, create default admin
-            from core.models import User
-
-            admin_password = "Admin@123"
-            password_hash = self.auth_service.hash_password(admin_password)
-
-            admin_user = User(
-                username="admin",
-                email="admin@storycreator.com",
-                password_hash=password_hash,
-                role="admin"
+        if admin_users:
+            logger.info(
+                "Found %d admin account(s); skipping seed", len(admin_users)
             )
+            return
 
-            # Save admin to database
-            self.storage.save_user(admin_user.to_dict())
+        initial_pwd = os.environ.get('INITIAL_ADMIN_PASSWORD')
+        if not initial_pwd:
+            logger.warning(
+                "No admin account exists and INITIAL_ADMIN_PASSWORD is unset — "
+                "skipping admin seed. Set INITIAL_ADMIN_PASSWORD to auto-create "
+                "the initial admin."
+            )
+            return
 
-            print("🔐 Tạo tài khoản admin mặc định:")
-            print("   Username: admin")
-            print("   Email: admin@storycreator.com")
-            print("   Password: Admin@123")
-            print("   ⚠️  VUI LÒNG ĐỔI MẬT KHẨU SAU KHI ĐĂNG NHẬP!")
-        else:
-            # Admin exists
-            admin_count = len(admin_users)
-            print(f"✅ Đã tìm thấy {admin_count} tài khoản admin trong hệ thống")
+        from core.models import User
+        password_hash = self.auth_service.hash_password(initial_pwd)
+        admin_user = User(
+            username="admin",
+            email="admin@storycreator.com",
+            password_hash=password_hash,
+            role="admin",
+        )
+        self.storage.save_user(admin_user.to_dict())
+        logger.info("Admin account seeded from INITIAL_ADMIN_PASSWORD env")
 
     def _seed_test_account(self):
         """Seed a hard-coded test account for local / nonprod development.
 
-        Credentials:
-        - Username: testuser
-        - Email:    test@storycreator.local
-        - Password: Test@123
-        - Role:     user
-
-        Always ensures the password is correct — resets it if a stale record exists.
+        Caller (_seed_once) gates this behind both VERCEL_ENV != 'production'
+        AND SEED_TEST_USER == '1'. The password is never printed or logged.
         """
         from core.models import User
 
@@ -237,11 +266,14 @@ class APIBackend:
         existing = self.storage.find_user_by_username("testuser")
 
         if existing:
-            # Reset password if it doesn't match (handles stale db state)
-            if not self.auth_service.verify_password(test_password, existing.get('password_hash', '')):
-                existing['password_hash'] = self.auth_service.hash_password(test_password)
+            if not self.auth_service.verify_password(
+                test_password, existing.get('password_hash', '')
+            ):
+                existing['password_hash'] = self.auth_service.hash_password(
+                    test_password
+                )
                 self.storage.save_user(existing)
-                print("🧪 Test account password reset to: Test@123")
+                logger.info("Test account password reset (nonprod)")
             return
 
         password_hash = self.auth_service.hash_password(test_password)
@@ -249,12 +281,10 @@ class APIBackend:
             username="testuser",
             email="test@storycreator.local",
             password_hash=password_hash,
-            role="user"
+            role="user",
         )
         self.storage.save_user(test_user.to_dict())
-        print("🧪 Test account seeded (nonprod only):")
-        print("   Username: testuser")
-        print("   Password: Test@123")
+        logger.info("Test account seeded (nonprod)")
 
     def _ensure_gpt(self):
         """Lazily initialize GPT integration on first use. Thread-safe, runs once."""
@@ -276,13 +306,22 @@ class APIBackend:
             _gpt_initialized = True
 
     def _seed_once(self):
-        """Run admin seeding exactly once per process, deferred from __init__."""
+        """Run admin + test seeding exactly once per process.
+
+        Test account requires explicit opt-in via SEED_TEST_USER=1 so that
+        the hardcoded Test@123 user is never created by default — not on
+        Vercel preview deployments, not in CI, not in local shells where
+        the flag was never set.
+        """
         global _admin_seeded
         if _admin_seeded:
             return
         _admin_seeded = True
         self._ensure_default_admin()
-        if os.environ.get("VERCEL_ENV") != "production":
+        if (
+            os.environ.get("VERCEL_ENV") != "production"
+            and os.environ.get("SEED_TEST_USER") == "1"
+        ):
             self._seed_test_account()
 
     def _ensure_swagger(self):
