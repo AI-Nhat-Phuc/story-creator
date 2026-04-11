@@ -1,5 +1,5 @@
 {
-  "phase": "REVIEW",
+  "phase": "DONE",
   "current_feature": "backend security hardening",
   "task_dir": ".task/backend_security_hardening",
   "breakdown": [],
@@ -38,6 +38,11 @@
       "from": "IMPLEMENT",
       "to": "REVIEW",
       "at": "2026-04-11 10:44:22"
+    },
+    {
+      "from": "REVIEW",
+      "to": "DONE",
+      "at": "2026-04-11 10:45:50"
     }
   ]
 }
