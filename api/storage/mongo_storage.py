@@ -452,13 +452,17 @@ class MongoStorage:
                 'public': [{'$match': {'visibility': 'public'}}, {'$count': 'n'}]
             }
             if user_id:
+                # 'draft' and 'private' owned by the user both count as "yours / not public"
                 facets['private'] = [
-                    {'$match': {'visibility': 'private', 'owner_id': user_id}},
+                    {'$match': {
+                        'visibility': {'$in': ['private', 'draft']},
+                        'owner_id': user_id
+                    }},
                     {'$count': 'n'}
                 ]
                 facets['shared'] = [
                     {'$match': {
-                        'visibility': 'private',
+                        'visibility': {'$in': ['private', 'draft']},
                         'owner_id': {'$ne': user_id},
                         'shared_with': user_id
                     }},
