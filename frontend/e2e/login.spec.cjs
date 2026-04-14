@@ -1,12 +1,9 @@
 // @ts-check
 const { test, expect } = require('@playwright/test')
+const { ADMIN, TEST_USER, LOGIN_TIMEOUT } = require('./utils/auth.cjs')
 
 // All navigation uses relative paths so baseURL from playwright.config.cjs
 // is the single source of truth — no URL constructed here.
-
-// Test credentials (from api/test_api.py)
-const ADMIN = { username: 'admin', password: 'Admin@123' }
-const TEST_USER = { username: 'testuser', password: 'Test@123' }
 
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
@@ -41,7 +38,7 @@ test.describe('Login Page', () => {
     await page.getByLabel(/mật khẩu/i).fill('WrongPassword123')
     await page.getByRole('button', { name: /đăng nhập/i }).last().click()
 
-    await expect(page.locator('.alert-error')).toBeVisible()
+    await expect(page.locator('.alert-error')).toBeVisible({ timeout: LOGIN_TIMEOUT })
   })
 
   test('clears error message when user starts typing', async ({ page }) => {
@@ -49,7 +46,7 @@ test.describe('Login Page', () => {
     await page.getByLabel(/mật khẩu/i).fill('badpass')
     await page.getByRole('button', { name: /đăng nhập/i }).last().click()
 
-    await expect(page.locator('.alert-error')).toBeVisible()
+    await expect(page.locator('.alert-error')).toBeVisible({ timeout: LOGIN_TIMEOUT })
 
     await page.getByLabel(/tên đăng nhập/i).fill('a')
     await expect(page.locator('.alert-error')).not.toBeVisible()
@@ -62,7 +59,7 @@ test.describe('Login Page', () => {
     await page.getByLabel(/mật khẩu/i).fill(ADMIN.password)
     await page.getByRole('button', { name: /đăng nhập/i }).last().click()
 
-    await expect(page).not.toHaveURL(/\/login/)
+    await expect(page).not.toHaveURL(/\/login/, { timeout: LOGIN_TIMEOUT })
   })
 
   test('logs in as testuser and redirects away from /login', async ({ page }) => {
@@ -70,7 +67,7 @@ test.describe('Login Page', () => {
     await page.getByLabel(/mật khẩu/i).fill(TEST_USER.password)
     await page.getByRole('button', { name: /đăng nhập/i }).last().click()
 
-    await expect(page).not.toHaveURL(/\/login/)
+    await expect(page).not.toHaveURL(/\/login/, { timeout: LOGIN_TIMEOUT })
   })
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -85,10 +82,10 @@ test.describe('Login Page', () => {
     await page.getByLabel(/tên đăng nhập/i).fill(ADMIN.username)
     await page.getByLabel(/mật khẩu/i).fill(ADMIN.password)
     await page.getByRole('button', { name: /đăng nhập/i }).last().click()
-    await expect(page).not.toHaveURL(/\/login/)
+    await expect(page).not.toHaveURL(/\/login/, { timeout: LOGIN_TIMEOUT })
 
     // Revisit /login — should redirect away immediately
     await page.goto('/login')
-    await expect(page).not.toHaveURL(/\/login/)
+    await expect(page).not.toHaveURL(/\/login/, { timeout: LOGIN_TIMEOUT })
   })
 })
