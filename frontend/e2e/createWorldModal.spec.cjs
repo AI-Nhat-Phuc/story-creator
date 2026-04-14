@@ -1,20 +1,10 @@
 // @ts-check
 const { test, expect } = require('@playwright/test')
-
-const TEST_USER = { username: 'testuser', password: 'Test@123' }
+const { login, TEST_USER } = require('./utils/auth.cjs')
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-// Login API can be slow on cold starts — give login redirect 20 s.
-const LOGIN_TIMEOUT = 20000
-
-async function loginAsTestUser(page) {
-  await page.goto('/login')
-  await page.getByLabel(/tên đăng nhập/i).fill(TEST_USER.username)
-  await page.getByLabel(/mật khẩu/i).fill(TEST_USER.password)
-  await page.getByRole('button', { name: /đăng nhập/i }).last().click()
-  await expect(page).not.toHaveURL(/\/login/, { timeout: LOGIN_TIMEOUT })
-}
+const loginAsTestUser = (page) => login(page, TEST_USER)
 
 /** Navigate to /worlds, wait for the enabled create button, open the modal. */
 async function openCreateModal(page) {

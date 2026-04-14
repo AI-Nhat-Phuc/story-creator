@@ -1,20 +1,8 @@
 // @ts-check
 const { test, expect } = require('@playwright/test')
-
-const ADMIN = { username: 'admin', password: 'Admin@123' }
+const { login } = require('./utils/auth.cjs')
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-// Login API can be slow on cold starts — give login redirect 20 s.
-const LOGIN_TIMEOUT = 20000
-
-async function login(page, user = ADMIN) {
-  await page.goto('/login')
-  await page.getByLabel(/tên đăng nhập/i).fill(user.username)
-  await page.getByLabel(/mật khẩu/i).fill(user.password)
-  await page.getByRole('button', { name: /đăng nhập/i }).last().click()
-  await expect(page).not.toHaveURL(/\/login/, { timeout: LOGIN_TIMEOUT })
-}
 
 /** Get auth token from localStorage and ensure a world exists; returns worldId. */
 async function ensureWorld(page) {

@@ -1,15 +1,9 @@
 // @ts-check
 const { test, expect } = require('@playwright/test')
+const { ADMIN, TEST_USER, LOGIN_TIMEOUT } = require('./utils/auth.cjs')
 
 // All navigation uses relative paths so baseURL from playwright.config.cjs
 // is the single source of truth — no URL constructed here.
-
-// Test credentials (from api/test_api.py)
-const ADMIN = { username: 'admin', password: 'Admin@123' }
-const TEST_USER = { username: 'testuser', password: 'Test@123' }
-
-// Login API can be slow on cold starts — give login-dependent assertions 20 s.
-const LOGIN_TIMEOUT = 20000
 
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
