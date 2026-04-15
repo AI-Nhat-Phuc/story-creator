@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import Tag from '../Tag'
 import {
@@ -9,6 +10,17 @@ import {
 } from '@heroicons/react/24/outline'
 
 function WorldTimeline({ stories, characters = [], locations = [], getStoryWorldTime, getTimelineLabel, onDeleteStory }) {
+  // Spec BR-1/BR-2 — sort by (order ASC, created_at ASC). Legacy stories
+  // with no `order` are pushed to the end.
+  const sortedStories = useMemo(() => (
+    [...(stories || [])].sort((a, b) => {
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER
+      if (orderA !== orderB) return orderA - orderB
+      return (a.created_at || '').localeCompare(b.created_at || '')
+    })
+  ), [stories])
+
   if (!stories || stories.length === 0) {
     return <p className="opacity-60 py-8 text-center">Chưa có câu chuyện nào</p>
   }
@@ -34,28 +46,14 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
     return locations.filter(loc => locationIds.includes(loc.location_id))
   }
 
-  const sortedStories = [...stories].sort((a, b) => {
-    const yearA = getStoryWorldTime(a)?.year ?? (a.time_index || 0)
-    const yearB = getStoryWorldTime(b)?.year ?? (b.time_index || 0)
-    return yearA - yearB
-  })
-
-  // Group stories by year/time_index
-  const groupedByYear = sortedStories.reduce((acc, story) => {
-    const worldTime = getStoryWorldTime(story)
-    const yearKey = worldTime?.year ?? story.time_index ?? 'unknown'
-    if (!acc[yearKey]) {
-      acc[yearKey] = []
-    }
-    acc[yearKey].push(story)
-    return acc
-  }, {})
-
-  const yearGroups = Object.entries(groupedByYear).map(([yearKey, storiesInYear]) => ({
-    yearKey,
-    stories: storiesInYear,
-    worldTime: getStoryWorldTime(storiesInYear[0]),
-    timeLabel: getTimelineLabel(storiesInYear[0])
+  // One zigzag group per story — alternating left/right is handled at render
+  // time. We still fall back to `timeLabel` for back-compat with stories that
+  // carry legacy world_time metadata.
+  const yearGroups = sortedStories.map((story) => ({
+    yearKey: story.story_id,
+    stories: [story],
+    worldTime: getStoryWorldTime ? getStoryWorldTime(story) : null,
+    timeLabel: getTimelineLabel ? getTimelineLabel(story) : `#${story.order ?? '?'}`,
   }))
 
   return (
@@ -70,10 +68,14 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
           badgeColor: 'accent'
         }
 
+        // Zigzag: odd-indexed groups flip sides on md+ screens.
+        const flip = groupIndex % 2 === 1
+        const metaPos = flip ? 'timeline-end md:text-left' : 'timeline-start md:text-right'
+        const cardPos = flip ? 'timeline-start' : 'timeline-end'
         return (
           <li key={group.yearKey}>
             {groupIndex === 0 && <hr className={palette.line} />}
-            <div className="text-left md:text-right timeline-start">
+            <div className={`${metaPos} text-left`}>
               <time className="opacity-70 font-mono text-sm"><ClockIcon className="inline w-3.5 h-3.5" /> {group.timeLabel}</time>
               {group.worldTime?.era && (
                 <p className="opacity-60 mt-1 text-xs">Kỷ nguyên: {group.worldTime.era}</p>
@@ -86,7 +88,7 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
                 </svg>
               </div>
             </div>
-            <div className="space-y-3 timeline-end">
+            <div className={`space-y-3 ${cardPos}`}>
               {group.stories.map((story) => {
                 const storyWorldTime = getStoryWorldTime(story)
                 const storyPalette = paletteMap[story.genre] || {

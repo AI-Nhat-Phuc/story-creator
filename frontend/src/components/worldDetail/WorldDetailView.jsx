@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'
 import CollaboratorsPanel from './CollaboratorsPanel'
@@ -57,6 +58,7 @@ function WorldDetailView({
   onInviteCollaborator,
   onRemoveCollaborator,
 }) {
+  const { t } = useTranslation()
   const [editingEntityId, setEditingEntityId] = useState(null)
   const [entityEditForm, setEntityEditForm] = useState({})
   const [publishTarget, setPublishTarget] = useState(null)
@@ -200,7 +202,16 @@ function WorldDetailView({
 
       {activeTab === 'stories' && (
         <div className="w-full">
-          <div className="flex justify-end gap-2 mb-4">
+          <div className="flex justify-end gap-2 mb-4 flex-wrap">
+            {stories.length > 0 && (
+              <Link
+                to={`/worlds/${world.world_id}/novel`}
+                className="btn btn-accent btn-sm gap-1"
+              >
+                <BookOpenIcon className="inline w-4 h-4" />
+                {t('pages.novel.viewAsNovel')}
+              </Link>
+            )}
             <button
               onClick={onAutoLinkStories}
               className={`btn btn-secondary btn-sm ${autoLinking ? 'loading' : ''}`}

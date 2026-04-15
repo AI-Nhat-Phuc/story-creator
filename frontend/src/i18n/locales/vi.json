@@ -320,13 +320,33 @@
       "deleteError": "Lỗi khi xóa câu chuyện",
       "linkSuccess": "Đã liên kết nhân vật và địa điểm!",
       "linkSuccessWithCount": "Đã liên kết và tạo mới {{chars}} nhân vật, {{locs}} địa điểm!",
-      "linkError": "Lỗi liên kết"
+      "linkError": "Lỗi liên kết",
+      "readMore": "Xem thêm",
+      "openReader": "Mở chế độ đọc"
+    },
+    "storyReader": {
+      "loadError": "Không thể tải câu chuyện",
+      "prev": "Chương trước",
+      "next": "Chương sau",
+      "backToStory": "Về chi tiết câu chuyện",
+      "noPrev": "Đây là chương đầu",
+      "noNext": "Đây là chương cuối"
     },
     "novel": {
       "loadError": "Không thể tải tiểu thuyết",
       "updateSuccess": "Đã cập nhật tiểu thuyết",
       "updateError": "Không thể cập nhật tiểu thuyết",
-      "reorderError": "Không thể lưu thứ tự chương"
+      "reorderError": "Không thể lưu thứ tự chương",
+      "viewAsNovel": "Xem dạng novel",
+      "loadMoreError": "Không thể tải thêm nội dung",
+      "loadingMore": "Đang tải thêm...",
+      "endOfNovel": "Đã hết nội dung",
+      "continued": "(đang tiếp tục...)",
+      "emptyWorld": "Thế giới này chưa có câu chuyện nào"
+    },
+    "storyEditor": {
+      "orderLabel": "Thứ tự chương",
+      "orderHelp": "Số nguyên dùng để sắp xếp trong novel (ví dụ 1, 2, 3…)"
     }
   }
 }

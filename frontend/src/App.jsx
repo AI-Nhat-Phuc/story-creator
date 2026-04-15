@@ -15,6 +15,7 @@ const WorldsPage = lazy(() => import('./pages/WorldsPage'))
 const StoriesPage = lazy(() => import('./pages/StoriesPage'))
 const WorldDetailPage = lazy(() => import('./pages/WorldDetailPage'))
 const StoryDetailPage = lazy(() => import('./pages/StoryDetailPage'))
+const StoryReaderPage = lazy(() => import('./pages/StoryReaderPage'))
 const StoryEditorPage = lazy(() => import('./pages/StoryEditorPage'))
 const NovelPage = lazy(() => import('./pages/NovelPage'))
 const StoryPrintPage = lazy(() => import('./pages/StoryPrintPage'))
@@ -52,6 +53,7 @@ function App() {
                 <Route path="/stories/new" element={<StoryEditorPage showToast={showToast} />} />
                 <Route path="/stories/:storyId/edit" element={<StoryEditorPage showToast={showToast} />} />
                 <Route path="/stories/:storyId" element={<StoryDetailPage showToast={showToast} />} />
+                <Route path="/stories/:storyId/read" element={<StoryReaderPage showToast={showToast} />} />
                 <Route path="/admin" element={<AdminPanel showToast={showToast} />} />
               </Route>
             </Routes>

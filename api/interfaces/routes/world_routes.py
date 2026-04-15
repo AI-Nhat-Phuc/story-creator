@@ -9,7 +9,7 @@ from core.exceptions import (
     ValidationError as APIValidationError,
     BusinessRuleError
 )
-from services import CharacterService, PermissionService
+from services import CharacterService, PermissionService, NovelService
 from interfaces.auth_middleware import token_required, optional_auth
 from utils.responses import success_response, created_response, deleted_response
 from utils.validation import validate_request, validate_query_params, extract_pagination
@@ -21,6 +21,7 @@ from schemas.world_schemas import (
     UpdateEntitySchema,
     UpdateNovelSchema,
     ReorderChaptersSchema,
+    NovelContentQuerySchema,
 )
 import random
 
@@ -785,6 +786,52 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             'owner_id': world_data.get('owner_id'),
             'co_authors': world_data.get('co_authors', [])
         })
+
+    @world_bp.route('/api/worlds/<world_id>/novel/content', methods=['GET'])
+    @optional_auth
+    @validate_query_params(NovelContentQuerySchema)
+    def get_novel_content(world_id):
+        """Paginated novel content across chapters ordered by Story.order ASC.
+        ---
+        tags:
+          - Novel
+        parameters:
+          - name: world_id
+            in: path
+            type: string
+            required: true
+          - name: cursor
+            in: query
+            type: string
+            required: false
+          - name: line_budget
+            in: query
+            type: integer
+            required: false
+            default: 100
+        responses:
+          200:
+            description: Batch of chapter blocks with next_cursor for pagination.
+          404:
+            description: World not found
+        """
+        world_data = storage.load_world(world_id)
+        if not world_data:
+            raise ResourceNotFoundError('World', world_id)
+
+        user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
+        if not PermissionService.can_view(user_id, world_data):
+            raise PermissionDeniedError('view', 'world')
+
+        params = request.validated_data
+        batch = NovelService.get_content_batch(
+            storage,
+            world_id,
+            cursor=params.get('cursor'),
+            line_budget=params.get('line_budget', 100),
+            user_id=user_id,
+        )
+        return success_response(batch)
 
     @world_bp.route('/api/worlds/<world_id>/novel', methods=['PUT'])
     @token_required

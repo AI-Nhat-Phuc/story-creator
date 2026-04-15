@@ -42,6 +42,15 @@ class CreateStorySchema(Schema):
         load_default=list
     )
 
+    # Sort key for novel reading. None → backend auto-assigns max(order)+1.
+    order = fields.Int(
+        validate=validate.Range(min=1),
+        load_default=None,
+        allow_none=True
+    )
+
+    # DEPRECATED — kept for back-compat with older clients. Routes will translate
+    # time_index into `order` when `order` is not provided.
     time_index = fields.Int(
         validate=validate.Range(min=0, max=100),
         load_default=0
@@ -101,6 +110,12 @@ class UpdateStorySchema(Schema):
         validate=validate.OneOf(['plain', 'markdown', 'html'])
     )
 
+    # Sort key for novel reading.
+    order = fields.Int(
+        validate=validate.Range(min=1)
+    )
+
+    # DEPRECATED — kept for back-compat. Translated to `order` if `order` absent.
     time_index = fields.Int(
         validate=validate.Range(min=0, max=100)
     )

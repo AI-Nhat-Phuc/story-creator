@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
 import Tag from '../Tag'
@@ -14,8 +15,11 @@ import {
   XMarkIcon,
   TrashIcon,
   SparklesIcon,
+  BookOpenIcon,
 } from '@heroicons/react/24/outline'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
+
+const PREVIEW_LINE_COUNT = 10
 
 function StoryDetailView({
   story,
@@ -39,8 +43,18 @@ function StoryDetailView({
   highlightEventId,
   highlightPosition = -1
 }) {
+  const { t } = useTranslation()
   const highlightRef = useRef(null)
   const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
+
+  // When highlightPosition targets a paragraph past the preview cut-off, or
+  // user clicks "Read more", expand to show full content inline.
+  const [expanded, setExpanded] = useState(false)
+
+  // Reset expansion when navigating to a different story.
+  useEffect(() => {
+    setExpanded(false)
+  }, [story?.story_id])
 
   useEffect(() => {
     if (highlightPosition >= 0 && highlightRef.current) {
@@ -50,6 +64,10 @@ function StoryDetailView({
     }
   }, [highlightPosition])
 
+  const allParagraphs = story.content ? story.content.split('\n') : []
+  const isLong = allParagraphs.length > PREVIEW_LINE_COUNT
+  const showTruncated = isLong && !expanded && highlightPosition < 0
+
   const renderStoryContent = () => {
     if (!story.content) return null
 
@@ -58,14 +76,23 @@ function StoryDetailView({
       const html = story.format === 'markdown' ? marked.parse(story.content) : story.content
       return (
         <div
-          className="prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
+          className={showTruncated ? 'relative max-h-[18rem] overflow-hidden' : ''}
+        >
+          <div
+            className="prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+          {showTruncated && (
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-base-100 to-transparent pointer-events-none" />
+          )}
+        </div>
       )
     }
 
-    // Plain/markdown: paragraph-by-paragraph with highlight support
-    const paragraphs = story.content.split('\n')
+    // Plain: paragraph-by-paragraph with highlight support + truncation
+    const paragraphs = showTruncated
+      ? allParagraphs.slice(0, PREVIEW_LINE_COUNT)
+      : allParagraphs
 
     // Resolve highlight: if target paragraph is empty, find nearest non-empty one
     let effectiveHighlight = highlightPosition
@@ -83,28 +110,33 @@ function StoryDetailView({
       }
     }
 
-    if (effectiveHighlight < 0) {
+    if (effectiveHighlight < 0 && !showTruncated) {
       return <p className="text-lg whitespace-pre-wrap">{story.content}</p>
     }
 
     return (
-      <div className="text-lg whitespace-pre-wrap">
-        {paragraphs.map((para, idx) => {
-          const isHighlighted = idx === effectiveHighlight
-          return (
-            <p
-              key={idx}
-              ref={isHighlighted ? highlightRef : undefined}
-              className={
-                isHighlighted
-                  ? 'bg-warning/20 border-l-4 border-warning pl-3 py-1 rounded-r transition-colors duration-700'
-                  : ''
-              }
-            >
-              {para || '\u00A0'}
-            </p>
-          )
-        })}
+      <div className="relative">
+        <div className="text-lg whitespace-pre-wrap">
+          {paragraphs.map((para, idx) => {
+            const isHighlighted = idx === effectiveHighlight
+            return (
+              <p
+                key={idx}
+                ref={isHighlighted ? highlightRef : undefined}
+                className={
+                  isHighlighted
+                    ? 'bg-warning/20 border-l-4 border-warning pl-3 py-1 rounded-r transition-colors duration-700'
+                    : ''
+                }
+              >
+                {para || '\u00A0'}
+              </p>
+            )
+          })}
+        </div>
+        {showTruncated && (
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-base-100 to-transparent pointer-events-none" />
+        )}
       </div>
     )
   }
@@ -171,6 +203,26 @@ function StoryDetailView({
               )}
             </div>
             {renderStoryContent()}
+            {isLong && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {!expanded && (
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm gap-1"
+                    onClick={() => setExpanded(true)}
+                  >
+                    {t('pages.storyDetail.readMore')}
+                  </button>
+                )}
+                <Link
+                  to={`/stories/${story.story_id}/read`}
+                  className="btn btn-outline btn-sm gap-1"
+                >
+                  <BookOpenIcon className="w-4 h-4" />
+                  {t('pages.storyDetail.openReader')}
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="bg-base-100 shadow-xl p-6 rounded-box">

@@ -32,11 +32,34 @@ async function login(page, user = ADMIN) {
   // Navigate to establish the app origin so localStorage is writable.
   await page.goto('/login')
 
-  const res = await page.request.post('/api/auth/login', {
-    data: { username: user.username, password: user.password },
-    timeout: LOGIN_TIMEOUT,
-  })
-  expect(res.ok(), `login API failed: HTTP ${res.status()}`).toBeTruthy()
+  // Retry on transient failures:
+  //   5xx — Vercel/Mongo cold-start burp; short backoff.
+  //   429 — shared GH Actions IP hits the auth rate limit (10/min);
+  //         wait past the 60 s window before retrying.
+  //   4xx (other) — real auth error; fail fast.
+  const backoffs5xx = [2000, 4000]
+  const backoff429 = 20000
+  let res
+  let lastBody = ''
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await page.request.post('/api/auth/login', {
+      data: { username: user.username, password: user.password },
+      timeout: LOGIN_TIMEOUT,
+    })
+    if (res.ok()) break
+    lastBody = (await res.text().catch(() => '')).slice(0, 500)
+    console.error(`[login] attempt ${attempt + 1} HTTP ${res.status()}: ${lastBody}`)
+    if (res.status() === 429) {
+      await page.waitForTimeout(backoff429)
+      continue
+    }
+    if (res.status() >= 500 && attempt < backoffs5xx.length) {
+      await page.waitForTimeout(backoffs5xx[attempt])
+      continue
+    }
+    break
+  }
+  expect(res.ok(), `login API failed: HTTP ${res.status()} — ${lastBody}`).toBeTruthy()
 
   const body = await res.json()
   const token = body.token ?? body.data?.token
