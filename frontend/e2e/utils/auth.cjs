@@ -37,6 +37,7 @@ async function login(page, user = ADMIN) {
   // are real auth errors, not infra flake.
   const backoffs = [0, 2000, 4000]
   let res
+  let lastBody = ''
   for (const delay of backoffs) {
     if (delay) await page.waitForTimeout(delay)
     res = await page.request.post('/api/auth/login', {
@@ -44,9 +45,11 @@ async function login(page, user = ADMIN) {
       timeout: LOGIN_TIMEOUT,
     })
     if (res.ok()) break
+    lastBody = (await res.text().catch(() => '')).slice(0, 500)
+    console.error(`[login] HTTP ${res.status()} (attempt after ${delay}ms delay): ${lastBody}`)
     if (res.status() < 500) break
   }
-  expect(res.ok(), `login API failed: HTTP ${res.status()}`).toBeTruthy()
+  expect(res.ok(), `login API failed: HTTP ${res.status()} — ${lastBody}`).toBeTruthy()
 
   const body = await res.json()
   const token = body.token ?? body.data?.token
