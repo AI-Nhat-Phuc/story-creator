@@ -1,5 +1,5 @@
 {
-  "phase": "REVIEW",
+  "phase": "DONE",
   "current_feature": "story preview truncation",
   "task_dir": ".task/story_preview_truncation",
   "breakdown": [],
@@ -33,6 +33,11 @@
       "from": "IMPLEMENT",
       "to": "REVIEW",
       "at": "2026-04-15 09:08:32"
+    },
+    {
+      "from": "REVIEW",
+      "to": "DONE",
+      "at": "2026-04-15 17:58:11"
     }
   ]
 }
