@@ -32,10 +32,20 @@ async function login(page, user = ADMIN) {
   // Navigate to establish the app origin so localStorage is writable.
   await page.goto('/login')
 
-  const res = await page.request.post('/api/auth/login', {
-    data: { username: user.username, password: user.password },
-    timeout: LOGIN_TIMEOUT,
-  })
+  // Retry on 5xx: Vercel cold-start + MongoDB Atlas connection bursts can
+  // intermittently return 500 from /api/auth/login. Fail fast on 4xx — those
+  // are real auth errors, not infra flake.
+  const backoffs = [0, 2000, 4000]
+  let res
+  for (const delay of backoffs) {
+    if (delay) await page.waitForTimeout(delay)
+    res = await page.request.post('/api/auth/login', {
+      data: { username: user.username, password: user.password },
+      timeout: LOGIN_TIMEOUT,
+    })
+    if (res.ok()) break
+    if (res.status() < 500) break
+  }
   expect(res.ok(), `login API failed: HTTP ${res.status()}`).toBeTruthy()
 
   const body = await res.json()
