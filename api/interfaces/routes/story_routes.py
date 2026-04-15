@@ -13,7 +13,7 @@ from core.exceptions import (
     BusinessRuleError,
     ConflictError
 )
-from services import CharacterService, PermissionService
+from services import CharacterService, PermissionService, NovelService
 from interfaces.auth_middleware import token_required, optional_auth
 from utils.responses import success_response, created_response, deleted_response
 from utils.validation import validate_request, validate_query_params, extract_pagination
@@ -146,6 +146,7 @@ def create_story_bp(storage, story_generator, flush_data):
         description = data.get('description', '')
         genre = data.get('genre', 'adventure')
         time_index = data.get('time_index', 0)
+        explicit_order = data.get('order')
         selected_characters = data.get('selected_characters', None)
 
         world = World.from_dict(world_data)
@@ -169,8 +170,11 @@ def create_story_bp(storage, story_generator, flush_data):
         if data['content']:
             story.content = data['content']
 
-
-        _set_world_time(story, world, time_index)
+        # Spec BR-15/BR-16 — assign `order` (explicit wins; otherwise max+1)
+        if explicit_order is not None:
+            story.order = explicit_order
+        else:
+            story.order = NovelService.assign_next_order(storage, world.world_id)
 
         time_cone = story_generator.generate_time_cone(
             story,
@@ -383,15 +387,10 @@ def create_story_bp(storage, story_generator, flush_data):
                 story_data[field] = data[field]
         if data.get('chapter_number') is not None:
             story_data['chapter_number'] = data['chapter_number']
+        if data.get('order') is not None:
+            story_data['order'] = data['order']
         if data.get('time_index') is not None:
             story_data['time_index'] = data['time_index']
-            world_data_for_time = storage.load_world(story_data.get('world_id'))
-            if world_data_for_time:
-                world_for_time = World.from_dict(world_data_for_time)
-                class _Proxy:
-                    def __init__(self, d):
-                        self.metadata = d.setdefault('metadata', {})
-                _set_world_time(_Proxy(story_data), world_for_time, data['time_index'])
 
         story_data['updated_at'] = datetime.now().isoformat()
         storage.save_story(story_data)
@@ -444,6 +443,36 @@ def create_story_bp(storage, story_generator, flush_data):
         flush_data()
 
         return deleted_response("Story deleted successfully")
+
+    @story_bp.route('/api/stories/<story_id>/neighbors', methods=['GET'])
+    @optional_auth
+    def story_neighbors(story_id):
+        """Return the previous and next stories in the world's novel order.
+        ---
+        tags:
+          - Stories
+        parameters:
+          - name: story_id
+            in: path
+            type: string
+            required: true
+        responses:
+          200:
+            description: Neighbor summaries ({prev, next}).
+          404:
+            description: Story not found
+        """
+        story_data = storage.load_story(story_id)
+        if not story_data:
+            raise ResourceNotFoundError('Story', story_id)
+
+        user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
+        if not PermissionService.can_view(user_id, story_data):
+            raise PermissionDeniedError('view', 'story')
+
+        world_id = story_data.get('world_id')
+        neighbors = NovelService.get_neighbors(storage, world_id, story_id, user_id)
+        return success_response(neighbors)
 
     @story_bp.route('/api/stories/<story_id>/link-entities', methods=['POST'])
     @token_required

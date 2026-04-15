@@ -1,12 +1,12 @@
 {
-  "phase": "TEST",
+  "phase": "IMPLEMENT",
   "current_feature": "story preview truncation",
   "task_dir": ".task/story_preview_truncation",
   "breakdown": [],
   "spec_approved": true,
   "design_approved": true,
-  "flow_summary_approved": false,
-  "last_flow_file": "",
+  "flow_summary_approved": true,
+  "last_flow_file": "api/interfaces/routes/world_routes.py",
   "history": [
     {
       "from": "NONE",
@@ -23,6 +23,11 @@
       "from": "DESIGN",
       "to": "TEST",
       "at": "2026-04-15 00:43:30"
+    },
+    {
+      "from": "TEST",
+      "to": "IMPLEMENT",
+      "at": "2026-04-15 00:54:24"
     }
   ]
 }
