@@ -25,12 +25,14 @@ def _ordered_stories(storage, world_id: str, user_id: Optional[str]) -> List[Dic
     return sorted(stories, key=_sort_key)
 
 
-def _encode_cursor(order: int, line: int) -> str:
-    payload = json.dumps({'order': order, 'line': line}).encode('utf-8')
+def _encode_cursor(story_id: str, line: int) -> str:
+    # Cursor is anchored by story_id (always unique) rather than `order`
+    # because legacy stories may share order=None.
+    payload = json.dumps({'story_id': story_id, 'line': line}).encode('utf-8')
     return base64.urlsafe_b64encode(payload).decode('ascii').rstrip('=')
 
 
-def _decode_cursor(cursor: str) -> Dict[str, int]:
+def _decode_cursor(cursor: str) -> Dict[str, Any]:
     padded = cursor + '=' * (-len(cursor) % 4)
     payload = base64.urlsafe_b64decode(padded.encode('ascii'))
     return json.loads(payload.decode('utf-8'))
@@ -101,18 +103,18 @@ class NovelService:
         """
         ordered = _ordered_stories(storage, world_id, user_id)
 
-        start_order: Optional[int] = None
+        start_story_id: Optional[str] = None
         start_line = 0
         if cursor:
             decoded = _decode_cursor(cursor)
-            start_order = decoded.get('order')
+            start_story_id = decoded.get('story_id')
             start_line = decoded.get('line', 0)
 
         start_idx = 0
-        if start_order is not None:
+        if start_story_id is not None:
             matched = False
             for i, s in enumerate(ordered):
-                if s.get('order') == start_order:
+                if s.get('story_id') == start_story_id:
                     start_idx = i
                     matched = True
                     break
@@ -129,7 +131,7 @@ class NovelService:
             if remaining <= 0:
                 has_more = True
                 s = ordered[idx]
-                next_cursor = _encode_cursor(s.get('order') or 0, 0)
+                next_cursor = _encode_cursor(s.get('story_id'), 0)
                 break
 
             s = ordered[idx]
@@ -162,7 +164,7 @@ class NovelService:
 
             if not is_complete:
                 has_more = True
-                next_cursor = _encode_cursor(s.get('order') or 0, end)
+                next_cursor = _encode_cursor(s.get('story_id'), end)
                 break
 
             idx += 1

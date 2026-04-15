@@ -31,7 +31,9 @@ function NovelView({
   const { t } = useTranslation()
   const sentinelRef = useRef(null)
 
-  // Infinite-scroll: observe a sentinel element near the bottom.
+  // Infinite-scroll: observe a sentinel element near the bottom. The
+  // container is responsible for de-duplicating concurrent loads; we only
+  // need to wire the observer whenever `hasMore` changes.
   useEffect(() => {
     if (!hasMore || !sentinelRef.current) return
     const el = sentinelRef.current
@@ -42,7 +44,7 @@ function NovelView({
     }, { rootMargin: '400px' })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [hasMore, onLoadMore, contentBlocks.length])
+  }, [hasMore, onLoadMore])
 
   if (isLoading) {
     return (
@@ -71,7 +73,7 @@ function NovelView({
         onEdit={onEditMeta}
         onCancel={onCancelMeta}
         onSave={onSaveMeta}
-        onFormChange={onCancelMeta && onMetaFormChange}
+        onFormChange={onMetaFormChange}
       />
 
       {contentBlocks && contentBlocks.length > 0 ? (

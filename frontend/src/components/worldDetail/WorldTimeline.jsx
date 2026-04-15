@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import Tag from '../Tag'
 import {
@@ -9,6 +10,17 @@ import {
 } from '@heroicons/react/24/outline'
 
 function WorldTimeline({ stories, characters = [], locations = [], getStoryWorldTime, getTimelineLabel, onDeleteStory }) {
+  // Spec BR-1/BR-2 — sort by (order ASC, created_at ASC). Legacy stories
+  // with no `order` are pushed to the end.
+  const sortedStories = useMemo(() => (
+    [...(stories || [])].sort((a, b) => {
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER
+      if (orderA !== orderB) return orderA - orderB
+      return (a.created_at || '').localeCompare(b.created_at || '')
+    })
+  ), [stories])
+
   if (!stories || stories.length === 0) {
     return <p className="opacity-60 py-8 text-center">Chưa có câu chuyện nào</p>
   }
@@ -33,15 +45,6 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
     if (locationIds.length === 0) return []
     return locations.filter(loc => locationIds.includes(loc.location_id))
   }
-
-  // Spec BR-1/BR-2 — sort by (order ASC, created_at ASC). Legacy stories
-  // with no `order` are pushed to the end.
-  const sortedStories = [...stories].sort((a, b) => {
-    const orderA = a.order ?? Number.MAX_SAFE_INTEGER
-    const orderB = b.order ?? Number.MAX_SAFE_INTEGER
-    if (orderA !== orderB) return orderA - orderB
-    return (a.created_at || '').localeCompare(b.created_at || '')
-  })
 
   // One zigzag group per story — alternating left/right is handled at render
   // time. We still fall back to `timeLabel` for back-compat with stories that

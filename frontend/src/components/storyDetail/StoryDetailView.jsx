@@ -51,6 +51,11 @@ function StoryDetailView({
   // user clicks "Read more", expand to show full content inline.
   const [expanded, setExpanded] = useState(false)
 
+  // Reset expansion when navigating to a different story.
+  useEffect(() => {
+    setExpanded(false)
+  }, [story?.story_id])
+
   useEffect(() => {
     if (highlightPosition >= 0 && highlightRef.current) {
       setTimeout(() => {

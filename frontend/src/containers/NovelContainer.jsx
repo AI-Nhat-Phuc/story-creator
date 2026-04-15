@@ -21,6 +21,8 @@ function NovelContainer({ showToast }) {
   const [hasMore, setHasMore] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  // Synchronous guard against observer double-fires (state updates lag).
+  const loadingMoreRef = useRef(false)
   const [editingMeta, setEditingMeta] = useState(false)
   const [metaForm, setMetaForm] = useState({ title: '', description: '' })
   const [savingMeta, setSavingMeta] = useState(false)
@@ -55,7 +57,8 @@ function NovelContainer({ showToast }) {
   }
 
   const loadMore = useCallback(async () => {
-    if (!hasMore || isLoadingMore || !nextCursor) return
+    if (!hasMore || loadingMoreRef.current || !nextCursor) return
+    loadingMoreRef.current = true
     setIsLoadingMore(true)
     try {
       const res = await novelAPI.getContent(worldId, {
@@ -69,9 +72,10 @@ function NovelContainer({ showToast }) {
     } catch {
       showToast(t('pages.novel.loadMoreError'), 'error')
     } finally {
+      loadingMoreRef.current = false
       setIsLoadingMore(false)
     }
-  }, [worldId, nextCursor, hasMore, isLoadingMore, showToast, t])
+  }, [worldId, nextCursor, hasMore, showToast, t])
 
   const totalWordCount = useMemo(
     () => chapters.reduce((sum, ch) => sum + (ch.word_count || 0), 0),
