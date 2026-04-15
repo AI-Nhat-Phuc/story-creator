@@ -7,6 +7,8 @@ import { novelAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import NovelView from '../components/novel/NovelView'
 
+const LINE_BUDGET = 100
+
 function NovelContainer({ showToast }) {
   const { t } = useTranslation()
   const { worldId } = useParams()
@@ -14,7 +16,11 @@ function NovelContainer({ showToast }) {
 
   const [novel, setNovel] = useState(null)
   const [chapters, setChapters] = useState([])
+  const [contentBlocks, setContentBlocks] = useState([])
+  const [nextCursor, setNextCursor] = useState(null)
+  const [hasMore, setHasMore] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [editingMeta, setEditingMeta] = useState(false)
   const [metaForm, setMetaForm] = useState({ title: '', description: '' })
   const [savingMeta, setSavingMeta] = useState(false)
@@ -30,17 +36,42 @@ function NovelContainer({ showToast }) {
   const load = async () => {
     try {
       setIsLoading(true)
-      const res = await novelAPI.get(worldId)
-      const data = res.data
-      setNovel(data)
-      setChapters(data.chapters || [])
-      setMetaForm({ title: data.title || '', description: data.description || '' })
+      const [metaRes, contentRes] = await Promise.all([
+        novelAPI.get(worldId),
+        novelAPI.getContent(worldId, { lineBudget: LINE_BUDGET }),
+      ])
+      setNovel(metaRes.data)
+      setChapters(metaRes.data.chapters || [])
+      setMetaForm({ title: metaRes.data.title || '', description: metaRes.data.description || '' })
+
+      setContentBlocks(contentRes.data.blocks || [])
+      setNextCursor(contentRes.data.next_cursor)
+      setHasMore(contentRes.data.has_more)
     } catch {
       showToast(t('pages.novel.loadError'), 'error')
     } finally {
       setIsLoading(false)
     }
   }
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || isLoadingMore || !nextCursor) return
+    setIsLoadingMore(true)
+    try {
+      const res = await novelAPI.getContent(worldId, {
+        cursor: nextCursor,
+        lineBudget: LINE_BUDGET,
+      })
+      const newBlocks = res.data.blocks || []
+      setContentBlocks(prev => [...prev, ...newBlocks])
+      setNextCursor(res.data.next_cursor)
+      setHasMore(res.data.has_more)
+    } catch {
+      showToast(t('pages.novel.loadMoreError'), 'error')
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [worldId, nextCursor, hasMore, isLoadingMore, showToast, t])
 
   const totalWordCount = useMemo(
     () => chapters.reduce((sum, ch) => sum + (ch.word_count || 0), 0),
@@ -98,21 +129,25 @@ function NovelContainer({ showToast }) {
       </Helmet>
       <NovelView
         worldId={worldId}
-      novel={novel}
-      chapters={chapters}
-      totalWordCount={totalWordCount}
-      isLoading={isLoading}
-      canEdit={canEdit}
-      canReorder={canReorder}
-      editingMeta={editingMeta}
-      metaForm={metaForm}
-      savingMeta={savingMeta}
-      onEditMeta={handleEditMeta}
-      onCancelMeta={handleCancelMeta}
-      onSaveMeta={handleSaveMeta}
-      onMetaFormChange={handleMetaFormChange}
-      onReorder={handleReorder}
-    />
+        novel={novel}
+        chapters={chapters}
+        contentBlocks={contentBlocks}
+        hasMore={hasMore}
+        isLoadingMore={isLoadingMore}
+        onLoadMore={loadMore}
+        totalWordCount={totalWordCount}
+        isLoading={isLoading}
+        canEdit={canEdit}
+        canReorder={canReorder}
+        editingMeta={editingMeta}
+        metaForm={metaForm}
+        savingMeta={savingMeta}
+        onEditMeta={handleEditMeta}
+        onCancelMeta={handleCancelMeta}
+        onSaveMeta={handleSaveMeta}
+        onMetaFormChange={handleMetaFormChange}
+        onReorder={handleReorder}
+      />
     </>
   )
 }

@@ -65,6 +65,7 @@ export const storiesAPI = {
   linkEntities: (id, data) => api.post(`/stories/${id}/link-entities`, data),
   clearLinks: (id) => api.post(`/stories/${id}/clear-links`),
   getMyDraft: () => api.get('/stories/my-draft'),
+  getNeighbors: (id) => api.get(`/stories/${id}/neighbors`),
 }
 
 // GPT API
@@ -138,6 +139,12 @@ export const novelAPI = {
   get:             (worldId)        => api.get(`/worlds/${worldId}/novel`),
   update:          (worldId, data)  => api.put(`/worlds/${worldId}/novel`, data),
   reorderChapters: (worldId, order) => api.patch(`/worlds/${worldId}/novel/chapters`, { order }),
+  getContent:      (worldId, { cursor, lineBudget } = {}) => {
+    const params = {}
+    if (cursor) params.cursor = cursor
+    if (lineBudget) params.line_budget = lineBudget
+    return api.get(`/worlds/${worldId}/novel/content`, { params })
+  },
 }
 
 // Invitations API

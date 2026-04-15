@@ -320,13 +320,33 @@
       "deleteError": "Error deleting story",
       "linkSuccess": "Characters and locations linked!",
       "linkSuccessWithCount": "Linked and created {{chars}} characters, {{locs}} locations!",
-      "linkError": "Link error"
+      "linkError": "Link error",
+      "readMore": "Read more",
+      "openReader": "Open reader"
+    },
+    "storyReader": {
+      "loadError": "Failed to load story",
+      "prev": "Previous",
+      "next": "Next",
+      "backToStory": "Back to story detail",
+      "noPrev": "This is the first chapter",
+      "noNext": "This is the last chapter"
     },
     "novel": {
       "loadError": "Failed to load novel",
       "updateSuccess": "Novel updated",
       "updateError": "Failed to update novel",
-      "reorderError": "Failed to save chapter order"
+      "reorderError": "Failed to save chapter order",
+      "viewAsNovel": "Read as novel",
+      "loadMoreError": "Failed to load more content",
+      "loadingMore": "Loading more...",
+      "endOfNovel": "End of novel",
+      "continued": "(continued...)",
+      "emptyWorld": "This world has no stories yet"
+    },
+    "storyEditor": {
+      "orderLabel": "Chapter order",
+      "orderHelp": "Integer used to sort chapters in novel view (e.g. 1, 2, 3…)"
     }
   }
 }
