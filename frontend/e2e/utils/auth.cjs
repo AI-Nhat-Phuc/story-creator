@@ -32,22 +32,32 @@ async function login(page, user = ADMIN) {
   // Navigate to establish the app origin so localStorage is writable.
   await page.goto('/login')
 
-  // Retry on 5xx: Vercel cold-start + MongoDB Atlas connection bursts can
-  // intermittently return 500 from /api/auth/login. Fail fast on 4xx — those
-  // are real auth errors, not infra flake.
-  const backoffs = [0, 2000, 4000]
+  // Retry on transient failures:
+  //   5xx — Vercel/Mongo cold-start burp; short backoff.
+  //   429 — shared GH Actions IP hits the auth rate limit (10/min);
+  //         wait past the 60 s window before retrying.
+  //   4xx (other) — real auth error; fail fast.
+  const backoffs5xx = [2000, 4000]
+  const backoff429 = 20000
   let res
   let lastBody = ''
-  for (const delay of backoffs) {
-    if (delay) await page.waitForTimeout(delay)
+  for (let attempt = 0; attempt < 3; attempt++) {
     res = await page.request.post('/api/auth/login', {
       data: { username: user.username, password: user.password },
       timeout: LOGIN_TIMEOUT,
     })
     if (res.ok()) break
     lastBody = (await res.text().catch(() => '')).slice(0, 500)
-    console.error(`[login] HTTP ${res.status()} (attempt after ${delay}ms delay): ${lastBody}`)
-    if (res.status() < 500) break
+    console.error(`[login] attempt ${attempt + 1} HTTP ${res.status()}: ${lastBody}`)
+    if (res.status() === 429) {
+      await page.waitForTimeout(backoff429)
+      continue
+    }
+    if (res.status() >= 500 && attempt < backoffs5xx.length) {
+      await page.waitForTimeout(backoffs5xx[attempt])
+      continue
+    }
+    break
   }
   expect(res.ok(), `login API failed: HTTP ${res.status()} — ${lastBody}`).toBeTruthy()
 

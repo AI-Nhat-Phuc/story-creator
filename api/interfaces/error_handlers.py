@@ -1,6 +1,7 @@
 """Global error handlers for Flask application."""
 
 from flask import jsonify
+from werkzeug.exceptions import HTTPException
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,12 @@ def register_error_handlers(app):
         # If it's our custom exception, let the specific handler deal with it
         if isinstance(e, APIException):
             return handle_api_exception(e)
+
+        # Werkzeug HTTPException subclasses (429 RateLimitExceeded, 413, etc.)
+        # carry their own status code and body — pass through unchanged instead
+        # of masking them as `internal_error` 500.
+        if isinstance(e, HTTPException):
+            return _http_exception_response(e)
 
         # Log unexpected errors
         logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
@@ -96,3 +103,26 @@ def register_error_handlers(app):
         return jsonify(response), e.status_code
 
     logger.info("✅ Global error handlers registered")
+
+
+_HTTP_ERROR_CODES = {
+    429: 'rate_limit_exceeded',
+    413: 'payload_too_large',
+    415: 'unsupported_media_type',
+}
+
+
+def _http_exception_response(e):
+    """Return a JSON envelope for a werkzeug HTTPException.
+
+    Keeps the original status code and surfaces a stable error code so
+    clients (and tests) can tell rate-limited (429) apart from generic 500.
+    """
+    code = _HTTP_ERROR_CODES.get(e.code, f'http_{e.code}')
+    return jsonify({
+        'success': False,
+        'error': {
+            'code': code,
+            'message': e.description or e.name,
+        }
+    }), e.code
