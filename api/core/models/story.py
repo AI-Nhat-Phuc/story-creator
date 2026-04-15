@@ -18,6 +18,7 @@ class Story:
         created_at: Optional[str] = None,
         updated_at: Optional[str] = None,
         chapter_number: Optional[int] = None,
+        order: Optional[int] = None,
         metadata: Optional[Dict[str, Any]] = None,
         visibility: str = 'private',
         owner_id: Optional[str] = None,
@@ -33,6 +34,9 @@ class Story:
             world_id: ID of the world this story belongs to
             story_id: Unique identifier (generated if not provided)
             created_at: Creation timestamp (current time if not provided)
+            chapter_number: Manual display label ("Chương N"); separate from `order`
+            order: Sort key for novel reading. None until assigned by route layer
+                (max(order in world)+1) or migration. Tie-break: created_at ASC.
             metadata: Additional metadata for the story
             visibility: 'draft', 'private', or 'public' (default: 'private')
             owner_id: User ID of the creator
@@ -45,20 +49,12 @@ class Story:
         self.created_at = created_at or datetime.now().isoformat()
         self.updated_at = updated_at or datetime.now().isoformat()
         self.chapter_number = chapter_number
+        self.order = order
         self.metadata = metadata or {}
         self.visibility = visibility
         self.owner_id = owner_id
         self.shared_with = shared_with or []
         self.format = format  # 'plain' | 'markdown'
-        # World time: when this story happens in the world's timeline
-        if 'world_time' not in self.metadata:
-            self.metadata['world_time'] = {
-                'era': '',
-                'year': 0,
-                'month': 0,
-                'day': 0,
-                'description': ''  # e.g., "Mùa xuân năm đầu tiên"
-            }
         self.locations: List[str] = []  # Location IDs where story takes place
         self.entities: List[str] = []  # Entity IDs participating in story
         self.time_cones: List[str] = []  # Time cone IDs for temporal context
@@ -75,6 +71,7 @@ class Story:
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "chapter_number": self.chapter_number,
+            "order": self.order,
             "metadata": self.metadata,
             "visibility": self.visibility,
             "owner_id": self.owner_id,
@@ -101,6 +98,7 @@ class Story:
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at"),
             chapter_number=data.get("chapter_number"),
+            order=data.get("order"),
             metadata=data.get("metadata", {}),
             visibility=data.get("visibility", "private"),
             owner_id=data.get("owner_id"),

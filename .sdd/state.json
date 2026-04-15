@@ -1,9 +1,9 @@
 {
-  "phase": "ANALYZE",
+  "phase": "DESIGN",
   "current_feature": "story preview truncation",
   "task_dir": ".task/story_preview_truncation",
   "breakdown": [],
-  "spec_approved": false,
+  "spec_approved": true,
   "design_approved": false,
   "flow_summary_approved": false,
   "last_flow_file": "",
@@ -13,6 +13,11 @@
       "to": "ANALYZE",
       "at": "2026-04-14 15:34:58",
       "feature": "story preview truncation"
+    },
+    {
+      "from": "ANALYZE",
+      "to": "DESIGN",
+      "at": "2026-04-15 00:03:51"
     }
   ]
 }

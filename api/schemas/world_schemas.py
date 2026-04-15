@@ -180,3 +180,22 @@ class ReorderChaptersSchema(Schema):
         required=True,
         error_messages={'required': 'Chapter order list is required'}
     )
+
+
+class NovelContentQuerySchema(Schema):
+    """Query params for GET /api/worlds/{world_id}/novel/content.
+
+    Paginated novel content as a stream of blocks ordered by Story.order ASC.
+    Cursor is opaque (server-encoded {order, line offset}).
+    """
+
+    cursor = fields.Str(
+        load_default=None,
+        allow_none=True,
+        validate=validate.Length(max=200)
+    )
+
+    line_budget = fields.Int(
+        validate=validate.Range(min=1, max=500),
+        load_default=100
+    )
