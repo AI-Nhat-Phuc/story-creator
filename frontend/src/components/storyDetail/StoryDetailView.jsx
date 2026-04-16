@@ -153,11 +153,10 @@ function StoryDetailView({
         {world && (
           <Link
             to={`/worlds/${world.world_id}`}
-            className="btn btn-ghost btn-sm min-w-0 max-w-[50vw] sm:max-w-[65vw]"
-            title={world.name}
+            className="btn btn-ghost btn-sm min-w-0 sm:max-w-[65vw] !whitespace-normal !h-auto text-left py-1"
           >
-            <GlobeAltIcon className="w-4 h-4 shrink-0" />
-            <span className="truncate">{world.name}</span>
+            <GlobeAltIcon className="w-4 h-4 shrink-0 self-start mt-0.5" />
+            <span className="sm:truncate">{world.name}</span>
           </Link>
         )}
       </div>
