@@ -257,7 +257,13 @@ class MongoStorage:
             query = {'$and': [{'world_id': world_id}, perm_query]}
         else:
             query = perm_query
-        return self._clean_docs(list(self.stories.find(query)))
+        docs = self._clean_docs(list(self.stories.find(query)))
+        # Sort by (order ASC, created_at ASC). Stories without `order` go last.
+        docs.sort(key=lambda s: (
+            (0, s['order']) if s.get('order') is not None else (1, 0),
+            s.get('created_at') or '',
+        ))
+        return docs
 
     def delete_story(self, story_id: str) -> bool:
         self._connect()

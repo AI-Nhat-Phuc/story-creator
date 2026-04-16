@@ -206,9 +206,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# SDD Framework (commit hooks + state, ignore runtime logs)
-.sdd/changelog.log
-
 # Story Creator specific
 data/
 demo_data/
