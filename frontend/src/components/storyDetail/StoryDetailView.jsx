@@ -79,7 +79,7 @@ function StoryDetailView({
           className={showTruncated ? 'relative max-h-[18rem] overflow-hidden' : ''}
         >
           <div
-            className="prose prose-sm max-w-none"
+            className="prose prose-sm sm:prose-base max-w-none"
             dangerouslySetInnerHTML={{ __html: html }}
           />
           {showTruncated && (
@@ -111,12 +111,12 @@ function StoryDetailView({
     }
 
     if (effectiveHighlight < 0 && !showTruncated) {
-      return <p className="text-lg whitespace-pre-wrap">{story.content}</p>
+      return <p className="text-lg whitespace-pre-wrap leading-relaxed">{story.content}</p>
     }
 
     return (
       <div className="relative">
-        <div className="text-lg whitespace-pre-wrap">
+        <div className="text-lg whitespace-pre-wrap leading-relaxed [&>p]:mb-3">
           {paragraphs.map((para, idx) => {
             const isHighlighted = idx === effectiveHighlight
             return (
@@ -151,9 +151,13 @@ function StoryDetailView({
           <span className="hidden sm:inline">Quay lại danh sách</span>
         </Link>
         {world && (
-          <Link to={`/worlds/${world.world_id}`} className="btn btn-ghost btn-sm min-w-0 max-w-[65vw]">
+          <Link
+            to={`/worlds/${world.world_id}`}
+            className="btn btn-ghost btn-sm min-w-0 max-w-[50vw] sm:max-w-[65vw]"
+            title={world.name}
+          >
             <GlobeAltIcon className="w-4 h-4 shrink-0" />
-            <span className="truncate">Về thế giới {world.name}</span>
+            <span className="truncate">{world.name}</span>
           </Link>
         )}
       </div>
@@ -169,7 +173,7 @@ function StoryDetailView({
                   href={`/stories/${story.story_id}/print`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn btn-outline btn-sm gap-1"
+                  className="btn btn-outline btn-sm gap-1 hidden sm:inline-flex"
                 >
                   <ArrowDownTrayIcon className="w-4 h-4" /> Export PDF
                 </a>
@@ -223,56 +227,66 @@ function StoryDetailView({
                 </Link>
               </div>
             )}
+            {/* Mobile: Export PDF at bottom of content */}
+            <a
+              href={`/stories/${story.story_id}/print`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-outline btn-sm gap-1 sm:hidden mt-4"
+            >
+              <ArrowDownTrayIcon className="w-4 h-4" /> Export PDF
+            </a>
           </div>
 
           <div className="bg-base-100 shadow-xl p-6 rounded-box">
-            <h2 className="mb-4 font-bold text-2xl"><ClipboardDocumentListIcon className="inline w-6 h-6" /> Thông tin chi tiết</h2>
-            <div className="overflow-x-auto">
-              <table className="table table-zebra w-full">
-                <tbody>
-                  <tr>
-                    <td className="font-semibold">ID</td>
-                    <td className="font-mono text-sm">{story.story_id}</td>
-                  </tr>
-                  <tr>
-                    <td className="font-semibold">Thế giới</td>
-                    <td>
-                      {world ? (
-                        <Link to={`/worlds/${world.world_id}`} className="link link-info">
-                          {world.name}
-                        </Link>
-                      ) : (
-                        'N/A'
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-semibold">Thời điểm</td>
-                    <td>
-                      <div>{formattedWorldTime}</div>
-                      {displayWorldTime?.era && (
-                        <div className="opacity-60 mt-1 text-xs">
-                          Kỷ nguyên: {displayWorldTime.era}
-                        </div>
-                      )}
-                      {displayWorldTime?.year > 0 && (
-                        <div className="opacity-60 text-xs">
-                          Niên đại: {(displayWorldTime.year_name || 'Năm')} {displayWorldTime.year}
-                        </div>
-                      )}
-                      {normalizedTimelineIndex !== null && normalizedTimelineIndex !== 0 ? (
-                        <div className="opacity-50 mt-1 text-xs">
-                          Chỉ số timeline: {normalizedTimelineIndex}
-                        </div>
-                      ) : (
-                        <div className="opacity-50 mt-1 text-xs">
-                          Mốc thời gian chưa xác định
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <h2 className="mb-4 font-bold text-2xl"><ClipboardDocumentListIcon className="inline w-6 h-6" /> {t('pages.storyDetailView.detailInfo')}</h2>
+            <div className="space-y-4">
+              <div>
+                <div className="text-xs font-semibold text-base-content/60 uppercase tracking-wide mb-1">{t('pages.storyDetailView.worldLabel')}</div>
+                <div>
+                  {world ? (
+                    <Link to={`/worlds/${world.world_id}`} className="link link-info">
+                      {world.name}
+                    </Link>
+                  ) : (
+                    'N/A'
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-base-content/60 uppercase tracking-wide mb-1">{t('pages.storyDetailView.timeLabel')}</div>
+                <div>
+                  <div>{formattedWorldTime}</div>
+                  {displayWorldTime?.era && (
+                    <div className="opacity-60 mt-1 text-xs">
+                      Kỷ nguyên: {displayWorldTime.era}
+                    </div>
+                  )}
+                  {displayWorldTime?.year > 0 && (
+                    <div className="opacity-60 text-xs">
+                      Niên đại: {(displayWorldTime.year_name || 'Năm')} {displayWorldTime.year}
+                    </div>
+                  )}
+                  {normalizedTimelineIndex !== null && normalizedTimelineIndex !== 0 ? (
+                    <div className="opacity-50 mt-1 text-xs">
+                      Chỉ số timeline: {normalizedTimelineIndex}
+                    </div>
+                  ) : (
+                    <div className="opacity-50 mt-1 text-xs">
+                      Mốc thời gian chưa xác định
+                    </div>
+                  )}
+                </div>
+              </div>
+              <details className="group">
+                <summary className="text-xs text-base-content/40 cursor-pointer hover:text-base-content/60 select-none">
+                  {t('pages.storyDetailView.forDeveloper')} ▸
+                </summary>
+                <div className="mt-2 bg-base-200 rounded-lg px-3 py-2">
+                  <div className="text-xs text-base-content/50 mb-1">Story ID</div>
+                  <code className="text-xs font-mono break-all select-all">{story.story_id}</code>
+                </div>
+              </details>
             </div>
           </div>
         </div>
@@ -351,10 +365,10 @@ function StoryDetailView({
       {story.content && (
         <button
           onClick={() => setShowAnalysisPanel(v => !v)}
-          className="sm:hidden fixed bottom-24 right-4 z-40 btn btn-circle shadow-lg bg-base-100 border border-base-300"
-          title="Phân tích AI"
+          className="sm:hidden fixed bottom-24 right-4 z-40 btn btn-sm shadow-lg bg-base-100 border border-base-300 gap-1.5 pl-3 pr-4"
         >
           <SparklesIcon className="w-5 h-5 text-warning" />
+          <span className="text-xs font-medium">{t('pages.storyDetailView.aiLabel')}</span>
         </button>
       )}
 
