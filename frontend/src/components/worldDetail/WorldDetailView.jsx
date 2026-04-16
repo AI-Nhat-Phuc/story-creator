@@ -57,6 +57,10 @@ function WorldDetailView({
   inviteLoading = false,
   onInviteCollaborator,
   onRemoveCollaborator,
+  // Pagination props
+  hasMoreStories = false,
+  loadingMoreStories = false,
+  onLoadMoreStories,
 }) {
   const { t } = useTranslation()
   const [editingEntityId, setEditingEntityId] = useState(null)
@@ -249,6 +253,9 @@ function WorldDetailView({
             getStoryWorldTime={getStoryWorldTime}
             getTimelineLabel={getTimelineLabel}
             onDeleteStory={canEdit ? onDeleteStory : null}
+            hasMore={hasMoreStories}
+            loadingMore={loadingMoreStories}
+            onLoadMore={onLoadMoreStories}
           />
         </div>
       )}

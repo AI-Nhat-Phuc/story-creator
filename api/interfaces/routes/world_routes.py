@@ -11,12 +11,13 @@ from core.exceptions import (
 )
 from services import CharacterService, PermissionService, NovelService
 from interfaces.auth_middleware import token_required, optional_auth
-from utils.responses import success_response, created_response, deleted_response
+from utils.responses import success_response, created_response, deleted_response, paginated_response
 from utils.validation import validate_request, validate_query_params, extract_pagination
 from schemas.world_schemas import (
     CreateWorldSchema,
     UpdateWorldSchema,
     ListWorldsQuerySchema,
+    ListWorldStoriesQuerySchema,
     CreateEntitySchema,
     UpdateEntitySchema,
     UpdateNovelSchema,
@@ -311,15 +312,42 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
     @world_bp.route('/api/worlds/<world_id>/stories', methods=['GET'])
     @optional_auth
+    @validate_query_params(ListWorldStoriesQuerySchema)
     def world_stories(world_id):
-        """Get all stories in a world."""
+        """Get stories in a world (paginated, without full content).
+        ---
+        tags:
+          - Worlds
+        parameters:
+          - in: path
+            name: world_id
+            type: string
+            required: true
+          - in: query
+            name: page
+            type: integer
+            default: 1
+          - in: query
+            name: per_page
+            type: integer
+            default: 20
+        responses:
+          200:
+            description: Paginated story summaries (content_preview instead of full content)
+        """
         world_data = storage.load_world(world_id)
         if not world_data:
             raise ResourceNotFoundError('World', world_id)
 
+        params = request.validated_data
+        page = params.get('page', 1)
+        per_page = params.get('per_page', 20)
         user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
-        stories = storage.list_stories(world_id, user_id=user_id)
-        return success_response(stories)
+
+        items, total = storage.list_stories_summary(
+            world_id, user_id=user_id, page=page, per_page=per_page,
+        )
+        return paginated_response(items, page, per_page, total)
 
     @world_bp.route('/api/worlds/<world_id>/characters', methods=['GET'])
     def world_characters(world_id):

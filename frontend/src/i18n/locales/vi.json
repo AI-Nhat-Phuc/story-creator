@@ -304,7 +304,9 @@
       "invitePending": "Đã là đồng tác giả hoặc lời mời đang chờ",
       "inviteError": "Không thể gửi lời mời",
       "removeCollabSuccess": "Đã xóa đồng tác giả",
-      "removeCollabError": "Không thể xóa đồng tác giả"
+      "removeCollabError": "Không thể xóa đồng tác giả",
+      "loadMoreStories": "Tải thêm câu chuyện",
+      "loadingMoreStories": "Đang tải..."
     },
     "storyDetail": {
       "loadError": "Không thể tải chi tiết câu chuyện",

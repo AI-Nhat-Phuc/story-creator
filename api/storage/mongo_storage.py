@@ -11,8 +11,9 @@ Setup:
        MONGODB_URI=mongodb+srv://user:pass@cluster.xxxxx.mongodb.net/story_creator?retryWrites=true&w=majority
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 import logging
+import re
 import threading
 
 logger = logging.getLogger(__name__)
@@ -264,6 +265,57 @@ class MongoStorage:
             s.get('created_at') or '',
         ))
         return docs
+
+    def list_stories_summary(
+        self,
+        world_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        page: int = 1,
+        per_page: int = 20,
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """List story summaries with pagination, excluding full content.
+
+        Returns a tuple of (page_items, total_count).  Each item carries a
+        ``content_preview`` (first 200 plain-text characters) instead of the
+        full ``content`` field, drastically reducing payload size.
+        """
+        self._connect()
+        perm_query = self._build_permission_query(user_id)
+        query = {'$and': [{'world_id': world_id}, perm_query]} if world_id else perm_query
+
+        total = self.stories.count_documents(query)
+        if total == 0:
+            return [], 0
+
+        # Fetch metadata only (exclude heavy content field)
+        docs = self._clean_docs(list(self.stories.find(query, {'content': 0})))
+
+        # Sort: order ASC (nulls last), created_at ASC
+        docs.sort(key=lambda s: (
+            (0, s['order']) if s.get('order') is not None else (1, 0),
+            s.get('created_at') or '',
+        ))
+
+        # Slice for current page
+        start = (page - 1) * per_page
+        page_docs = docs[start:start + per_page]
+
+        # Fetch content preview for current page only (avoids loading all content)
+        page_ids = [d['story_id'] for d in page_docs]
+        if page_ids:
+            previews: Dict[str, str] = {}
+            for cd in self.stories.find(
+                {'story_id': {'$in': page_ids}},
+                {'story_id': 1, 'content': 1, '_id': 0},
+            ):
+                raw = cd.get('content') or ''
+                plain = re.sub(r'<[^>]*>', '', raw)[:200]
+                previews[cd['story_id']] = plain
+
+            for d in page_docs:
+                d['content_preview'] = previews.get(d['story_id'], '')
+
+        return page_docs, total
 
     def delete_story(self, story_id: str) -> bool:
         self._connect()
