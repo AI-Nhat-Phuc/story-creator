@@ -146,19 +146,21 @@ function StoryDetailView({
   return (
     <div className="overflow-x-hidden">
       <div className="flex flex-wrap gap-2 mb-4">
-        <Link to="/stories" className="btn btn-ghost btn-sm btn-square sm:w-auto sm:px-3">
-          <span aria-hidden="true">←</span>
-          <span className="hidden sm:inline">Quay lại danh sách</span>
-        </Link>
         {world && (
           <Link
             to={`/worlds/${world.world_id}`}
-            className="btn btn-ghost btn-sm min-w-0 sm:max-w-[65vw] !whitespace-normal !h-auto text-left py-1"
+            className="btn btn-ghost btn-sm btn-square sm:w-auto sm:px-3 min-w-0 sm:max-w-[65vw]"
+            title={world.name}
           >
-            <GlobeAltIcon className="w-4 h-4 shrink-0 self-start mt-0.5" />
-            <span className="sm:truncate">{world.name}</span>
+            <GlobeAltIcon className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline sm:truncate">{world.name}</span>
           </Link>
         )}
+        <Link to="/stories" className="btn btn-ghost btn-sm btn-square sm:w-auto sm:px-3">
+          <ClipboardDocumentListIcon className="w-4 h-4 sm:hidden" />
+          <span aria-hidden="true" className="hidden sm:inline">←</span>
+          <span className="hidden sm:inline">Quay lại danh sách</span>
+        </Link>
       </div>
 
       <div className="flex gap-0 items-start">
