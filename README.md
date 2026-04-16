@@ -141,8 +141,6 @@ story-creator/
 │   ├── vite.config.js
 │   └── package.json
 │
-├── .sdd/                         # SDD phase manager and hooks
-├── .task/                        # Per-feature task specs and design docs
 ├── docs/                         # Documentation
 ├── vercel.json                   # Vercel deployment config
 ├── package.json                  # Root npm scripts
@@ -275,33 +273,6 @@ Pre-configured tasks in `.vscode/tasks.json`:
 | `Run React Frontend` | Vite dev server on port 3000 |
 | `Run Tests` / `Run NoSQL Tests` | Test suites |
 | `Build React` | Production frontend build |
-
----
-
-## SDD Workflow
-
-This project uses **Specification-Driven Development** — a gated 6-phase process enforced by Claude Code hooks. Every feature goes through: **ANALYZE → SPEC → DESIGN → TEST → IMPLEMENT → REVIEW**.
-
-```bash
-# Start a new feature
-python .sdd/sdd.py start "Feature name"
-
-# Check current phase
-python .sdd/sdd.py status
-```
-
-### Phase transitions
-
-| Command | Transition |
-|---------|-----------|
-| `python .sdd/sdd.py approve spec` | SPEC → DESIGN |
-| `python .sdd/sdd.py approve design` | DESIGN → TEST |
-| `python .sdd/sdd.py phase IMPLEMENT` | TEST → IMPLEMENT (after red-state confirmed) |
-| `python .sdd/sdd.py approve flow <file>` | Unlock one service/route file for editing |
-| `python .sdd/sdd.py phase REVIEW` | IMPLEMENT → REVIEW (after all tests pass) |
-| `python .sdd/sdd.py done` | Mark feature complete |
-
-See [.sdd/PHASES.md](.sdd/PHASES.md) for the complete rules.
 
 ---
 
