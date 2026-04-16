@@ -324,6 +324,13 @@
       "readMore": "Read more",
       "openReader": "Open reader"
     },
+    "storyDetailView": {
+      "detailInfo": "Details",
+      "worldLabel": "World",
+      "timeLabel": "Time",
+      "forDeveloper": "For developers",
+      "aiLabel": "AI Analysis"
+    },
     "storyReader": {
       "loadError": "Failed to load story",
       "prev": "Previous",

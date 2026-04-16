@@ -324,6 +324,13 @@
       "readMore": "Xem thêm",
       "openReader": "Mở chế độ đọc"
     },
+    "storyDetailView": {
+      "detailInfo": "Thông tin chi tiết",
+      "worldLabel": "Thế giới",
+      "timeLabel": "Thời điểm",
+      "forDeveloper": "Dành cho developer",
+      "aiLabel": "Phân tích AI"
+    },
     "storyReader": {
       "loadError": "Không thể tải câu chuyện",
       "prev": "Chương trước",

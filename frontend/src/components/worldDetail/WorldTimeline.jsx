@@ -120,6 +120,21 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
                         </button>
                       )}
                     </div>
+                    {story.content && (
+                      <p className="text-sm text-base-content/60 mt-1 line-clamp-2">
+                        {story.content.replace(/<[^>]*>/g, '').slice(0, 120)}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1 text-xs text-base-content/40">
+                      {story.created_at && (
+                        <time>{new Date(story.created_at).toLocaleDateString()}</time>
+                      )}
+                      {story.visibility && (
+                        <span className={`badge badge-xs ${story.visibility === 'public' ? 'badge-success' : story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
+                          {story.visibility}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-2 mt-3">
                       <Tag color={storyPalette.badgeColor}>{story.genre}</Tag>
                       {getStoryCharacters(story).slice(0, 3).map(char => (
