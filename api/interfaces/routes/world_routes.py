@@ -12,7 +12,7 @@ from core.exceptions import (
 from services import CharacterService, PermissionService, NovelService
 from interfaces.auth_middleware import token_required, optional_auth
 from utils.responses import success_response, created_response, deleted_response, paginated_response
-from utils.validation import validate_request, validate_query_params, extract_pagination
+from utils.validation import validate_request, validate_query_params
 from schemas.world_schemas import (
     CreateWorldSchema,
     UpdateWorldSchema,
@@ -35,11 +35,8 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
     @world_bp.route('/api/worlds', methods=['GET'])
     @optional_auth
     @validate_query_params(ListWorldsQuerySchema)
-    @extract_pagination(lambda: storage.list_worlds(
-        user_id=g.current_user.user_id if hasattr(g, 'current_user') else None
-    ))
     def list_worlds():
-        """List all worlds visible to current user.
+        """List world summaries visible to current user (paginated, without heavy fields).
         ---
         tags:
           - Worlds
@@ -59,9 +56,17 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             default: 20
         responses:
           200:
-            description: List of worlds (public + owned + shared)
+            description: Paginated world summaries (excludes description/metadata/novel)
         """
-        pass
+        params = request.validated_data
+        page = params.get('page', 1)
+        per_page = params.get('per_page', 20)
+        user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
+
+        items, total = storage.list_worlds_summary(
+            user_id=user_id, page=page, per_page=per_page,
+        )
+        return paginated_response(items, page, per_page, total)
 
     @world_bp.route('/api/worlds', methods=['POST'])
     @token_required

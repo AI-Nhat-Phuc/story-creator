@@ -78,7 +78,7 @@ def create_stats_bp(storage, has_gpt):
             stats_data = storage.get_stats()
             entity_count = stats_data.get('entities', 0)
             location_count = stats_data.get('locations', 0)
-            worlds_summary = storage.list_worlds_summary(user_id=user_id)
+            worlds_summary, _ = storage.list_worlds_summary(user_id=user_id)
 
         result = {
             'total_worlds': worlds_counts['total'],

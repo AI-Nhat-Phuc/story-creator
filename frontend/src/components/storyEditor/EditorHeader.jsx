@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import StoryTimeSelector from './StoryTimeSelector'
 
 const STATUS_BADGE = {
   new:     { cls: 'badge-ghost',    label: 'New'      },
@@ -15,11 +16,14 @@ function EditorHeader({
   wordCount,
   readTime,
   isPublished,
+  timeIndex,
+  worldCalendar,
   onTitleChange,
   onSave,
   onPublish,
   onBack,
   onTitleFocus,
+  onTimeIndexChange,
 }) {
   const titleRef = useRef(null)
   const [titleError, setTitleError] = useState(false)
@@ -40,10 +44,12 @@ function EditorHeader({
     onTitleChange(value)
   }
 
+  const showTimeSelector = onTimeIndexChange !== undefined
+
   return (
-    <header className="flex flex-col sm:flex-row sm:items-center gap-1 px-4 py-2 bg-base-200 border-b border-base-300">
+    <header className="flex flex-col gap-1 px-4 py-2 bg-base-200 border-b border-base-300">
       {/* Row 1: back button + title input */}
-      <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="flex items-center gap-2 min-w-0">
         <button
           onClick={onBack}
           className="btn btn-ghost btn-sm btn-square shrink-0"
@@ -68,27 +74,38 @@ function EditorHeader({
         </div>
       </div>
 
-      {/* Row 2 on mobile / inline on desktop: status + action buttons */}
-      <div className="flex items-center gap-2 justify-end">
-        {saveStatus === 'saved'
-          ? <span className="text-xs text-base-content/50 shrink-0">{badge.label}</span>
-          : <span className={`badge ${badge.cls} badge-sm shrink-0`}>{badge.label}</span>
-        }
-
-        {wordCount > 0 && (
-          <span className="text-xs text-base-content/50 shrink-0 hidden sm:block">
-            {wordCount.toLocaleString()}w · ~{readTime}m
-          </span>
+      {/* Row 2: time selector (under title) + status + action buttons (incl. publish) */}
+      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap pl-10">
+        {showTimeSelector && (
+          <StoryTimeSelector
+            compact
+            timeIndex={timeIndex ?? 0}
+            onChange={onTimeIndexChange}
+            worldCalendar={worldCalendar}
+          />
         )}
 
-        {saveStatus === 'saved' && !isPublished && title.trim() && wordCount > 0 && (
-          <button onClick={onPublish} className="btn btn-success btn-sm shrink-0">
-            Xuất bản
+        <div className="flex items-center gap-2 ml-auto shrink-0">
+          {saveStatus === 'saved'
+            ? <span className="text-xs text-base-content/50 shrink-0">{badge.label}</span>
+            : <span className={`badge ${badge.cls} badge-sm shrink-0`}>{badge.label}</span>
+          }
+
+          {wordCount > 0 && (
+            <span className="text-xs text-base-content/50 shrink-0 hidden sm:block">
+              {wordCount.toLocaleString()}w · ~{readTime}m
+            </span>
+          )}
+
+          {saveStatus === 'saved' && !isPublished && title.trim() && wordCount > 0 && (
+            <button onClick={onPublish} className="btn btn-success btn-sm shrink-0">
+              Xuất bản
+            </button>
+          )}
+          <button onClick={handleSave} className="btn btn-primary btn-sm shrink-0">
+            Lưu
           </button>
-        )}
-        <button onClick={handleSave} className="btn btn-primary btn-sm shrink-0">
-          Lưu
-        </button>
+        </div>
       </div>
     </header>
   )

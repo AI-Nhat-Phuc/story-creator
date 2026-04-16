@@ -48,6 +48,9 @@ function StoryEditorView({
         onSave={onSave}
         onPublish={onPublish}
         isPublished={editor.isPublished}
+        timeIndex={timeIndex}
+        worldCalendar={worldCalendar}
+        onTimeIndexChange={onTimeIndexChange}
         onBack={onBack}
         onTitleFocus={() => setPanelOpen(false)}
       />
@@ -70,10 +73,7 @@ function StoryEditorView({
           gpt={gpt}
           headings={headings}
           userSignature={userSignature}
-          timeIndex={timeIndex}
-          worldCalendar={worldCalendar}
           onInsertSignature={onInsertSignature}
-          onTimeIndexChange={onTimeIndexChange}
           panelOpen={panelOpen}
           onClosePanel={() => setPanelOpen(false)}
         />
