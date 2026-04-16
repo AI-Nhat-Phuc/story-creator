@@ -90,6 +90,20 @@ class ListWorldsQuerySchema(Schema):
     )
 
 
+class ListWorldStoriesQuerySchema(Schema):
+    """Schema for GET /api/worlds/<id>/stories — paginated story summaries."""
+
+    page = fields.Int(
+        validate=validate.Range(min=1),
+        load_default=1
+    )
+
+    per_page = fields.Int(
+        validate=validate.Range(min=1, max=100),
+        load_default=20
+    )
+
+
 class CreateEntitySchema(Schema):
     """Schema for POST /api/worlds/<id>/entities - Add entity to world."""
 

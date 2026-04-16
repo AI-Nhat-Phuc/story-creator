@@ -23,6 +23,7 @@ api.interceptors.request.use(
 
 // Unwrap standard API response envelope: { success: true, data: X } → response.data = X
 // GPT endpoints use jsonify() directly (no envelope) so they are unaffected.
+// Pagination metadata (if present) is preserved on response.pagination.
 api.interceptors.response.use(
   (response) => {
     if (
@@ -31,6 +32,9 @@ api.interceptors.response.use(
       'success' in response.data &&
       'data' in response.data
     ) {
+      if (response.data.pagination) {
+        response.pagination = response.data.pagination
+      }
       response.data = response.data.data
     }
     return response
@@ -46,7 +50,8 @@ export const worldsAPI = {
   update: (id, data) => api.put(`/worlds/${id}`, data),
   delete: (id) => api.delete(`/worlds/${id}`),
   getCharacters: (id) => api.get(`/worlds/${id}/characters`),
-  getStories: (id) => api.get(`/worlds/${id}/stories`),
+  getStories: (id, { page = 1, perPage = 20 } = {}) =>
+    api.get(`/worlds/${id}/stories`, { params: { page, per_page: perPage } }),
   getLocations: (id) => api.get(`/worlds/${id}/locations`),
   autoLinkStories: (id) => api.post(`/worlds/${id}/auto-link-stories`),
   deleteEntity: (worldId, entityId) => api.delete(`/worlds/${worldId}/entities/${entityId}`),

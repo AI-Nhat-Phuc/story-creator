@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Tag from '../Tag'
 import {
   UserIcon,
@@ -9,7 +10,8 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline'
 
-function WorldTimeline({ stories, characters = [], locations = [], getStoryWorldTime, getTimelineLabel, onDeleteStory }) {
+function WorldTimeline({ stories, characters = [], locations = [], getStoryWorldTime, getTimelineLabel, onDeleteStory, hasMore = false, loadingMore = false, onLoadMore }) {
+  const { t } = useTranslation()
   // Spec BR-1/BR-2 — sort by (order ASC, created_at ASC). Legacy stories
   // with no `order` are pushed to the end.
   const sortedStories = useMemo(() => (
@@ -57,6 +59,7 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
   }))
 
   return (
+    <>
     <ul className="timeline timeline-vertical max-md:timeline-compact">
       {yearGroups.map((group, groupIndex) => {
         // Use first story's genre for the line color
@@ -120,9 +123,11 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
                         </button>
                       )}
                     </div>
-                    {story.content && (
+                    {(story.content_preview || story.content) && (
                       <p className="text-sm text-base-content/60 mt-1 line-clamp-2">
-                        {story.content.replace(/<[^>]*>/g, '').slice(0, 120)}
+                        {story.content_preview
+                          ? story.content_preview.slice(0, 120)
+                          : story.content.replace(/<[^>]*>/g, '').slice(0, 120)}
                       </p>
                     )}
                     <div className="flex items-center gap-2 mt-1 text-xs text-base-content/40">
@@ -182,6 +187,20 @@ function WorldTimeline({ stories, characters = [], locations = [], getStoryWorld
         )
       })}
     </ul>
+    {hasMore && (
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={onLoadMore}
+          disabled={loadingMore}
+          className="btn btn-outline btn-primary btn-sm gap-2"
+        >
+          {loadingMore
+            ? <><span className="loading loading-spinner loading-xs"></span> {t('pages.worldDetail.loadingMoreStories')}</>
+            : t('pages.worldDetail.loadMoreStories')}
+        </button>
+      </div>
+    )}
+    </>
   )
 }
 

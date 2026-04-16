@@ -304,7 +304,9 @@
       "invitePending": "Already a co-author or invitation pending",
       "inviteError": "Failed to send invitation",
       "removeCollabSuccess": "Co-author removed",
-      "removeCollabError": "Failed to remove co-author"
+      "removeCollabError": "Failed to remove co-author",
+      "loadMoreStories": "Load more stories",
+      "loadingMoreStories": "Loading..."
     },
     "storyDetail": {
       "loadError": "Failed to load story details",

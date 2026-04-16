@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
@@ -9,6 +9,8 @@ import WorldDetailView from '../components/worldDetail/WorldDetailView'
 import { useAuth } from '../contexts/AuthContext'
 import { useGptTasks } from '../contexts/GptTaskContext'
 
+const STORIES_PER_PAGE = 20
+
 function WorldDetailContainer({ showToast }) {
   const { t } = useTranslation()
   const { worldId } = useParams()
@@ -16,6 +18,9 @@ function WorldDetailContainer({ showToast }) {
   const { registerTask } = useGptTasks()
   const [world, setWorld] = useState(null)
   const [stories, setStories] = useState([])
+  const [storiesTotalPages, setStoriesTotalPages] = useState(0)
+  const [storiesPage, setStoriesPage] = useState(1)
+  const [loadingMoreStories, setLoadingMoreStories] = useState(false)
   const [characters, setCharacters] = useState([])
   const [locations, setLocations] = useState([])
   const [activeTab, setActiveTab] = useState('stories')
@@ -45,7 +50,7 @@ function WorldDetailContainer({ showToast }) {
       setLoading(true)
       const [worldRes, storiesRes, charsRes, locsRes, collabRes] = await Promise.all([
         worldsAPI.getById(worldId),
-        worldsAPI.getStories(worldId),
+        worldsAPI.getStories(worldId, { page: 1, perPage: STORIES_PER_PAGE }),
         worldsAPI.getCharacters(worldId),
         worldsAPI.getLocations(worldId),
         collaboratorsAPI.list(worldId).catch(() => ({ data: [] })),
@@ -53,6 +58,8 @@ function WorldDetailContainer({ showToast }) {
 
       setWorld(worldRes.data)
       setStories(storiesRes.data)
+      setStoriesPage(1)
+      setStoriesTotalPages(storiesRes.pagination?.total_pages ?? 1)
       setCharacters(charsRes.data)
       setLocations(locsRes.data)
       setCollaborators(collabRes.data || [])
@@ -63,6 +70,22 @@ function WorldDetailContainer({ showToast }) {
       setLoading(false)
     }
   }
+
+  const handleLoadMoreStories = useCallback(async () => {
+    const nextPage = storiesPage + 1
+    if (nextPage > storiesTotalPages || loadingMoreStories) return
+    try {
+      setLoadingMoreStories(true)
+      const res = await worldsAPI.getStories(worldId, { page: nextPage, perPage: STORIES_PER_PAGE })
+      setStories(prev => [...prev, ...res.data])
+      setStoriesPage(nextPage)
+      setStoriesTotalPages(res.pagination?.total_pages ?? storiesTotalPages)
+    } catch (error) {
+      showToast(t('pages.worldDetail.loadError'), 'error')
+    } finally {
+      setLoadingMoreStories(false)
+    }
+  }, [worldId, storiesPage, storiesTotalPages, loadingMoreStories, showToast, t])
 
   const computeWorldTimeFromIndex = (timeIndex) => {
     if (!world) return null
@@ -342,6 +365,10 @@ function WorldDetailContainer({ showToast }) {
       inviteLoading={inviteLoading}
       onInviteCollaborator={handleInviteCollaborator}
       onRemoveCollaborator={handleRemoveCollaborator}
+      // Pagination props
+      hasMoreStories={storiesPage < storiesTotalPages}
+      loadingMoreStories={loadingMoreStories}
+      onLoadMoreStories={handleLoadMoreStories}
     />
     </>
   )
