@@ -21,15 +21,9 @@ function StoryCard({ story, featured = false }) {
         to={`/stories/${story.story_id}`}
         className="col-span-2 bg-base-100 rounded-2xl shadow-md hover:shadow-lg transition p-6 flex flex-col gap-3 group"
       >
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-extrabold text-2xl leading-snug group-hover:text-primary transition-colors line-clamp-2">
-            {story.title}
-          </h3>
-          <span className={`badge shrink-0 mt-1 ${
-            story.visibility === 'public' ? 'badge-success' :
-            story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'
-          }`}>{story.visibility}</span>
-        </div>
+        <h3 className="font-extrabold text-2xl leading-snug group-hover:text-primary transition-colors line-clamp-2">
+          {story.title}
+        </h3>
         {story.content_preview && (
           <p className="text-base-content/70 text-sm leading-relaxed line-clamp-3">
             {story.content_preview}
@@ -54,15 +48,9 @@ function StoryCard({ story, featured = false }) {
       to={`/stories/${story.story_id}`}
       className="bg-base-100 rounded-2xl shadow hover:shadow-md transition p-4 flex flex-col gap-2 group"
     >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="font-bold text-base leading-snug group-hover:text-primary transition-colors line-clamp-2">
-          {story.title}
-        </h3>
-        <span className={`badge badge-xs shrink-0 mt-0.5 ${
-          story.visibility === 'public' ? 'badge-success' :
-          story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'
-        }`}>{story.visibility}</span>
-      </div>
+      <h3 className="font-bold text-base leading-snug group-hover:text-primary transition-colors line-clamp-2">
+        {story.title}
+      </h3>
       {story.content_preview && (
         <p className="text-sm text-base-content/60 line-clamp-2 flex-1">
           {story.content_preview}
@@ -88,14 +76,9 @@ function WorldCard({ world }) {
       to={`/worlds/${world.world_id}`}
       className="bg-base-100 rounded-2xl shadow hover:shadow-md transition p-4 flex flex-col gap-2 group"
     >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="font-bold text-base leading-snug group-hover:text-primary transition-colors line-clamp-1">
-          {world.name}
-        </h3>
-        <span className={`badge badge-xs shrink-0 mt-0.5 ${
-          world.visibility === 'public' ? 'badge-success' : 'badge-ghost'
-        }`}>{world.visibility}</span>
-      </div>
+      <h3 className="font-bold text-base leading-snug group-hover:text-primary transition-colors line-clamp-1">
+        {world.name}
+      </h3>
       {world.world_type && (
         <Tag color="secondary" size="sm" className="w-fit">{world.world_type}</Tag>
       )}
