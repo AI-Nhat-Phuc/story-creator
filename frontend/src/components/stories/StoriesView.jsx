@@ -7,6 +7,7 @@ import {
   DocumentTextIcon,
 } from '@heroicons/react/24/outline'
 import { marked } from 'marked'
+import Modal from '../Modal'
 
 function toPlainText(content) {
   if (!content) return ''
@@ -150,32 +151,31 @@ function StoriesView({
       )}
 
       {/* World picker modal — shown when user has multiple worlds */}
-      {showWorldPicker && (
-        <div className="modal modal-open modal-bottom-sheet">
-          <div className="modal-box max-w-sm">
-            <h3 className="mb-4 font-bold text-lg">Chọn thế giới</h3>
-            <p className="mb-4 text-sm text-base-content/70">Câu chuyện sẽ được tạo trong thế giới nào?</p>
-            <div className="flex flex-col gap-2">
-              {worlds.map(world => (
-                <Link
-                  key={world.world_id}
-                  to={`/stories/new?worldId=${world.world_id}`}
-                  className="btn btn-outline justify-start"
-                  onClick={() => setShowWorldPicker(false)}
-                >
-                  <GlobeAltIcon className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{world.name}</span>
-                  <span className="ml-auto text-xs opacity-50">{world.world_type}</span>
-                </Link>
-              ))}
-            </div>
-            <div className="modal-action mt-6">
-              <button type="button" onClick={() => setShowWorldPicker(false)} className="btn btn-ghost">Hủy</button>
-            </div>
-          </div>
-          <div className="modal-backdrop" onClick={() => setShowWorldPicker(false)}></div>
+      <Modal
+        open={showWorldPicker}
+        onClose={() => setShowWorldPicker(false)}
+        title="Chọn thế giới"
+        className="max-w-sm"
+      >
+        <p className="mb-4 text-sm text-base-content/70">Câu chuyện sẽ được tạo trong thế giới nào?</p>
+        <div className="flex flex-col gap-2">
+          {worlds.map(world => (
+            <Link
+              key={world.world_id}
+              to={`/stories/new?worldId=${world.world_id}`}
+              className="btn btn-outline justify-start"
+              onClick={() => setShowWorldPicker(false)}
+            >
+              <GlobeAltIcon className="w-4 h-4 shrink-0" />
+              <span className="truncate">{world.name}</span>
+              <span className="ml-auto text-xs opacity-50">{world.world_type}</span>
+            </Link>
+          ))}
         </div>
-      )}
+        <div className="flex justify-end mt-6">
+          <button type="button" onClick={() => setShowWorldPicker(false)} className="btn btn-ghost btn-sm">Hủy</button>
+        </div>
+      </Modal>
     </div>
   )
 }

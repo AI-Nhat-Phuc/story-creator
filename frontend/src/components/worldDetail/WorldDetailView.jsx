@@ -5,6 +5,7 @@ import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'
 import CollaboratorsPanel from './CollaboratorsPanel'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
+import Modal from '../Modal'
 import Tag from '../Tag'
 import {
   BookOpenIcon,
@@ -401,37 +402,39 @@ function WorldDetailView({
       )}
 
       {/* Publish Modal */}
-      {publishTarget && (
-        <div className="modal modal-open modal-bottom-sheet">
-          <div className="modal-box max-w-sm">
-            <h3 className="font-bold text-lg mb-2">Publish thế giới</h3>
-            <p className="mb-4 text-sm opacity-70">Chọn chế độ hiển thị cho thế giới này:</p>
-            <div className="flex flex-col gap-2 mb-4">
-              <button
-                onClick={() => setPublishTarget('private')}
-                className={`btn btn-outline justify-start ${publishTarget === 'private' ? 'btn-active' : ''}`}
-              >
-                Riêng tư — Chỉ bạn có thể xem
-              </button>
-              <button
-                onClick={() => setPublishTarget('public')}
-                className={`btn btn-outline justify-start ${publishTarget === 'public' ? 'btn-active' : ''}`}
-              >
-                Công khai — Mọi người có thể xem
-              </button>
-            </div>
-            <div className="modal-action">
-              <button
-                className="btn btn-success"
-                onClick={() => { onPublish(publishTarget); setPublishTarget(null) }}
-              >
-                Xác nhận
-              </button>
-              <button className="btn btn-ghost" onClick={() => setPublishTarget(null)}>Hủy</button>
-            </div>
-          </div>
+      <Modal
+        open={!!publishTarget}
+        onClose={() => setPublishTarget(null)}
+        title="Publish thế giới"
+        className="max-w-sm"
+      >
+        <p className="mb-4 text-sm opacity-70">Chọn chế độ hiển thị cho thế giới này:</p>
+        <div className="flex flex-col gap-2 mb-6">
+          <button
+            onClick={() => setPublishTarget('private')}
+            className={`btn btn-outline justify-start ${publishTarget === 'private' ? 'btn-active btn-primary' : ''}`}
+          >
+            🔒 Riêng tư — Chỉ bạn có thể xem
+          </button>
+          <button
+            onClick={() => setPublishTarget('public')}
+            className={`btn btn-outline justify-start ${publishTarget === 'public' ? 'btn-active btn-success' : ''}`}
+          >
+            🌐 Công khai — Mọi người có thể xem
+          </button>
         </div>
-      )}
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-ghost btn-sm" onClick={() => setPublishTarget(null)}>
+            Hủy
+          </button>
+          <button
+            className="btn btn-success btn-sm"
+            onClick={() => { onPublish(publishTarget); setPublishTarget(null) }}
+          >
+            Xác nhận
+          </button>
+        </div>
+      </Modal>
 
       {/* Unlinked Stories Modal */}
       <UnlinkedStoriesModal

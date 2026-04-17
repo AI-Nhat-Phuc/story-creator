@@ -165,16 +165,26 @@ function StoryDetailView({
         {/* Main content */}
         <div className="flex-1 min-w-0">
           <div className="bg-base-100 shadow-xl mb-6 p-6 rounded-box">
-            <div className="flex justify-between items-start mb-2">
-              <h1 className="font-bold text-3xl">{story.title}</h1>
-              <div className="flex gap-1 items-center">
+            <div className="flex justify-between items-start mb-2 gap-2">
+              <h1 className="font-bold text-3xl leading-tight">{story.title}</h1>
+              <div className="flex flex-wrap gap-1 items-center shrink-0">
+                {/* "Mở chế độ đọc" — always visible at the top */}
+                <Link
+                  to={`/stories/${story.story_id}/read`}
+                  className="btn btn-primary btn-sm gap-1.5"
+                  title="Mở chế độ đọc toàn màn hình"
+                >
+                  <BookOpenIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('pages.storyDetail.openReader')}</span>
+                </Link>
                 <a
                   href={`/stories/${story.story_id}/print`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-outline btn-sm gap-1 hidden sm:inline-flex"
                 >
-                  <ArrowDownTrayIcon className="w-4 h-4" /> Export PDF
+                  <ArrowDownTrayIcon className="w-4 h-4" />
+                  <span className="hidden md:inline">Export PDF</span>
                 </a>
                 {canEdit && (
                   <>
@@ -183,7 +193,7 @@ function StoryDetailView({
                     </Link>
                     {onDeleteStory && (
                       <button onClick={onDeleteStory} className="text-error btn btn-sm btn-ghost" title="Xóa">
-                        <TrashIcon className="inline w-4 h-4" /> <span className="hidden sm:inline">Xóa</span>
+                        <TrashIcon className="inline w-4 h-4" />
                       </button>
                     )}
                   </>
@@ -206,24 +216,15 @@ function StoryDetailView({
               )}
             </div>
             {renderStoryContent()}
-            {isLong && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {!expanded && (
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm gap-1"
-                    onClick={() => setExpanded(true)}
-                  >
-                    {t('pages.storyDetail.readMore')}
-                  </button>
-                )}
-                <Link
-                  to={`/stories/${story.story_id}/read`}
+            {isLong && !expanded && (
+              <div className="mt-4">
+                <button
+                  type="button"
                   className="btn btn-outline btn-sm gap-1"
+                  onClick={() => setExpanded(true)}
                 >
-                  <BookOpenIcon className="w-4 h-4" />
-                  {t('pages.storyDetail.openReader')}
-                </Link>
+                  {t('pages.storyDetail.readMore')}
+                </button>
               </div>
             )}
             {/* Mobile: Export PDF at bottom of content */}
@@ -310,11 +311,11 @@ function StoryDetailView({
                   {linkedCharacters.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
-                        <UserIcon className="w-3.5 h-3.5" /> Nhân vật
+                        <UserIcon className="w-3.5 h-3.5 text-primary" /> Nhân vật
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {linkedCharacters.map((char) => (
-                          <Tag key={char.entity_id} color="primary" size="sm" icon={UserIcon}>{char.name}</Tag>
+                          <Tag key={char.entity_id} color="primary" outline size="sm" icon={UserIcon}>{char.name}</Tag>
                         ))}
                       </div>
                     </div>
@@ -322,11 +323,11 @@ function StoryDetailView({
                   {linkedLocations.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
-                        <MapPinIcon className="w-3.5 h-3.5" /> Địa điểm
+                        <MapPinIcon className="w-3.5 h-3.5 text-secondary" /> Địa điểm
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {linkedLocations.map((loc) => (
-                          <Tag key={loc.location_id} color="secondary" size="sm" icon={MapPinIcon}>{loc.name}</Tag>
+                          <Tag key={loc.location_id} color="secondary" outline size="sm" icon={MapPinIcon}>{loc.name}</Tag>
                         ))}
                       </div>
                     </div>
@@ -386,11 +387,11 @@ function StoryDetailView({
               {linkedCharacters.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
-                    <UserIcon className="w-3.5 h-3.5" /> Nhân vật
+                    <UserIcon className="w-3.5 h-3.5 text-primary" /> Nhân vật
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {linkedCharacters.map((char) => (
-                      <Tag key={char.entity_id} color="primary" size="sm" icon={UserIcon}>{char.name}</Tag>
+                      <Tag key={char.entity_id} color="primary" outline size="sm" icon={UserIcon}>{char.name}</Tag>
                     ))}
                   </div>
                 </div>
@@ -398,11 +399,11 @@ function StoryDetailView({
               {linkedLocations.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
-                    <MapPinIcon className="w-3.5 h-3.5" /> Địa điểm
+                    <MapPinIcon className="w-3.5 h-3.5 text-secondary" /> Địa điểm
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {linkedLocations.map((loc) => (
-                      <Tag key={loc.location_id} color="secondary" size="sm" icon={MapPinIcon}>{loc.name}</Tag>
+                      <Tag key={loc.location_id} color="secondary" outline size="sm" icon={MapPinIcon}>{loc.name}</Tag>
                     ))}
                   </div>
                 </div>

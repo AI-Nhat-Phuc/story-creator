@@ -1,28 +1,87 @@
-import React from 'react';
+import React, { useEffect } from 'react'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 
 /**
- * Modal component for popup dialogs
- * @param {boolean} open - Whether the modal is open
- * @param {function} onClose - Function to close the modal
- * @param {string} title - Modal title
- * @param {React.ReactNode} children - Modal content
- * @param {string} className - Additional classes
+ * Modal component for popup dialogs.
+ *
+ * Behaviour:
+ * - Mobile  : bottom-sheet with dark overlay; body scroll is locked.
+ * - Desktop : centred card with no dark overlay; page scroll is preserved
+ *             (only the modal card intercepts pointer events).
+ *
+ * @param {boolean}           open      – whether the modal is visible
+ * @param {function}          onClose   – called when the user dismisses the modal
+ * @param {string}            title     – optional heading
+ * @param {React.ReactNode}   children  – modal body
+ * @param {string}            className – extra classes applied to the modal card
  */
 export default function Modal({ open, onClose, title, children, className = '' }) {
-  if (!open) return null;
+  // Lock body scroll on mobile only while open
+  useEffect(() => {
+    if (!open) return
+    const isMobile = window.innerWidth < 640
+    if (isMobile) {
+      document.body.style.overflow = 'hidden'
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
+  if (!open) return null
+
   return (
-    <div className="z-50 fixed inset-0 flex justify-center items-end sm:items-center bg-black/40">
-      <div className={`bg-base-100 rounded-t-2xl rounded-b-none sm:rounded-lg shadow-lg sm:max-w-lg w-full p-6 relative mt-[100px] sm:mt-0 max-h-[calc(100vh-100px)] sm:max-h-[85vh] overflow-y-auto mobile-slide-up sm:animate-none ${className}`}>
-        <button
-          className="top-2 right-2 absolute btn btn-sm btn-circle btn-ghost"
-          onClick={onClose}
-          aria-label="Đóng"
+    <>
+      {/* ── Mobile: dark full-screen overlay ─────────────────────────── */}
+      <div
+        className="sm:hidden fixed inset-0 z-40 bg-black/50"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* ── Flex container: bottom-sheet on mobile, centred on desktop ── */}
+      {/*    pointer-events-none so the desktop page stays scrollable;    */}
+      {/*    the card below re-enables pointer events for itself.         */}
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none">
+        <div
+          className={[
+            // reset pointer events so the card is interactive
+            'pointer-events-auto',
+            // layout & sizing
+            'relative w-full sm:max-w-lg',
+            // shape: rounded top on mobile, rounded all on desktop
+            'rounded-t-2xl sm:rounded-2xl',
+            // colours & depth
+            'bg-base-100 shadow-2xl',
+            // spacing
+            'p-6',
+            // height constraints
+            'max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto',
+            // slide-up on mobile
+            'mobile-slide-up sm:animate-none',
+            className,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          // Prevent clicks inside the card from bubbling to the overlay
+          onClick={(e) => e.stopPropagation()}
         >
-          ✕
-        </button>
-        {title && <h2 className="mb-4 font-bold text-xl">{title}</h2>}
-        <div>{children}</div>
+          {/* Close button */}
+          <button
+            className="absolute top-3 right-3 btn btn-sm btn-circle btn-ghost"
+            onClick={onClose}
+            aria-label="Đóng"
+          >
+            <XMarkIcon className="w-4 h-4" />
+          </button>
+
+          {title && (
+            <h2 className="mb-4 pr-8 font-bold text-xl">{title}</h2>
+          )}
+
+          <div>{children}</div>
+        </div>
       </div>
-    </div>
-  );
+    </>
+  )
 }

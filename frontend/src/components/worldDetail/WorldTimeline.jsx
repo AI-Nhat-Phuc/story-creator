@@ -148,7 +148,8 @@ function WorldTimeline({
             onDrop={canReorder ? handleDrop(groupIndex) : undefined}
             className={isDragging ? 'opacity-40' : ''}
           >
-            {groupIndex === 0 && <hr className={palette.line} />}
+            {/* Top connector — absent on the very first item */}
+            {groupIndex > 0 && <hr className={palette.line} />}
             {showGap && (
               <div className="timeline-end w-full h-20 border-2 border-dashed border-primary bg-primary/5 rounded" />
             )}
@@ -211,7 +212,7 @@ function WorldTimeline({
                 <div className="flex flex-wrap gap-2 mt-3">
                   <Tag color={palette.badgeColor}>{story.genre}</Tag>
                   {getStoryCharacters(story).slice(0, 3).map(char => (
-                    <Tag key={char.entity_id} color="primary" icon={UserIcon} className="text-primary-content">
+                    <Tag key={char.entity_id} color="primary" outline icon={UserIcon}>
                       {char.name}
                     </Tag>
                   ))}
@@ -219,7 +220,7 @@ function WorldTimeline({
                     <Tag color="ghost">+{getStoryCharacters(story).length - 3}</Tag>
                   )}
                   {getStoryLocations(story).slice(0, 2).map(loc => (
-                    <Tag key={loc.location_id} color="secondary" icon={MapPinIcon} className="text-secondary-content">
+                    <Tag key={loc.location_id} color="secondary" outline icon={MapPinIcon}>
                       {loc.name}
                     </Tag>
                   ))}
@@ -248,7 +249,8 @@ function WorldTimeline({
                 )}
               </div>
             </div>
-            <hr className={palette.line} />
+            {/* Bottom connector — absent on the very last item */}
+            {groupIndex < sortedStories.length - 1 && <hr className={palette.line} />}
           </li>
         )
       })}

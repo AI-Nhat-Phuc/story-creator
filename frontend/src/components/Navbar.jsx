@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { invitationsAPI } from '../services/api'
 import ThemeSelector from './ThemeSelector'
 import InvitationsDropdown from './InvitationsDropdown'
+import Modal from './Modal'
 import {
   BookOpenIcon,
   ShieldCheckIcon,
@@ -200,24 +201,17 @@ function Navbar() {
       </div>
 
       {/* Logout Confirmation Modal */}
-      {showLogoutModal && (
-        <div className="modal modal-open modal-bottom-sheet">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg">{t('nav.logoutConfirmTitle')}</h3>
-            <p className="py-4">{t('nav.logoutConfirmMsg')}</p>
-            <div className="modal-action">
-              <button className="btn btn-ghost" onClick={cancelLogout}>
-                {t('common.cancel')}
-              </button>
-              <button className="btn btn-error" onClick={confirmLogout}>
-                {t('actions.logout')}
-              </button>
-            </div>
-          </div>
-          {/* Click backdrop to close */}
-          <div className="modal-backdrop" onClick={cancelLogout}></div>
+      <Modal open={showLogoutModal} onClose={cancelLogout} title={t('nav.logoutConfirmTitle')} className="max-w-sm">
+        <p className="text-sm opacity-80 mb-6">{t('nav.logoutConfirmMsg')}</p>
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-ghost btn-sm" onClick={cancelLogout}>
+            {t('common.cancel')}
+          </button>
+          <button className="btn btn-error btn-sm" onClick={confirmLogout}>
+            {t('actions.logout')}
+          </button>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }
