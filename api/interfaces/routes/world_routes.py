@@ -623,12 +623,13 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                 {
                     'story_id': s.story_id,
                     'title': s.title,
-                    'time_index': s.metadata.get('world_time', {}).get('year', 0) if s.metadata else 0,
+                    'order': getattr(s, 'order', None),
+                    'created_at': getattr(s, 'created_at', '') or '',
                     'description': s.content[:200] if s.content else ''
                 }
                 for s in stories if not s.entities and not s.locations
             ],
-            key=lambda s: s['time_index']
+            key=lambda s: (s['order'] if s['order'] is not None else float('inf'), s['created_at'])
         )
 
         return success_response({
@@ -963,7 +964,9 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
         world_story_ids = set(world_data.get('stories', []))
 
-        # Update chapter_number on each story (1-based, contiguous)
+        # Update chapter_number and order on each story (1-based, contiguous).
+        # `order` is the sort key used by NovelService; keeping it in sync with
+        # chapter_number ensures the drag-reorder actually changes reading order.
         updated_chapters = []
         for idx, story_id in enumerate(order, start=1):
             if story_id not in world_story_ids:
@@ -971,8 +974,9 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             story = storage.load_story(story_id)
             if story:
                 story['chapter_number'] = idx
+                story['order'] = idx
                 storage.save_story(story)
-                updated_chapters.append({'story_id': story_id, 'chapter_number': idx})
+                updated_chapters.append({'story_id': story_id, 'chapter_number': idx, 'order': idx})
 
         novel = _get_or_create_novel(world_data)
         novel['chapter_order'] = order

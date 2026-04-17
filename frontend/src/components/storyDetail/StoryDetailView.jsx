@@ -27,8 +27,6 @@ function StoryDetailView({
   linkedCharacters = [],
   linkedLocations = [],
   formattedWorldTime,
-  displayWorldTime,
-  normalizedTimelineIndex,
   gptAnalyzing,
   analyzedEntities,
   onAnalyzeStory,
@@ -193,7 +191,7 @@ function StoryDetailView({
               </div>
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
-              <Tag color="neutral" icon={ClockIcon} title={`Time index: ${normalizedTimelineIndex ?? 0}`}>
+              <Tag color="neutral" icon={ClockIcon}>
                 {formattedWorldTime}
               </Tag>
               {story.visibility && (
@@ -258,25 +256,6 @@ function StoryDetailView({
                 <div className="text-xs font-semibold text-base-content/60 uppercase tracking-wide mb-1">{t('pages.storyDetailView.timeLabel')}</div>
                 <div>
                   <div>{formattedWorldTime}</div>
-                  {displayWorldTime?.era && (
-                    <div className="opacity-60 mt-1 text-xs">
-                      Kỷ nguyên: {displayWorldTime.era}
-                    </div>
-                  )}
-                  {displayWorldTime?.year > 0 && (
-                    <div className="opacity-60 text-xs">
-                      Niên đại: {(displayWorldTime.year_name || 'Năm')} {displayWorldTime.year}
-                    </div>
-                  )}
-                  {normalizedTimelineIndex !== null && normalizedTimelineIndex !== 0 ? (
-                    <div className="opacity-50 mt-1 text-xs">
-                      Chỉ số timeline: {normalizedTimelineIndex}
-                    </div>
-                  ) : (
-                    <div className="opacity-50 mt-1 text-xs">
-                      Mốc thời gian chưa xác định
-                    </div>
-                  )}
                 </div>
               </div>
               <details className="group">

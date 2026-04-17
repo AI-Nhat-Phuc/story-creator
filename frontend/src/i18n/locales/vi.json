@@ -19,9 +19,8 @@
     "everyoneSee": "Mọi người xem được",
     "unknown": "Không xác định",
     "year": "Năm",
-    "timeNotSet": "Chưa đặt thời gian",
-    "timeIndexLabel": "Chỉ số {{index}}",
-    "timelineUnknown": "Mốc thời gian chưa xác định",
+    "chapterLabel": "Chương {{number}}",
+    "timelineUnknown": "Chưa có thứ tự",
     "deleteConfirm": "Bạn có chắc muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác."
   },
   "actions": {

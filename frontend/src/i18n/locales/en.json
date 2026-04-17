@@ -19,9 +19,8 @@
     "everyoneSee": "Visible to everyone",
     "unknown": "Unknown",
     "year": "Year",
-    "timeNotSet": "Time not set",
-    "timeIndexLabel": "Index {{index}}",
-    "timelineUnknown": "Timeline unknown",
+    "chapterLabel": "Chapter {{number}}",
+    "timelineUnknown": "Not ordered",
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This cannot be undone."
   },
   "actions": {

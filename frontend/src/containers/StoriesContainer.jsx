@@ -40,41 +40,10 @@ function StoriesContainer({ showToast }) {
     return world ? world.name : 'Unknown World'
   }
 
-  const normalizeTimeIndex = (value) => {
-    if (value === undefined || value === null) return null
-    const numeric = Number(value)
-    return Number.isFinite(numeric) ? numeric : null
-  }
-
-  const computeWorldTimeFromIndex = (worldId, timeIndex) => {
-    const normalizedIndex = normalizeTimeIndex(timeIndex)
-    if (normalizedIndex === null) return null
-    const world = findWorldById(worldId)
-    if (!world) return null
-    const calendar = world.metadata?.calendar
-    if (!calendar) return null
-    if (normalizedIndex === 0) return { year: 0, era: '', description: t('common.unknown'), year_name: '' }
-    const currentYear = calendar.current_year || 1
-    const yearRange = 100
-    const offset = Math.floor((normalizedIndex / 100) * yearRange) - Math.floor(yearRange / 2)
-    const year = Math.max(1, currentYear + offset)
-    const yearLabel = calendar.year_name || t('common.year')
-    return {
-      year,
-      era: calendar.current_era || '',
-      year_name: yearLabel,
-      description: `${yearLabel} ${year}${calendar.current_era ? `, ${calendar.current_era}` : ''}`.trim()
-    }
-  }
-
   const formatWorldTime = (story) => {
-    const worldTime = story.metadata?.world_time || computeWorldTimeFromIndex(story.world_id, story.time_index)
-    const normalizedIndex = normalizeTimeIndex(story.time_index)
-    if (worldTime) {
-      if (worldTime.year === 0) return worldTime.description || t('common.unknown')
-      return worldTime.description || `${worldTime.year_name || t('common.year')} ${worldTime.year}`
+    if (story?.order != null) {
+      return t('common.chapterLabel', { number: story.order, defaultValue: `Chương ${story.order}` })
     }
-    if (normalizedIndex !== null && normalizedIndex !== 0) return t('common.timeIndexLabel', { index: normalizedIndex })
     return t('pages.stories.unknownTime')
   }
 

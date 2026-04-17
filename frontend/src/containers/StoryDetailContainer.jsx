@@ -74,52 +74,9 @@ function StoryDetailContainer({ showToast }) {
     }
   }
 
-  const normalizeTimeIndex = (value) => {
-    if (value === undefined || value === null) return null
-    const numeric = Number(value)
-    return Number.isFinite(numeric) ? numeric : null
-  }
-
-  const computeWorldTimeFromIndex = (worldData, timeIndex) => {
-    if (!worldData) return null
-    const normalizedIndex = normalizeTimeIndex(timeIndex)
-    if (normalizedIndex === null) return null
-    const calendar = worldData.metadata?.calendar
-    if (!calendar) return null
-
-    if (normalizedIndex === 0) {
-      return { year: 0, era: '', year_name: '', description: t('common.unknown') }
-    }
-
-    const currentYear = calendar.current_year || 1
-    const yearRange = 100
-    const offset = Math.floor((normalizedIndex / 100) * yearRange) - Math.floor(yearRange / 2)
-    const year = Math.max(1, currentYear + offset)
-    const yearLabel = calendar.year_name || t('common.year')
-
-    return {
-      year,
-      era: calendar.current_era || '',
-      year_name: yearLabel,
-      description: `${yearLabel} ${year}${calendar.current_era ? `, ${calendar.current_era}` : ''}`.trim()
-    }
-  }
-
-  const getStoryWorldTime = (currentStory) => {
-    if (!currentStory) return null
-    if (currentStory.metadata?.world_time) return currentStory.metadata.world_time
-    return computeWorldTimeFromIndex(world, currentStory.time_index)
-  }
-
   const formatWorldTime = (currentStory) => {
-    const worldTime = getStoryWorldTime(currentStory)
-    const normalizedIndex = normalizeTimeIndex(currentStory.time_index)
-    if (worldTime) {
-      if (worldTime.year === 0) return worldTime.description || t('common.unknown')
-      return worldTime.description || `${worldTime.year_name || t('common.year')} ${worldTime.year}`
-    }
-    if (normalizedIndex !== null && normalizedIndex !== 0) {
-      return t('common.timeIndexLabel', { index: normalizedIndex })
+    if (currentStory?.order != null) {
+      return t('common.chapterLabel', { number: currentStory.order, defaultValue: `Chương ${currentStory.order}` })
     }
     return t('pages.stories.unknownTime')
   }
@@ -275,8 +232,6 @@ function StoryDetailContainer({ showToast }) {
   if (loading) return <LoadingSpinner />
   if (!story) return <div>{t('pages.storyDetail.notFound')}</div>
 
-  const displayWorldTime = getStoryWorldTime(story)
-  const normalizedTimelineIndex = normalizeTimeIndex(story.time_index)
   const formattedWorldTime = formatWorldTime(story)
 
   const canEdit = !!(user && story && user.user_id === story.owner_id)
@@ -294,8 +249,6 @@ function StoryDetailContainer({ showToast }) {
       linkedLocations={linkedLocations}
       canEdit={canEdit}
       formattedWorldTime={formattedWorldTime}
-      displayWorldTime={displayWorldTime}
-      normalizedTimelineIndex={normalizedTimelineIndex}
       gptAnalyzing={gptAnalyzing}
       analyzedEntities={analyzedEntities}
       onAnalyzeStory={handleAnalyzeStory}

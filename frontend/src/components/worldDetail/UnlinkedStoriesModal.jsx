@@ -3,7 +3,6 @@ import Modal from '../Modal'
 import {
   MagnifyingGlassIcon,
   BookOpenIcon,
-  ClockIcon,
   UserIcon,
   MapPinIcon,
   CheckCircleIcon,
@@ -22,7 +21,6 @@ export default function UnlinkedStoriesModal({
   open,
   onClose,
   unlinkedStories = [],
-  getTimelineLabel,
   batchAnalyzing,
   batchProgress,
   batchResult,
@@ -50,24 +48,13 @@ export default function UnlinkedStoriesModal({
 
   const clearSelection = () => setSelected(new Set())
 
-  // Group stories by time_index
-  const grouped = {}
-  for (const story of unlinkedStories) {
-    const key = story.time_index ?? 0
-    if (!grouped[key]) grouped[key] = []
-    grouped[key].push(story)
-  }
-  const sortedKeys = Object.keys(grouped).sort((a, b) => Number(a) - Number(b))
-
-  // Build a timeline label from a fake story object for grouping display
-  const getGroupLabel = (timeIndex) => {
-    const num = Number(timeIndex)
-    if (num === 0) return 'Không xác định'
-    if (getTimelineLabel) {
-      return getTimelineLabel({ time_index: num, metadata: { world_time: { year: num } } })
-    }
-    return `Thời kỳ ${num}`
-  }
+  // Show as a flat list ordered by the story's sort key (BR-1/BR-2).
+  const sortedStories = [...unlinkedStories].sort((a, b) => {
+    const orderA = a.order ?? Number.MAX_SAFE_INTEGER
+    const orderB = b.order ?? Number.MAX_SAFE_INTEGER
+    if (orderA !== orderB) return orderA - orderB
+    return (a.created_at || '').localeCompare(b.created_at || '')
+  })
 
   const isCompleted = batchResult && !batchAnalyzing
   // Check which stories were already analyzed in this session
@@ -185,72 +172,60 @@ export default function UnlinkedStoriesModal({
         </div>
       )}
 
-      {/* Story list grouped by time */}
+      {/* Flat ordered list */}
       {!isCompleted && (
-        <div className="space-y-4 pr-1 max-h-[400px] overflow-y-auto">
-          {sortedKeys.map((timeKey) => (
-            <div key={timeKey}>
-              <div className="flex items-center gap-2 mb-2">
-                <ClockIcon className="w-4 h-4 text-primary" />
-                <h3 className="font-semibold text-primary text-sm">
-                  {getGroupLabel(timeKey)}
-                </h3>
-                <span className="badge badge-sm badge-ghost">
-                  {grouped[timeKey].length} câu chuyện
-                </span>
+        <div className="space-y-2 pr-1 max-h-[400px] overflow-y-auto">
+          {sortedStories.map((story) => {
+            const isAnalyzed = analyzedIds.has(story.story_id)
+            const isSelected = selected.has(story.story_id)
+            const canSelect = isSelected || selected.size < MAX_BATCH
+
+            return (
+              <div
+                key={story.story_id}
+                className={`flex items-start gap-3 p-2 rounded-lg transition-colors
+                  ${isAnalyzed ? 'bg-success/10 opacity-60' : isSelected ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-base-200/50 hover:bg-base-200'}`}
+              >
+                {!batchAnalyzing && !isAnalyzed && (
+                  <input
+                    type="checkbox"
+                    className="flex-shrink-0 mt-0.5 checkbox checkbox-primary checkbox-sm"
+                    checked={isSelected}
+                    disabled={!canSelect}
+                    onChange={() => toggleSelect(story.story_id)}
+                  />
+                )}
+                {isAnalyzed && (
+                  <CheckCircleIcon className="flex-shrink-0 mt-0.5 w-5 h-5 text-success" />
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">
+                    {story.order != null && (
+                      <span className="badge badge-sm badge-ghost mr-2">Chương {story.order}</span>
+                    )}
+                    {story.title}
+                  </p>
+                  {story.description && (
+                    <p className="opacity-60 mt-0.5 text-xs line-clamp-2">
+                      {story.description}
+                    </p>
+                  )}
+                </div>
+
+                {!batchAnalyzing && !isAnalyzed && (
+                  <button
+                    onClick={() => onBatchAnalyze([story.story_id])}
+                    className="flex-shrink-0 gap-1 btn btn-ghost btn-xs"
+                    title="Phân tích câu chuyện này"
+                  >
+                    <OpenAILogo size={14} />
+                    <MagnifyingGlassIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
-              <div className="space-y-2 pl-6">
-                {grouped[timeKey].map((story) => {
-                  const isAnalyzed = analyzedIds.has(story.story_id)
-                  const isSelected = selected.has(story.story_id)
-                  const canSelect = isSelected || selected.size < MAX_BATCH
-
-                  return (
-                    <div
-                      key={story.story_id}
-                      className={`flex items-start gap-3 p-2 rounded-lg transition-colors
-                        ${isAnalyzed ? 'bg-success/10 opacity-60' : isSelected ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-base-200/50 hover:bg-base-200'}`}
-                    >
-                      {/* Checkbox */}
-                      {!batchAnalyzing && !isAnalyzed && (
-                        <input
-                          type="checkbox"
-                          className="flex-shrink-0 mt-0.5 checkbox checkbox-primary checkbox-sm"
-                          checked={isSelected}
-                          disabled={!canSelect}
-                          onChange={() => toggleSelect(story.story_id)}
-                        />
-                      )}
-                      {isAnalyzed && (
-                        <CheckCircleIcon className="flex-shrink-0 mt-0.5 w-5 h-5 text-success" />
-                      )}
-
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{story.title}</p>
-                        {story.description && (
-                          <p className="opacity-60 mt-0.5 text-xs line-clamp-2">
-                            {story.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Per-story analyze button */}
-                      {!batchAnalyzing && !isAnalyzed && (
-                        <button
-                          onClick={() => onBatchAnalyze([story.story_id])}
-                          className="flex-shrink-0 gap-1 btn btn-ghost btn-xs"
-                          title="Phân tích câu chuyện này"
-                        >
-                          <OpenAILogo size={14} />
-                          <MagnifyingGlassIcon className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { usePageTitle } from '../hooks/usePageTitle'
-import { worldsAPI, gptAPI, collaboratorsAPI } from '../services/api'
+import { worldsAPI, gptAPI, collaboratorsAPI, novelAPI, storiesAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import WorldDetailView from '../components/worldDetail/WorldDetailView'
 import { useAuth } from '../contexts/AuthContext'
@@ -87,48 +87,30 @@ function WorldDetailContainer({ showToast }) {
     }
   }, [worldId, storiesPage, storiesTotalPages, loadingMoreStories, showToast, t])
 
-  const computeWorldTimeFromIndex = (timeIndex) => {
-    if (!world) return null
-    if (timeIndex === undefined || timeIndex === null) return null
-    const calendar = world.metadata?.calendar
-    if (!calendar) return null
-
-    if (timeIndex === 0) {
-      return { year: 0, era: '', year_name: '', description: t('common.timeNotSet') }
-    }
-
-    const currentYear = calendar.current_year || 1
-    const yearRange = 100
-    const offset = Math.floor((timeIndex / 100) * yearRange) - Math.floor(yearRange / 2)
-    const year = Math.max(1, currentYear + offset)
-    const yearLabel = calendar.year_name || t('common.year')
-
-    return {
-      year,
-      era: calendar.current_era || '',
-      year_name: yearLabel,
-      description: `${yearLabel} ${year}${calendar.current_era ? `, ${calendar.current_era}` : ''}`.trim()
-    }
-  }
-
-  const getStoryWorldTime = (story) => {
-    if (!story) return null
-    if (story.metadata?.world_time) return story.metadata.world_time
-    return computeWorldTimeFromIndex(story.time_index)
-  }
-
   const getTimelineLabel = (story) => {
-    const worldTime = getStoryWorldTime(story)
-    if (worldTime) {
-      return worldTime.year === 0
-        ? t('common.timeNotSet')
-        : worldTime.description || `${worldTime.year_name || t('common.year')} ${worldTime.year}`
-    }
-    if (story.time_index !== undefined && story.time_index !== null && story.time_index !== 0) {
-      return t('common.timeIndexLabel', { index: story.time_index })
+    if (!story) return t('common.timelineUnknown')
+    const ord = story.order
+    if (ord !== undefined && ord !== null) {
+      return t('common.chapterLabel', { number: ord, defaultValue: `Chương ${ord}` })
     }
     return t('common.timelineUnknown')
   }
+
+  const handleReorderStories = useCallback(async (newOrderedIds) => {
+    const prevStories = stories
+    // Optimistic update — reindex `order` by position
+    const byId = new Map(stories.map(s => [s.story_id, s]))
+    const reordered = newOrderedIds
+      .map((id, idx) => byId.get(id) && { ...byId.get(id), order: idx + 1, chapter_number: idx + 1 })
+      .filter(Boolean)
+    setStories(reordered)
+    try {
+      await novelAPI.reorderChapters(worldId, newOrderedIds)
+    } catch (error) {
+      setStories(prevStories)
+      showToast(t('pages.worldDetail.reorderError', { defaultValue: 'Không thể sắp xếp lại' }), 'error')
+    }
+  }, [stories, worldId, showToast, t])
 
   const handleAutoLinkStories = async () => {
     try {
@@ -341,8 +323,8 @@ function WorldDetailContainer({ showToast }) {
       onCancelEdit={handleCancelEdit}
       onSaveEdit={handleSaveEdit}
       onChangeField={handleEditFormChange}
-      getStoryWorldTime={getStoryWorldTime}
       getTimelineLabel={getTimelineLabel}
+      onReorderStories={handleReorderStories}
       // Auto-link props
       autoLinking={autoLinking}
       onAutoLinkStories={handleAutoLinkStories}
