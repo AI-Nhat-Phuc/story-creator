@@ -229,6 +229,7 @@ test-results/
 playwright-report/
 frontend/test-results/
 frontend/playwright-report/
+.playwright-mcp/
 
 # Temporary files
 *.tmp
