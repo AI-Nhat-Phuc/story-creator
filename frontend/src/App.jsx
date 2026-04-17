@@ -10,7 +10,7 @@ import Toast from './components/Toast'
 import LoadingSpinner from './components/LoadingSpinner'
 
 // Lazy-loaded route pages for code-splitting
-const Dashboard = lazy(() => import('./pages/Dashboard'))
+const HomePage = lazy(() => import('./pages/HomePage'))
 const WorldsPage = lazy(() => import('./pages/WorldsPage'))
 const StoriesPage = lazy(() => import('./pages/StoriesPage'))
 const WorldDetailPage = lazy(() => import('./pages/WorldDetailPage'))
@@ -45,7 +45,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/stories/:storyId/print" element={<StoryPrintPage />} />
               <Route element={<MainLayout />}>
-                <Route path="/" element={<Dashboard showToast={showToast} />} />
+                <Route path="/" element={<HomePage showToast={showToast} />} />
                 <Route path="/worlds" element={<WorldsPage showToast={showToast} />} />
                 <Route path="/worlds/:worldId" element={<WorldDetailPage showToast={showToast} />} />
                 <Route path="/worlds/:worldId/novel" element={<NovelPage showToast={showToast} />} />

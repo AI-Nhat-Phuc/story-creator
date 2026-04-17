@@ -35,8 +35,8 @@ function WorldDetailView({
   onSaveEdit,
   onChangeField,
   onPublish,
-  getStoryWorldTime,
   getTimelineLabel,
+  onReorderStories,
   // Auto-link props
   autoLinking,
   onAutoLinkStories,
@@ -106,7 +106,7 @@ function WorldDetailView({
     <div>
       <div className="mb-4">
         <Link to="/worlds" className="btn btn-ghost btn-sm">
-          ← Quay lại danh sách
+          ← {t('common.backToList')}
         </Link>
       </div>
 
@@ -250,9 +250,10 @@ function WorldDetailView({
             stories={stories}
             characters={characters}
             locations={locations}
-            getStoryWorldTime={getStoryWorldTime}
             getTimelineLabel={getTimelineLabel}
             onDeleteStory={canEdit ? onDeleteStory : null}
+            canReorder={canEdit}
+            onReorderStories={onReorderStories}
             hasMore={hasMoreStories}
             loadingMore={loadingMoreStories}
             onLoadMore={onLoadMoreStories}
@@ -437,7 +438,6 @@ function WorldDetailView({
         open={showUnlinkedModal}
         onClose={onCloseUnlinkedModal}
         unlinkedStories={unlinkedStories}
-        getTimelineLabel={getTimelineLabel}
         batchAnalyzing={batchAnalyzing}
         batchProgress={batchProgress}
         batchResult={batchResult}

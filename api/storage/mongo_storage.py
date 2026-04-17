@@ -206,14 +206,36 @@ class MongoStorage:
         query = self._build_permission_query(user_id)
         return self._clean_docs(list(self.worlds.find(query)))
 
-    def list_worlds_summary(self, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    _WORLD_SUMMARY_PROJECTION = {
+        '_id': 0, 'world_id': 1, 'name': 1, 'created_at': 1,
+        'visibility': 1, 'owner_id': 1, 'shared_with': 1, 'world_type': 1,
+    }
+
+    def list_worlds_summary(
+        self,
+        user_id: Optional[str] = None,
+        page: Optional[int] = None,
+        per_page: Optional[int] = None,
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """List world summaries with optional pagination, excluding heavy fields.
+
+        Mirrors ``list_stories_summary``: applies a MongoDB projection that
+        drops large fields (``description``, ``metadata``, ``novel``, plus
+        ``stories``/``entities``/``locations`` id arrays) and paginates at the
+        database level via ``skip``/``limit`` when ``page`` and ``per_page``
+        are supplied.  Returns ``(items, total)``; ``total`` reflects the full
+        result set size regardless of pagination.
+        """
         self._connect()
         query = self._build_permission_query(user_id)
-        projection = {
-            '_id': 0, 'world_id': 1, 'name': 1, 'created_at': 1,
-            'visibility': 1, 'owner_id': 1, 'shared_with': 1, 'world_type': 1
-        }
-        return list(self.worlds.find(query, projection))
+        total = self.worlds.count_documents(query)
+        if total == 0:
+            return [], 0
+
+        cursor = self.worlds.find(query, self._WORLD_SUMMARY_PROJECTION).sort('created_at', -1)
+        if page is not None and per_page is not None:
+            cursor = cursor.skip((page - 1) * per_page).limit(per_page)
+        return list(cursor), total
 
     def count_visible(self, collection_name: str, user_id: Optional[str] = None) -> dict:
         coll = self.get_collection(collection_name)
@@ -568,12 +590,7 @@ class MongoStorage:
         pipeline = _build_faceted_count_pipeline(user_id)
         worlds_counts = _parse_facet_result(list(self.worlds.aggregate(pipeline)))
         stories_counts = _parse_facet_result(list(self.stories.aggregate(pipeline)))
-        perm_query = self._build_permission_query(user_id)
-        projection = {
-            '_id': 0, 'world_id': 1, 'name': 1, 'created_at': 1,
-            'visibility': 1, 'owner_id': 1, 'shared_with': 1, 'world_type': 1
-        }
-        worlds_summary = list(self.worlds.find(perm_query, projection))
+        worlds_summary, _ = self.list_worlds_summary(user_id=user_id)
         return {
             'worlds_counts': worlds_counts,
             'stories_counts': stories_counts,

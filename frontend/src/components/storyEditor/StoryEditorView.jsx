@@ -15,8 +15,6 @@ function StoryEditorView({
   gpt,
   activeFormats,
   userSignature,
-  timeIndex,
-  worldCalendar,
   onTitleChange,
   onContentUpdate,
   onSelectionChange,
@@ -24,7 +22,6 @@ function StoryEditorView({
   onPublish,
   onBack,
   onInsertSignature,
-  onTimeIndexChange,
   initialFormat,
 }) {
   const [panelOpen, setPanelOpen] = useState(false)
@@ -70,10 +67,7 @@ function StoryEditorView({
           gpt={gpt}
           headings={headings}
           userSignature={userSignature}
-          timeIndex={timeIndex}
-          worldCalendar={worldCalendar}
           onInsertSignature={onInsertSignature}
-          onTimeIndexChange={onTimeIndexChange}
           panelOpen={panelOpen}
           onClosePanel={() => setPanelOpen(false)}
         />

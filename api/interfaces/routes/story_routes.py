@@ -100,11 +100,6 @@ def create_story_bp(storage, story_generator, flush_data):
                   type: string
                   enum: [draft, private, public]
                   default: private
-                time_index:
-                  type: integer
-                  minimum: 0
-                  maximum: 100
-                  example: 10
                 selected_characters:
                   type: array
                   items:
@@ -145,7 +140,6 @@ def create_story_bp(storage, story_generator, flush_data):
         title = data.get('title', 'Untitled Story')
         description = data.get('description', '')
         genre = data.get('genre', 'adventure')
-        time_index = data.get('time_index', 0)
         explicit_order = data.get('order')
         selected_characters = data.get('selected_characters', None)
 
@@ -176,14 +170,7 @@ def create_story_bp(storage, story_generator, flush_data):
         else:
             story.order = NovelService.assign_next_order(storage, world.world_id)
 
-        time_cone = story_generator.generate_time_cone(
-            story,
-            world.world_id,
-            time_index=time_index
-        )
-
         storage.save_story(story.to_dict())
-        storage.save_time_cone(time_cone.to_dict())
         world.add_story(story.story_id)
         storage.save_world(world.to_dict())
 
@@ -196,7 +183,7 @@ def create_story_bp(storage, story_generator, flush_data):
         flush_data()
 
         return created_response(
-            {'story_id': story.story_id, 'story': story.to_dict(), 'time_cone': time_cone.to_dict()},
+            {'story_id': story.story_id, 'story': story.to_dict()},
             "Story created successfully"
         )
 
@@ -389,8 +376,6 @@ def create_story_bp(storage, story_generator, flush_data):
             story_data['chapter_number'] = data['chapter_number']
         if data.get('order') is not None:
             story_data['order'] = data['order']
-        if data.get('time_index') is not None:
-            story_data['time_index'] = data['time_index']
 
         story_data['updated_at'] = datetime.now().isoformat()
         storage.save_story(story_data)
@@ -717,29 +702,3 @@ def _resolve_linked_entities(storage, world, world_id, selected_characters, desc
         return mentioned_entity_ids or []
 
 
-def _set_world_time(story, world, time_index):
-    """Set story's world_time metadata based on time_index."""
-    calendar = world.metadata.get('calendar', {})
-    if not calendar:
-        return
-
-    if time_index is None or time_index == 0:
-        story.metadata['world_time'] = {
-            'era': '',
-            'year': 0,
-            'month': 0,
-            'day': 0,
-            'description': 'Không xác định'
-        }
-    else:
-        current_year = calendar.get('current_year', 1)
-        year_range = 100
-        calculated_year = max(1, current_year + int((time_index / 100) * year_range) - (year_range // 2))
-
-        story.metadata['world_time'] = {
-            'era': calendar.get('current_era', 'Kỷ nguyên mới'),
-            'year': calculated_year,
-            'month': 0,
-            'day': 0,
-            'description': f"{calendar.get('year_name', 'Năm')} {calculated_year}, {calendar.get('current_era', 'Kỷ nguyên mới')}"
-        }

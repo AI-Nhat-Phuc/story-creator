@@ -49,13 +49,6 @@ class CreateStorySchema(Schema):
         allow_none=True
     )
 
-    # DEPRECATED — kept for back-compat with older clients. Routes will translate
-    # time_index into `order` when `order` is not provided.
-    time_index = fields.Int(
-        validate=validate.Range(min=0, max=100),
-        load_default=0
-    )
-
     selected_characters = fields.List(
         fields.Str(),
         load_default=None,
@@ -113,11 +106,6 @@ class UpdateStorySchema(Schema):
     # Sort key for novel reading.
     order = fields.Int(
         validate=validate.Range(min=1)
-    )
-
-    # DEPRECATED — kept for back-compat. Translated to `order` if `order` absent.
-    time_index = fields.Int(
-        validate=validate.Range(min=0, max=100)
     )
 
     @validates_schema

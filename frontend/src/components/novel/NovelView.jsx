@@ -10,6 +10,7 @@ import LoadingSpinner from '../LoadingSpinner'
 function NovelView({
   worldId,
   novel,
+  worldDescription,
   chapters,
   contentBlocks,
   hasMore,
@@ -17,15 +18,7 @@ function NovelView({
   onLoadMore,
   totalWordCount,
   isLoading,
-  canEdit,
   canReorder,
-  editingMeta,
-  metaForm,
-  savingMeta,
-  onEditMeta,
-  onCancelMeta,
-  onSaveMeta,
-  onMetaFormChange,
   onReorder,
 }) {
   const { t } = useTranslation()
@@ -58,7 +51,7 @@ function NovelView({
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="mb-6">
         <Link to={`/worlds/${worldId}`} className="btn btn-ghost btn-sm gap-1">
-          <ArrowLeftIcon className="w-4 h-4" /> Back to World
+          <ArrowLeftIcon className="w-4 h-4" /> {t('common.backToWorld')}
         </Link>
       </div>
 
@@ -66,15 +59,20 @@ function NovelView({
         title={novel?.title || ''}
         description={novel?.description || ''}
         totalWordCount={totalWordCount}
-        canEdit={canEdit}
-        editing={editingMeta}
-        metaForm={metaForm}
-        saving={savingMeta}
-        onEdit={onEditMeta}
-        onCancel={onCancelMeta}
-        onSave={onSaveMeta}
-        onFormChange={onMetaFormChange}
       />
+
+      {worldDescription && (
+        <details className="collapse collapse-arrow bg-base-200 mb-6">
+          <summary className="collapse-title font-medium">
+            {t('pages.novel.worldDescription')}
+          </summary>
+          <div className="collapse-content">
+            <p className="whitespace-pre-wrap text-base-content/80">
+              {worldDescription}
+            </p>
+          </div>
+        </details>
+      )}
 
       {contentBlocks && contentBlocks.length > 0 ? (
         <>

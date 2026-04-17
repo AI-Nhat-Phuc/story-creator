@@ -12,7 +12,7 @@ from core.exceptions import (
 from services import CharacterService, PermissionService, NovelService
 from interfaces.auth_middleware import token_required, optional_auth
 from utils.responses import success_response, created_response, deleted_response, paginated_response
-from utils.validation import validate_request, validate_query_params, extract_pagination
+from utils.validation import validate_request, validate_query_params
 from schemas.world_schemas import (
     CreateWorldSchema,
     UpdateWorldSchema,
@@ -35,11 +35,8 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
     @world_bp.route('/api/worlds', methods=['GET'])
     @optional_auth
     @validate_query_params(ListWorldsQuerySchema)
-    @extract_pagination(lambda: storage.list_worlds(
-        user_id=g.current_user.user_id if hasattr(g, 'current_user') else None
-    ))
     def list_worlds():
-        """List all worlds visible to current user.
+        """List world summaries visible to current user (paginated, without heavy fields).
         ---
         tags:
           - Worlds
@@ -59,9 +56,17 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             default: 20
         responses:
           200:
-            description: List of worlds (public + owned + shared)
+            description: Paginated world summaries (excludes description/metadata/novel)
         """
-        pass
+        params = request.validated_data
+        page = params.get('page', 1)
+        per_page = params.get('per_page', 20)
+        user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
+
+        items, total = storage.list_worlds_summary(
+            user_id=user_id, page=page, per_page=per_page,
+        )
+        return paginated_response(items, page, per_page, total)
 
     @world_bp.route('/api/worlds', methods=['POST'])
     @token_required
@@ -618,12 +623,13 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                 {
                     'story_id': s.story_id,
                     'title': s.title,
-                    'time_index': s.metadata.get('world_time', {}).get('year', 0) if s.metadata else 0,
+                    'order': getattr(s, 'order', None),
+                    'created_at': getattr(s, 'created_at', '') or '',
                     'description': s.content[:200] if s.content else ''
                 }
                 for s in stories if not s.entities and not s.locations
             ],
-            key=lambda s: s['time_index']
+            key=lambda s: (s['order'] if s['order'] is not None else float('inf'), s['created_at'])
         )
 
         return success_response({
@@ -809,6 +815,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         return success_response({
             'title': novel.get('title', world_data.get('name')),
             'description': novel.get('description', ''),
+            'world_description': world_data.get('description', ''),
             'chapters': chapters,
             'total_word_count': total_word_count,
             'owner_id': world_data.get('owner_id'),
@@ -958,7 +965,9 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
         world_story_ids = set(world_data.get('stories', []))
 
-        # Update chapter_number on each story (1-based, contiguous)
+        # Update chapter_number and order on each story (1-based, contiguous).
+        # `order` is the sort key used by NovelService; keeping it in sync with
+        # chapter_number ensures the drag-reorder actually changes reading order.
         updated_chapters = []
         for idx, story_id in enumerate(order, start=1):
             if story_id not in world_story_ids:
@@ -966,8 +975,9 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             story = storage.load_story(story_id)
             if story:
                 story['chapter_number'] = idx
+                story['order'] = idx
                 storage.save_story(story)
-                updated_chapters.append({'story_id': story_id, 'chapter_number': idx})
+                updated_chapters.append({'story_id': story_id, 'chapter_number': idx, 'order': idx})
 
         novel = _get_or_create_novel(world_data)
         novel['chapter_order'] = order

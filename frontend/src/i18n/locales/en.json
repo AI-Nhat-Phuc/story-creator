@@ -19,9 +19,10 @@
     "everyoneSee": "Visible to everyone",
     "unknown": "Unknown",
     "year": "Year",
-    "timeNotSet": "Time not set",
-    "timeIndexLabel": "Index {{index}}",
-    "timelineUnknown": "Timeline unknown",
+    "chapterLabel": "Chapter {{number}}",
+    "timelineUnknown": "Not ordered",
+    "backToList": "Back to list",
+    "backToWorld": "Back to world",
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This cannot be undone."
   },
   "actions": {
@@ -39,6 +40,7 @@
     "processing": "Processing..."
   },
   "nav": {
+    "home": "Home",
     "dashboard": "Dashboard",
     "worlds": "Worlds",
     "stories": "Stories",
@@ -68,6 +70,10 @@
     "guest": "Guest"
   },
   "meta": {
+    "home": {
+      "title": "Home – Story Creator",
+      "description": "Discover the latest stories and worlds on Story Creator."
+    },
     "dashboard": {
       "title": "Dashboard – Story Creator",
       "description": "Overview of your worlds, stories, and usage quota."
@@ -124,6 +130,14 @@
     }
   },
   "pages": {
+    "home": {
+      "recentStories": "Recently updated stories",
+      "recentWorlds": "Worlds",
+      "noStories": "No stories yet",
+      "noWorlds": "No worlds yet",
+      "loadError": "Failed to load data",
+      "viewAll": "View all"
+    },
     "dashboard": {
       "title": "Dashboard",
       "loadError": "Failed to load statistics",
@@ -268,7 +282,17 @@
       "publishError": "Failed to publish",
       "saveError": "Failed to save",
       "gptError": "GPT error",
-      "signatureExists": "Signature already in document"
+      "signatureExists": "Signature already in document",
+      "titlePlaceholder": "Story title…",
+      "titleRequired": "Please enter a title",
+      "back": "Back",
+      "publish": "Publish",
+      "save": "Save",
+      "statusNew": "New",
+      "statusDraft": "Draft",
+      "statusSaving": "Saving…",
+      "statusSaved": "Saved",
+      "statusError": "Error"
     },
     "storyPrint": {
       "notFound": "Story not found.",
@@ -351,11 +375,16 @@
       "loadingMore": "Loading more...",
       "endOfNovel": "End of novel",
       "continued": "(continued...)",
-      "emptyWorld": "This world has no stories yet"
+      "emptyWorld": "This world has no stories yet",
+      "worldDescription": "World description",
+      "totalWords": "{{words}} words total"
     },
-    "storyEditor": {
-      "orderLabel": "Chapter order",
-      "orderHelp": "Integer used to sort chapters in novel view (e.g. 1, 2, 3…)"
+    "worldTimeline": {
+      "empty": "No stories yet",
+      "deleteStory": "Delete story",
+      "linkedWith": "Linked with:",
+      "moreLocations": "+{{count}} locations",
+      "dragToReorder": "Drag to reorder"
     }
   }
 }

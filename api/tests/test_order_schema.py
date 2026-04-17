@@ -54,10 +54,11 @@ class TestStorySchemaOrderField:
         res = CreateStorySchema().load({'title': 'T', 'world_id': 'w', 'order': 4})
         assert res['order'] == 4
 
-    def test_create_accepts_time_index_back_compat(self):
+    def test_create_ignores_legacy_time_index(self):
+        """time_index is no longer part of the schema — extra fields are ignored."""
         from schemas.story_schemas import CreateStorySchema
         res = CreateStorySchema().load({'title': 'T', 'world_id': 'w', 'time_index': 50})
-        assert res['time_index'] == 50
+        assert 'time_index' not in res
         assert res['order'] is None
 
     def test_update_accepts_order(self):
@@ -113,16 +114,17 @@ class TestAutoAssignOrder:
         got = client.get(f'/api/stories/{sid}', headers=admin_headers)
         assert got.get_json()['data'].get('order') == 42
 
-    def test_time_index_maps_to_order_back_compat(self, client, admin_headers, world):
-        """Old clients sending time_index should get an order assigned."""
+    def test_legacy_time_index_in_payload_is_ignored(self, client, admin_headers, world):
+        """Old clients may still send time_index; it's silently dropped now."""
         resp = client.post('/api/stories', json={
             'world_id': world['world_id'], 'title': 'Legacy',
             'time_index': 30, 'visibility': 'private'
         }, headers=admin_headers)
         story = resp.get_json()['data']['story']
-        # order must be set (either 1 for first story, or derived)
         assert story.get('order') is not None
         assert story.get('order') >= 1
+        # time_index must NOT be persisted on the story document.
+        assert 'time_index' not in story
 
 
 # ---------------------------------------------------------------------------

@@ -19,9 +19,10 @@
     "everyoneSee": "Mọi người xem được",
     "unknown": "Không xác định",
     "year": "Năm",
-    "timeNotSet": "Chưa đặt thời gian",
-    "timeIndexLabel": "Chỉ số {{index}}",
-    "timelineUnknown": "Mốc thời gian chưa xác định",
+    "chapterLabel": "Chương {{number}}",
+    "timelineUnknown": "Chưa có thứ tự",
+    "backToList": "Quay lại danh sách",
+    "backToWorld": "Về trang thế giới",
     "deleteConfirm": "Bạn có chắc muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác."
   },
   "actions": {
@@ -39,6 +40,7 @@
     "processing": "Đang xử lý..."
   },
   "nav": {
+    "home": "Trang chủ",
     "dashboard": "Dashboard",
     "worlds": "Thế giới",
     "stories": "Câu chuyện",
@@ -68,6 +70,10 @@
     "guest": "Khách"
   },
   "meta": {
+    "home": {
+      "title": "Trang chủ – Story Creator",
+      "description": "Khám phá các câu chuyện và thế giới mới nhất trên Story Creator."
+    },
     "dashboard": {
       "title": "Dashboard – Story Creator",
       "description": "Tổng quan thống kê thế giới, câu chuyện và hạn mức của bạn."
@@ -124,6 +130,14 @@
     }
   },
   "pages": {
+    "home": {
+      "recentStories": "Câu chuyện mới cập nhật",
+      "recentWorlds": "Thế giới",
+      "noStories": "Chưa có câu chuyện nào",
+      "noWorlds": "Chưa có thế giới nào",
+      "loadError": "Không thể tải dữ liệu",
+      "viewAll": "Xem tất cả"
+    },
     "dashboard": {
       "title": "Dashboard",
       "loadError": "Không thể tải thống kê",
@@ -268,7 +282,17 @@
       "publishError": "Không thể phát hành",
       "saveError": "Lưu thất bại",
       "gptError": "Lỗi GPT",
-      "signatureExists": "Chữ ký đã có trong tài liệu"
+      "signatureExists": "Chữ ký đã có trong tài liệu",
+      "titlePlaceholder": "Tiêu đề câu chuyện…",
+      "titleRequired": "Vui lòng nhập tiêu đề",
+      "back": "Quay lại",
+      "publish": "Xuất bản",
+      "save": "Lưu",
+      "statusNew": "Mới",
+      "statusDraft": "Nháp",
+      "statusSaving": "Đang lưu…",
+      "statusSaved": "Đã lưu",
+      "statusError": "Lỗi"
     },
     "storyPrint": {
       "notFound": "Không tìm thấy câu chuyện.",
@@ -351,11 +375,16 @@
       "loadingMore": "Đang tải thêm...",
       "endOfNovel": "Đã hết nội dung",
       "continued": "(đang tiếp tục...)",
-      "emptyWorld": "Thế giới này chưa có câu chuyện nào"
+      "emptyWorld": "Thế giới này chưa có câu chuyện nào",
+      "worldDescription": "Mô tả thế giới",
+      "totalWords": "Tổng {{words}} từ"
     },
-    "storyEditor": {
-      "orderLabel": "Thứ tự chương",
-      "orderHelp": "Số nguyên dùng để sắp xếp trong novel (ví dụ 1, 2, 3…)"
+    "worldTimeline": {
+      "empty": "Chưa có câu chuyện nào",
+      "deleteStory": "Xóa câu chuyện",
+      "linkedWith": "Liên kết với:",
+      "moreLocations": "+{{count}} địa điểm",
+      "dragToReorder": "Kéo để sắp xếp lại"
     }
   }
 }
