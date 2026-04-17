@@ -204,8 +204,8 @@ function WorldTimeline({
                     <time>{new Date(story.created_at).toLocaleDateString()}</time>
                   )}
                   {story.visibility && (
-                    <span className={`badge badge-xs ${story.visibility === 'public' ? 'badge-success' : story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
-                      {story.visibility}
+                    <span className={`badge badge-sm ${story.visibility === 'public' ? 'badge-success' : story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
+                      {story.visibility === 'public' ? 'Công khai' : story.visibility === 'draft' ? 'Nháp' : 'Riêng tư'}
                     </span>
                   )}
                 </div>
