@@ -206,7 +206,7 @@ function StoryDetailView({
               </Tag>
               {story.visibility && (
                 <Tag color={story.visibility === 'public' ? 'success' : story.visibility === 'draft' ? 'warning' : 'ghost'}>
-                  {story.visibility === 'public' ? 'Công khai' : story.visibility === 'draft' ? 'Bản nháp' : 'Riêng tư'}
+                  {t(`common.${story.visibility}`, story.visibility)}
                 </Tag>
               )}
               {world && (

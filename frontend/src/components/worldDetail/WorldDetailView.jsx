@@ -230,21 +230,17 @@ function WorldDetailView({
                 <span className="loading loading-spinner loading-xs"></span>
               </button>
             ) : user?.role === 'admin' ? (
-              <div className="tooltip-left tooltip" data-tip="Admin chỉ quản lý hệ thống, không tạo nội dung">
-                <button className="btn btn-primary btn-sm btn-disabled">
-                  + Thêm câu chuyện
-                </button>
-              </div>
+              <button className="btn btn-primary btn-sm btn-disabled tooltip tooltip-left" data-tip="Admin chỉ quản lý hệ thống, không tạo nội dung">
+                + Thêm câu chuyện
+              </button>
             ) : user ? (
               <Link to={`/stories/new?worldId=${world.world_id}`} className="btn btn-primary btn-sm">
                 + Thêm câu chuyện
               </Link>
             ) : (
-              <div className="tooltip-left tooltip" data-tip="Vui lòng đăng nhập để tạo câu chuyện">
-                <button className="btn btn-primary btn-sm btn-disabled" disabled>
-                  + Thêm câu chuyện
-                </button>
-              </div>
+              <button className="btn btn-primary btn-sm btn-disabled tooltip tooltip-left" data-tip="Vui lòng đăng nhập để tạo câu chuyện" disabled>
+                + Thêm câu chuyện
+              </button>
             )}
           </div>
           <WorldTimeline

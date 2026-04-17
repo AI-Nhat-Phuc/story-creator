@@ -205,7 +205,7 @@ function WorldTimeline({
                   )}
                   {story.visibility && (
                     <span className={`badge badge-sm ${story.visibility === 'public' ? 'badge-success' : story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
-                      {story.visibility === 'public' ? 'Công khai' : story.visibility === 'draft' ? 'Nháp' : 'Riêng tư'}
+                      {t(`common.${story.visibility}`, story.visibility)}
                     </span>
                   )}
                 </div>

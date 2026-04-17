@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   BookOpenIcon,
   GlobeAltIcon,
@@ -47,6 +48,7 @@ function StoriesView({
   formatWorldTime,
   getWorldName,
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [showWorldPicker, setShowWorldPicker] = useState(false)
 
@@ -152,14 +154,10 @@ function StoriesView({
                 <div className="px-4 py-2.5 border-t border-base-200 flex items-center gap-1.5 text-base-content/40 text-xs">
                   <DocumentTextIcon className="w-3.5 h-3.5 shrink-0" />
                   <span>Click để đọc thêm</span>
-                  {story.visibility === 'public' && (
-                    <span className="ml-auto badge badge-success badge-xs">Công khai</span>
-                  )}
-                  {story.visibility === 'draft' && (
-                    <span className="ml-auto badge badge-warning badge-xs">Nháp</span>
-                  )}
-                  {story.visibility === 'private' && (
-                    <span className="ml-auto badge badge-ghost badge-xs">Riêng tư</span>
+                  {story.visibility && (
+                    <span className={`ml-auto badge badge-xs ${story.visibility === 'public' ? 'badge-success' : story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
+                      {t(`common.${story.visibility}`, story.visibility)}
+                    </span>
                   )}
                 </div>
               </div>
