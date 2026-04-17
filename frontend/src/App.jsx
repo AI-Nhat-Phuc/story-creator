@@ -1,8 +1,8 @@
 import React, { useState, useCallback, lazy, Suspense } from 'react'
 import { useKeepAlive } from './hooks/useKeepAlive'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AuthProvider } from './contexts/AuthContext'
 import { GptTaskProvider } from './contexts/GptTaskContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import MainLayout from './layouts/MainLayout'
@@ -10,7 +10,7 @@ import Toast from './components/Toast'
 import LoadingSpinner from './components/LoadingSpinner'
 
 // Lazy-loaded route pages for code-splitting
-const Dashboard = lazy(() => import('./pages/Dashboard'))
+const HomePage = lazy(() => import('./pages/HomePage'))
 const WorldsPage = lazy(() => import('./pages/WorldsPage'))
 const StoriesPage = lazy(() => import('./pages/StoriesPage'))
 const WorldDetailPage = lazy(() => import('./pages/WorldDetailPage'))
@@ -24,13 +24,6 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 
 const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID
-
-function AdminRoute({ children }) {
-  const { user, loading } = useAuth()
-  if (loading) return <LoadingSpinner />
-  if (user?.role !== 'admin') return <Navigate to="/worlds" replace />
-  return children
-}
 
 function App() {
   useKeepAlive()
@@ -52,7 +45,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/stories/:storyId/print" element={<StoryPrintPage />} />
               <Route element={<MainLayout />}>
-                <Route path="/" element={<AdminRoute><Dashboard showToast={showToast} /></AdminRoute>} />
+                <Route path="/" element={<HomePage showToast={showToast} />} />
                 <Route path="/worlds" element={<WorldsPage showToast={showToast} />} />
                 <Route path="/worlds/:worldId" element={<WorldDetailPage showToast={showToast} />} />
                 <Route path="/worlds/:worldId/novel" element={<NovelPage showToast={showToast} />} />

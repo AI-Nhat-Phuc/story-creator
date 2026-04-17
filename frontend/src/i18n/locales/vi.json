@@ -40,6 +40,7 @@
     "processing": "Đang xử lý..."
   },
   "nav": {
+    "home": "Trang chủ",
     "dashboard": "Dashboard",
     "worlds": "Thế giới",
     "stories": "Câu chuyện",
@@ -69,6 +70,10 @@
     "guest": "Khách"
   },
   "meta": {
+    "home": {
+      "title": "Trang chủ – Story Creator",
+      "description": "Khám phá các câu chuyện và thế giới mới nhất trên Story Creator."
+    },
     "dashboard": {
       "title": "Dashboard – Story Creator",
       "description": "Tổng quan thống kê thế giới, câu chuyện và hạn mức của bạn."
@@ -125,6 +130,14 @@
     }
   },
   "pages": {
+    "home": {
+      "recentStories": "Câu chuyện mới cập nhật",
+      "recentWorlds": "Thế giới",
+      "noStories": "Chưa có câu chuyện nào",
+      "noWorlds": "Chưa có thế giới nào",
+      "loadError": "Không thể tải dữ liệu",
+      "viewAll": "Xem tất cả"
+    },
     "dashboard": {
       "title": "Dashboard",
       "loadError": "Không thể tải thống kê",

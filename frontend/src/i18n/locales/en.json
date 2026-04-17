@@ -40,6 +40,7 @@
     "processing": "Processing..."
   },
   "nav": {
+    "home": "Home",
     "dashboard": "Dashboard",
     "worlds": "Worlds",
     "stories": "Stories",
@@ -69,6 +70,10 @@
     "guest": "Guest"
   },
   "meta": {
+    "home": {
+      "title": "Home – Story Creator",
+      "description": "Discover the latest stories and worlds on Story Creator."
+    },
     "dashboard": {
       "title": "Dashboard – Story Creator",
       "description": "Overview of your worlds, stories, and usage quota."
@@ -125,6 +130,14 @@
     }
   },
   "pages": {
+    "home": {
+      "recentStories": "Recently updated stories",
+      "recentWorlds": "Worlds",
+      "noStories": "No stories yet",
+      "noWorlds": "No worlds yet",
+      "loadError": "Failed to load data",
+      "viewAll": "View all"
+    },
     "dashboard": {
       "title": "Dashboard",
       "loadError": "Failed to load statistics",
