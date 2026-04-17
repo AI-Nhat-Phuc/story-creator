@@ -815,6 +815,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         return success_response({
             'title': novel.get('title', world_data.get('name')),
             'description': novel.get('description', ''),
+            'world_description': world_data.get('description', ''),
             'chapters': chapters,
             'total_word_count': total_word_count,
             'owner_id': world_data.get('owner_id'),

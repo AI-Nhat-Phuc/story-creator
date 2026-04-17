@@ -269,7 +269,17 @@
       "publishError": "Không thể phát hành",
       "saveError": "Lưu thất bại",
       "gptError": "Lỗi GPT",
-      "signatureExists": "Chữ ký đã có trong tài liệu"
+      "signatureExists": "Chữ ký đã có trong tài liệu",
+      "titlePlaceholder": "Tiêu đề câu chuyện…",
+      "titleRequired": "Vui lòng nhập tiêu đề",
+      "back": "Quay lại",
+      "publish": "Xuất bản",
+      "save": "Lưu",
+      "statusNew": "Mới",
+      "statusDraft": "Nháp",
+      "statusSaving": "Đang lưu…",
+      "statusSaved": "Đã lưu",
+      "statusError": "Lỗi"
     },
     "storyPrint": {
       "notFound": "Không tìm thấy câu chuyện.",
@@ -352,11 +362,16 @@
       "loadingMore": "Đang tải thêm...",
       "endOfNovel": "Đã hết nội dung",
       "continued": "(đang tiếp tục...)",
-      "emptyWorld": "Thế giới này chưa có câu chuyện nào"
+      "emptyWorld": "Thế giới này chưa có câu chuyện nào",
+      "worldDescription": "Mô tả thế giới",
+      "totalWords": "Tổng {{words}} từ"
     },
-    "storyEditor": {
-      "orderLabel": "Thứ tự chương",
-      "orderHelp": "Số nguyên dùng để sắp xếp trong novel (ví dụ 1, 2, 3…)"
+    "worldTimeline": {
+      "empty": "Chưa có câu chuyện nào",
+      "deleteStory": "Xóa câu chuyện",
+      "linkedWith": "Liên kết với:",
+      "moreLocations": "+{{count}} địa điểm",
+      "dragToReorder": "Kéo để sắp xếp lại"
     }
   }
 }

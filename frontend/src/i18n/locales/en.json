@@ -269,7 +269,17 @@
       "publishError": "Failed to publish",
       "saveError": "Failed to save",
       "gptError": "GPT error",
-      "signatureExists": "Signature already in document"
+      "signatureExists": "Signature already in document",
+      "titlePlaceholder": "Story title…",
+      "titleRequired": "Please enter a title",
+      "back": "Back",
+      "publish": "Publish",
+      "save": "Save",
+      "statusNew": "New",
+      "statusDraft": "Draft",
+      "statusSaving": "Saving…",
+      "statusSaved": "Saved",
+      "statusError": "Error"
     },
     "storyPrint": {
       "notFound": "Story not found.",
@@ -352,11 +362,16 @@
       "loadingMore": "Loading more...",
       "endOfNovel": "End of novel",
       "continued": "(continued...)",
-      "emptyWorld": "This world has no stories yet"
+      "emptyWorld": "This world has no stories yet",
+      "worldDescription": "World description",
+      "totalWords": "{{words}} words total"
     },
-    "storyEditor": {
-      "orderLabel": "Chapter order",
-      "orderHelp": "Integer used to sort chapters in novel view (e.g. 1, 2, 3…)"
+    "worldTimeline": {
+      "empty": "No stories yet",
+      "deleteStory": "Delete story",
+      "linkedWith": "Linked with:",
+      "moreLocations": "+{{count}} locations",
+      "dragToReorder": "Drag to reorder"
     }
   }
 }

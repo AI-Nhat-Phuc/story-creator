@@ -23,9 +23,6 @@ function NovelContainer({ showToast }) {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   // Synchronous guard against observer double-fires (state updates lag).
   const loadingMoreRef = useRef(false)
-  const [editingMeta, setEditingMeta] = useState(false)
-  const [metaForm, setMetaForm] = useState({ title: '', description: '' })
-  const [savingMeta, setSavingMeta] = useState(false)
   const novelTitle = usePageTitle('novel', novel?.title)
   const novelDescription = novel?.title
     ? t('meta.novel.descriptionTemplate', { name: novel.title })
@@ -44,7 +41,6 @@ function NovelContainer({ showToast }) {
       ])
       setNovel(metaRes.data)
       setChapters(metaRes.data.chapters || [])
-      setMetaForm({ title: metaRes.data.title || '', description: metaRes.data.description || '' })
 
       setContentBlocks(contentRes.data.blocks || [])
       setNextCursor(contentRes.data.next_cursor)
@@ -84,32 +80,7 @@ function NovelContainer({ showToast }) {
 
   const isOwner = !!(novel?.owner_id && user?.user_id === novel.owner_id)
   const isCoAuthor = !!(user && novel?.co_authors?.includes(user.user_id))
-  const canEdit = isOwner
   const canReorder = isOwner || isCoAuthor
-
-  const handleEditMeta = useCallback(() => setEditingMeta(true), [])
-  const handleCancelMeta = useCallback(() => {
-    setMetaForm({ title: novel?.title || '', description: novel?.description || '' })
-    setEditingMeta(false)
-  }, [novel])
-
-  const handleSaveMeta = useCallback(async () => {
-    setSavingMeta(true)
-    try {
-      const res = await novelAPI.update(worldId, metaForm)
-      setNovel(prev => ({ ...prev, ...res.data }))
-      setEditingMeta(false)
-      showToast(t('pages.novel.updateSuccess'), 'success')
-    } catch {
-      showToast(t('pages.novel.updateError'), 'error')
-    } finally {
-      setSavingMeta(false)
-    }
-  }, [worldId, metaForm, showToast, t])
-
-  const handleMetaFormChange = useCallback((field, value) => {
-    setMetaForm(prev => ({ ...prev, [field]: value }))
-  }, [])
 
   const chaptersRef = useRef(chapters)
   useEffect(() => { chaptersRef.current = chapters }, [chapters])
@@ -134,6 +105,7 @@ function NovelContainer({ showToast }) {
       <NovelView
         worldId={worldId}
         novel={novel}
+        worldDescription={novel?.world_description || ''}
         chapters={chapters}
         contentBlocks={contentBlocks}
         hasMore={hasMore}
@@ -141,15 +113,7 @@ function NovelContainer({ showToast }) {
         onLoadMore={loadMore}
         totalWordCount={totalWordCount}
         isLoading={isLoading}
-        canEdit={canEdit}
         canReorder={canReorder}
-        editingMeta={editingMeta}
-        metaForm={metaForm}
-        savingMeta={savingMeta}
-        onEditMeta={handleEditMeta}
-        onCancelMeta={handleCancelMeta}
-        onSaveMeta={handleSaveMeta}
-        onMetaFormChange={handleMetaFormChange}
         onReorder={handleReorder}
       />
     </>

@@ -40,7 +40,7 @@ function WorldTimeline({
   const dragCounterRef = useRef(0)
 
   if (!stories || stories.length === 0) {
-    return <p className="opacity-60 py-8 text-center">Chưa có câu chuyện nào</p>
+    return <p className="opacity-60 py-8 text-center">{t('pages.worldTimeline.empty')}</p>
   }
 
   const paletteMap = {
@@ -152,19 +152,17 @@ function WorldTimeline({
             {showGap && (
               <div className="timeline-end w-full h-20 border-2 border-dashed border-primary bg-primary/5 rounded" />
             )}
-            <div className={`${metaPos} text-left`}>
-              <time className="opacity-70 font-mono text-sm">{timeLabel}</time>
+            <div className={metaPos}>
+              <time className="opacity-70 font-mono text-sm px-2">{timeLabel}</time>
             </div>
             <div className="timeline-middle">
-              <div className={`timeline-icon border-2 ${palette.iconBorder} ${palette.iconText}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 ${palette.iconText}`}>
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+              </svg>
             </div>
-            <div className={`space-y-3 ${cardPos}`}>
+            <div className={`space-y-3 min-w-0 ${cardPos}`}>
               <div
-                className={`bg-base-100 shadow-lg p-4 timeline-box transition-transform ${isDragging ? 'scale-95' : ''}`}
+                className={`bg-base-100 shadow-lg p-4 timeline-box transition-transform max-w-full overflow-hidden ${isDragging ? 'scale-95' : ''}`}
                 draggable={canReorder}
                 onDragStart={canReorder ? handleDragStart(groupIndex) : undefined}
                 onDragEnd={canReorder ? handleDragEnd : undefined}
@@ -174,7 +172,7 @@ function WorldTimeline({
                     {canReorder && (
                       <span
                         className="cursor-grab active:cursor-grabbing text-base-content/40 shrink-0"
-                        title={t('pages.worldDetail.dragToReorder', { defaultValue: 'Kéo để sắp xếp lại' })}
+                        title={t('pages.worldTimeline.dragToReorder')}
                       >
                         <Bars3Icon className="w-4 h-4" />
                       </span>
@@ -187,7 +185,7 @@ function WorldTimeline({
                     <button
                       onClick={(e) => { e.preventDefault(); onDeleteStory(story.story_id, story.title) }}
                       className="text-error btn btn-ghost btn-xs"
-                      title="Xóa câu chuyện"
+                      title={t('pages.worldTimeline.deleteStory')}
                     >
                       <TrashIcon className="w-4 h-4" />
                     </button>
@@ -226,12 +224,12 @@ function WorldTimeline({
                     </Tag>
                   ))}
                   {getStoryLocations(story).length > 2 && (
-                    <Tag color="ghost">+{getStoryLocations(story).length - 2} địa điểm</Tag>
+                    <Tag color="ghost">{t('pages.worldTimeline.moreLocations', { count: getStoryLocations(story).length - 2 })}</Tag>
                   )}
                 </div>
                 {linkedStories.length > 0 && (
                   <div className="mt-3 pt-3 border-base-300 border-t">
-                    <p className="opacity-70 mb-2 text-xs"><LinkIcon className="inline w-3 h-3" /> Liên kết với:</p>
+                    <p className="opacity-70 mb-2 text-xs"><LinkIcon className="inline w-3 h-3" /> {t('pages.worldTimeline.linkedWith')}</p>
                     <div className="flex flex-wrap gap-1">
                       {linkedStories.map(linked => (
                         <Tag

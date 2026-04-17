@@ -220,16 +220,19 @@ function WorldDetailContainer({ showToast }) {
     }
   }
 
-  const handleDeleteStory = async (storyId, storyTitle) => {
-    if (!confirm(t('common.deleteConfirm', { name: storyTitle }))) return
-
-    try {
-      await storiesAPI.delete(storyId)
-      setStories(prev => prev.filter(s => s.story_id !== storyId))
-      showToast(t('pages.worldDetail.deleteStorySuccess', { name: storyTitle }), 'success')
-    } catch (error) {
-      showToast(t('pages.worldDetail.deleteStoryError') + ': ' + (error.response?.data?.error || error.message), 'error')
-    }
+  const handleDeleteStory = (storyId, storyTitle) => {
+    // Defer the blocking confirm() so the click event handler returns quickly
+    // and the browser can paint the button's active state (INP fix).
+    setTimeout(async () => {
+      if (!confirm(t('common.deleteConfirm', { name: storyTitle }))) return
+      try {
+        await storiesAPI.delete(storyId)
+        setStories(prev => prev.filter(s => s.story_id !== storyId))
+        showToast(t('pages.worldDetail.deleteStorySuccess', { name: storyTitle }), 'success')
+      } catch (error) {
+        showToast(t('pages.worldDetail.deleteStoryError') + ': ' + (error.response?.data?.error || error.message), 'error')
+      }
+    }, 0)
   }
 
   const handlePublish = async (newVisibility) => {
