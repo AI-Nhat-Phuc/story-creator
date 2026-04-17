@@ -1,8 +1,8 @@
 import React, { useState, useCallback, lazy, Suspense } from 'react'
 import { useKeepAlive } from './hooks/useKeepAlive'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { GptTaskProvider } from './contexts/GptTaskContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import MainLayout from './layouts/MainLayout'
@@ -25,6 +25,13 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 
 const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID
 
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingSpinner />
+  if (user?.role !== 'admin') return <Navigate to="/worlds" replace />
+  return children
+}
+
 function App() {
   useKeepAlive()
   const [toast, setToast] = useState(null)
@@ -45,7 +52,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/stories/:storyId/print" element={<StoryPrintPage />} />
               <Route element={<MainLayout />}>
-                <Route path="/" element={<Dashboard showToast={showToast} />} />
+                <Route path="/" element={<AdminRoute><Dashboard showToast={showToast} /></AdminRoute>} />
                 <Route path="/worlds" element={<WorldsPage showToast={showToast} />} />
                 <Route path="/worlds/:worldId" element={<WorldDetailPage showToast={showToast} />} />
                 <Route path="/worlds/:worldId/novel" element={<NovelPage showToast={showToast} />} />
