@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import LoadingSpinner from '../LoadingSpinner'
 import Tag from '../Tag'
-import { BookOpenIcon, GlobeAltIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
+import { BookOpenIcon, GlobeAltIcon, ArrowRightIcon, MapIcon } from '@heroicons/react/24/outline'
 
 const GENRE_COLOR = {
   adventure: 'success',
@@ -33,6 +33,15 @@ function StoryCard({ story, featured = false }) {
           {story.genre && (
             <Tag color={GENRE_COLOR[story.genre] || 'accent'} size="sm">{story.genre}</Tag>
           )}
+          {story.world_name && (
+            <Link
+              to={`/worlds/${story.world_id}`}
+              onClick={e => e.stopPropagation()}
+              className="flex items-center gap-1 text-xs text-base-content/50 hover:text-primary transition"
+            >
+              <MapIcon className="w-3 h-3" />{story.world_name}
+            </Link>
+          )}
           {date && (
             <span className="text-xs text-base-content/40 ml-auto">
               {new Date(date).toLocaleDateString()}
@@ -59,6 +68,15 @@ function StoryCard({ story, featured = false }) {
       <div className="flex items-center gap-2 mt-auto pt-1 flex-wrap">
         {story.genre && (
           <Tag color={GENRE_COLOR[story.genre] || 'accent'} size="sm">{story.genre}</Tag>
+        )}
+        {story.world_name && (
+          <Link
+            to={`/worlds/${story.world_id}`}
+            onClick={e => e.stopPropagation()}
+            className="flex items-center gap-1 text-xs text-base-content/50 hover:text-primary transition"
+          >
+            <MapIcon className="w-3 h-3" />{story.world_name}
+          </Link>
         )}
         {date && (
           <span className="text-xs text-base-content/40 ml-auto">
