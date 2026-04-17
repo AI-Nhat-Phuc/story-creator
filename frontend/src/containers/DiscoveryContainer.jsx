@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { storiesAPI, worldsAPI } from '../services/api'
@@ -18,10 +18,15 @@ function DiscoveryContainer({ showToast }) {
           storiesAPI.getAll(),
           worldsAPI.getAll(),
         ])
-        // Sort stories by updated_at DESC, show latest 8
+        // Sort stories by updated_at DESC, extract plain-text preview, show latest 8
         const sorted = [...(storiesRes.data || [])]
           .sort((a, b) => (b.updated_at || b.created_at || '').localeCompare(a.updated_at || a.created_at || ''))
           .slice(0, 8)
+          .map(s => ({
+            ...s,
+            content_preview: s.content_preview
+              || (s.content ? s.content.replace(/<[^>]*>/g, '').slice(0, 160) : ''),
+          }))
         setStories(sorted)
         setWorlds((worldsRes.data || []).slice(0, 6))
       } catch {
