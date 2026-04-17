@@ -21,6 +21,8 @@
     "year": "Year",
     "chapterLabel": "Chapter {{number}}",
     "timelineUnknown": "Not ordered",
+    "backToList": "Back to list",
+    "backToWorld": "Back to world",
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"? This cannot be undone."
   },
   "actions": {

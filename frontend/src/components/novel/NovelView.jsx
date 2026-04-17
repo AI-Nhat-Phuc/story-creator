@@ -58,7 +58,7 @@ function NovelView({
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="mb-6">
         <Link to={`/worlds/${worldId}`} className="btn btn-ghost btn-sm gap-1">
-          <ArrowLeftIcon className="w-4 h-4" /> Back to World
+          <ArrowLeftIcon className="w-4 h-4" /> {t('common.backToWorld')}
         </Link>
       </div>
 

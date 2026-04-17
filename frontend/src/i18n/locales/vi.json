@@ -21,6 +21,8 @@
     "year": "Năm",
     "chapterLabel": "Chương {{number}}",
     "timelineUnknown": "Chưa có thứ tự",
+    "backToList": "Quay lại danh sách",
+    "backToWorld": "Về trang thế giới",
     "deleteConfirm": "Bạn có chắc muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác."
   },
   "actions": {

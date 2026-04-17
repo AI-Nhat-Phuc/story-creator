@@ -106,7 +106,7 @@ function WorldDetailView({
     <div>
       <div className="mb-4">
         <Link to="/worlds" className="btn btn-ghost btn-sm">
-          ← Quay lại danh sách
+          ← {t('common.backToList')}
         </Link>
       </div>
 

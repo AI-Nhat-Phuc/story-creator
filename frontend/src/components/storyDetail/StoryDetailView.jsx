@@ -157,7 +157,7 @@ function StoryDetailView({
         <Link to="/stories" className="btn btn-ghost btn-sm btn-square sm:w-auto sm:px-3">
           <ClipboardDocumentListIcon className="w-4 h-4 sm:hidden" />
           <span aria-hidden="true" className="hidden sm:inline">←</span>
-          <span className="hidden sm:inline">Quay lại danh sách</span>
+          <span className="hidden sm:inline">{t('common.backToList')}</span>
         </Link>
       </div>
 
