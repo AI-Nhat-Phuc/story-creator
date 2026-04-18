@@ -60,7 +60,7 @@ function EditorHeader({
           onChange={(e) => handleTitleChange(e.target.value)}
           onFocus={onTitleFocus}
           placeholder={t('pages.storyEditor.titlePlaceholder')}
-          className={`input input-ghost input-xs h-7 w-full font-semibold text-sm focus:outline-none focus:bg-base-200 rounded px-2 ${titleError ? 'input-error' : ''}`}
+          className={`bg-transparent border-0 outline-none h-7 w-full font-semibold text-sm px-2 rounded placeholder:text-base-content/30 hover:bg-base-200/60 focus:bg-base-200 transition-colors ${titleError ? 'ring-1 ring-error' : ''}`}
         />
         {titleError && (
           <span className="text-error text-xs px-1">
