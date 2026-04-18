@@ -81,7 +81,7 @@ function EditorHeader({
         {saveStatus === 'saved' && !isPublished && title.trim() && wordCount > 0 && (
           <button
             onClick={onPublish}
-            className="btn btn-xs btn-success h-7 min-h-0 px-2 shrink-0"
+            className="btn btn-xs btn-outline btn-success h-7 min-h-0 px-2 shrink-0"
           >
             {t('pages.storyEditor.publish')}
           </button>
