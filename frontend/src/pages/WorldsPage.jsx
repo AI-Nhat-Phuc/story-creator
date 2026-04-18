@@ -12,7 +12,9 @@ import {
   UserIcon,
   MapPinIcon,
   ArrowPathIcon,
+  BookOpenIcon,
 } from '@heroicons/react/24/outline'
+import Tag from '../components/Tag'
 
 function WorldsPage({ showToast }) {
   const { t } = useTranslation()
@@ -285,7 +287,16 @@ function WorldsPage({ showToast }) {
           <div key={world.world_id} className="bg-base-100 shadow-xl card">
             <div className="card-body">
               <h2 className="card-title">{world.name}</h2>
-              <p className="opacity-70 text-sm">{world.world_type}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="opacity-70 text-sm">{world.world_type}</span>
+                <Tag color={world.visibility === 'public' ? 'success' : world.visibility === 'draft' ? 'warning' : 'ghost'} size="sm">
+                  {t(`common.${world.visibility || 'private'}`)}
+                </Tag>
+                <span className="flex items-center gap-1 opacity-60 text-xs">
+                  <BookOpenIcon className="w-3.5 h-3.5" />
+                  {t('common.storiesCount', { count: world.stories?.length ?? 0 })}
+                </span>
+              </div>
               <p className="line-clamp-3">{world.description}</p>
               <div className="justify-end mt-4 card-actions">
                 <Link to={`/worlds/${world.world_id}`} className="btn btn-primary btn-sm">

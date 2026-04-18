@@ -209,6 +209,7 @@ class MongoStorage:
     _WORLD_SUMMARY_PROJECTION = {
         '_id': 0, 'world_id': 1, 'name': 1, 'created_at': 1,
         'visibility': 1, 'owner_id': 1, 'shared_with': 1, 'world_type': 1,
+        'description': 1, 'stories': 1,
     }
 
     def list_worlds_summary(

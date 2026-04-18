@@ -32,6 +32,7 @@ function Tag({
   const classes = [
     'badge',
     'whitespace-nowrap',
+    'py-1',
     color && `badge-${color}`,
     size && `badge-${size}`,
     outline && 'badge-outline',
