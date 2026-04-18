@@ -36,8 +36,11 @@ function WorldTimeline({
 
   const [draggingIdx, setDraggingIdx] = useState(null)
   const [hoverIdx, setHoverIdx] = useState(null)
-  // HTML5 DnD fires dragenter on children; counter handles flicker-free leave.
-  const dragCounterRef = useRef(0)
+  // Ref mirrors draggingIdx synchronously so event handlers (dragover, drop)
+  // can read it without waiting for React state to flush.
+  const draggingIdxRef = useRef(null)
+  // Per-li entry counter so dragLeave fires correctly when moving over children.
+  const hoverCounterRef = useRef(0)
 
   if (!stories || stories.length === 0) {
     return <p className="opacity-60 py-8 text-center">{t('pages.worldTimeline.empty')}</p>
@@ -63,54 +66,59 @@ function WorldTimeline({
   }
 
   const handleDragStart = (idx) => (e) => {
+    draggingIdxRef.current = idx   // sync — available immediately for dragover
     setDraggingIdx(idx)
-    dragCounterRef.current = 0
+    hoverCounterRef.current = 0
     e.dataTransfer.effectAllowed = 'move'
     try { e.dataTransfer.setData('text/plain', String(idx)) } catch { /* Firefox quirks */ }
   }
 
   const handleDragEnter = (idx) => (e) => {
-    if (draggingIdx === null) return
+    if (draggingIdxRef.current === null) return
     e.preventDefault()
-    dragCounterRef.current += 1
+    // Reset counter each time we enter a new <li> so it tracks only this li's children.
+    if (hoverIdx !== idx) hoverCounterRef.current = 0
+    hoverCounterRef.current += 1
     setHoverIdx(idx)
   }
 
+  // Must always call preventDefault so the browser fires 'drop'. Guard on ref
+  // (not state) to avoid the async-flush race condition.
   const handleDragOver = (e) => {
-    if (draggingIdx === null) return
+    if (draggingIdxRef.current === null) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
   }
 
   const handleDragLeave = () => {
-    dragCounterRef.current -= 1
-    if (dragCounterRef.current <= 0) {
-      dragCounterRef.current = 0
+    hoverCounterRef.current -= 1
+    if (hoverCounterRef.current <= 0) {
+      hoverCounterRef.current = 0
       setHoverIdx(null)
     }
   }
 
   const handleDrop = (targetIdx) => (e) => {
     e.preventDefault()
-    if (draggingIdx === null || draggingIdx === targetIdx) {
-      setDraggingIdx(null)
-      setHoverIdx(null)
-      return
-    }
-    const ids = sortedStories.map(s => s.story_id)
-    const [moved] = ids.splice(draggingIdx, 1)
-    // When dragging forward, splice already shifted indices left by 1.
-    const insertAt = draggingIdx < targetIdx ? targetIdx - 1 : targetIdx
-    ids.splice(insertAt, 0, moved)
+    const fromIdx = draggingIdxRef.current
+    draggingIdxRef.current = null
     setDraggingIdx(null)
     setHoverIdx(null)
+    hoverCounterRef.current = 0
+    if (fromIdx === null || fromIdx === targetIdx) return
+    const ids = sortedStories.map(s => s.story_id)
+    const [moved] = ids.splice(fromIdx, 1)
+    // After splice, forward targets shift left by 1; backward targets stay.
+    const insertAt = fromIdx < targetIdx ? targetIdx - 1 : targetIdx
+    ids.splice(insertAt, 0, moved)
     onReorderStories?.(ids)
   }
 
   const handleDragEnd = () => {
+    draggingIdxRef.current = null
     setDraggingIdx(null)
     setHoverIdx(null)
-    dragCounterRef.current = 0
+    hoverCounterRef.current = 0
   }
 
   return (
