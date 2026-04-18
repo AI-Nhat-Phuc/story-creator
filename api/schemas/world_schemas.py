@@ -154,6 +154,19 @@ class UpdateEntitySchema(Schema):
             raise ValidationError('At least one field must be provided for update')
 
 
+class UpdateLocationSchema(Schema):
+    """Schema for PUT /api/worlds/<world_id>/locations/<location_id> - Update location."""
+
+    name = fields.Str(validate=validate.Length(min=1, max=100))
+    location_type = fields.Str(validate=validate.Length(max=100))
+    description = fields.Str(validate=validate.Length(max=1000))
+
+    @validates_schema
+    def validate_not_empty(self, data, **kwargs):
+        if not data:
+            raise ValidationError('At least one field must be provided for update')
+
+
 class AddCollaboratorSchema(Schema):
     """Schema for POST /api/worlds/{world_id}/collaborators — SUB-2."""
 

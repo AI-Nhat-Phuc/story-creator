@@ -133,7 +133,7 @@ function StoryDetailView({
   const hasLinks = linkedCharacters.length > 0 || linkedLocations.length > 0
 
   return (
-    <div className="overflow-x-hidden">
+    <div className="max-w-5xl mx-auto overflow-x-hidden">
       <div className="flex flex-wrap gap-2 mb-4">
         {world && (
           <Link

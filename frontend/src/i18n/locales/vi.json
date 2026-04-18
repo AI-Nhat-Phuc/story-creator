@@ -331,7 +331,10 @@
       "removeCollabSuccess": "Đã xóa đồng tác giả",
       "removeCollabError": "Không thể xóa đồng tác giả",
       "loadMoreStories": "Tải thêm câu chuyện",
-      "loadingMoreStories": "Đang tải..."
+      "loadingMoreStories": "Đang tải...",
+      "appearsIn": "Xuất hiện trong:",
+      "updateLocationSuccess": "Đã cập nhật địa điểm!",
+      "updateLocationError": "Lỗi khi cập nhật địa điểm"
     },
     "storyDetail": {
       "loadError": "Không thể tải chi tiết câu chuyện",

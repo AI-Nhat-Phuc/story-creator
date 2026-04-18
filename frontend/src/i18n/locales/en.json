@@ -330,7 +330,10 @@
       "removeCollabSuccess": "Co-author removed",
       "removeCollabError": "Failed to remove co-author",
       "loadMoreStories": "Load more stories",
-      "loadingMoreStories": "Loading..."
+      "loadingMoreStories": "Loading...",
+      "appearsIn": "Appears in:",
+      "updateLocationSuccess": "Location updated!",
+      "updateLocationError": "Error updating location"
     },
     "storyDetail": {
       "loadError": "Failed to load story details",

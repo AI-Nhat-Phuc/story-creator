@@ -208,6 +208,16 @@ function WorldDetailContainer({ showToast }) {
     }
   }
 
+  const handleUpdateLocation = async (locationId, updatedData) => {
+    try {
+      const response = await worldsAPI.updateLocation(worldId, locationId, updatedData)
+      setLocations(prev => prev.map(l => l.location_id === locationId ? { ...l, ...response.data } : l))
+      showToast(t('pages.worldDetail.updateLocationSuccess'), 'success')
+    } catch (error) {
+      showToast(t('pages.worldDetail.updateLocationError') + ': ' + (error.response?.data?.error || error.message), 'error')
+    }
+  }
+
   const handleDeleteLocation = async (locationId, locationName) => {
     if (!confirm(t('common.deleteConfirm', { name: locationName }))) return
 
@@ -344,6 +354,7 @@ function WorldDetailContainer({ showToast }) {
       onDeleteEntity={handleDeleteEntity}
       onUpdateEntity={handleUpdateEntity}
       onDeleteLocation={handleDeleteLocation}
+      onUpdateLocation={handleUpdateLocation}
       onDeleteStory={handleDeleteStory}
       // Collaborators props
       collaborators={collaborators}

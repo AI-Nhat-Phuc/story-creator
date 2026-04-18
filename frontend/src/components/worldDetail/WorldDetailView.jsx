@@ -53,6 +53,7 @@ function WorldDetailView({
   onDeleteEntity,
   onUpdateEntity,
   onDeleteLocation,
+  onUpdateLocation,
   onDeleteStory,
   collaborators = [],
   inviteLoading = false,
@@ -66,6 +67,8 @@ function WorldDetailView({
   const { t } = useTranslation()
   const [editingEntityId, setEditingEntityId] = useState(null)
   const [entityEditForm, setEntityEditForm] = useState({})
+  const [editingLocationId, setEditingLocationId] = useState(null)
+  const [locationEditForm, setLocationEditForm] = useState({})
   const [publishTarget, setPublishTarget] = useState(null)
 
   const startEditEntity = (char) => {
@@ -74,7 +77,6 @@ function WorldDetailView({
       name: char.name || '',
       entity_type: char.entity_type || '',
       description: char.description || '',
-      attributes: { ...char.attributes }
     })
   }
 
@@ -95,16 +97,40 @@ function WorldDetailView({
     setEntityEditForm(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleAttributeChange = (attr, value) => {
-    const num = Math.min(10, Math.max(0, Number(value) || 0))
-    setEntityEditForm(prev => ({
-      ...prev,
-      attributes: { ...prev.attributes, [attr]: num }
-    }))
+  const startEditLocation = (loc) => {
+    setEditingLocationId(loc.location_id)
+    setLocationEditForm({
+      name: loc.name || '',
+      location_type: loc.location_type || '',
+      description: loc.description || '',
+    })
   }
 
+  const cancelEditLocation = () => {
+    setEditingLocationId(null)
+    setLocationEditForm({})
+  }
+
+  const saveEditLocation = async () => {
+    if (onUpdateLocation) {
+      await onUpdateLocation(editingLocationId, locationEditForm)
+    }
+    setEditingLocationId(null)
+    setLocationEditForm({})
+  }
+
+  const handleLocationFieldChange = (field, value) => {
+    setLocationEditForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const getCharacterStories = (char) =>
+    (stories || []).filter(s => (s.entities || s.entity_ids || []).includes(char.entity_id))
+
+  const getLocationStories = (loc) =>
+    (stories || []).filter(s => (s.locations || s.location_ids || []).includes(loc.location_id))
+
   return (
-    <div>
+    <div className="max-w-5xl mx-auto">
       <div className="mb-4">
         <Link to="/worlds" className="btn btn-ghost btn-sm">
           ← {t('common.backToList')}
@@ -293,28 +319,6 @@ function WorldDetailView({
                         className="h-16 textarea textarea-bordered textarea-sm"
                       />
                     </div>
-                    {entityEditForm.attributes && (
-                      <div className="gap-2 grid grid-cols-3 text-sm">
-                        <div className="form-control">
-                          <label className="py-0 label"><span className="text-xs label-text">Sức mạnh</span></label>
-                          <input type="number" min="0" max="10" value={entityEditForm.attributes.Strength ?? 0}
-                            onChange={(e) => handleAttributeChange('Strength', e.target.value)}
-                            className="w-full input input-bordered input-xs" />
-                        </div>
-                        <div className="form-control">
-                          <label className="py-0 label"><span className="text-xs label-text">Trí tuệ</span></label>
-                          <input type="number" min="0" max="10" value={entityEditForm.attributes.Intelligence ?? 0}
-                            onChange={(e) => handleAttributeChange('Intelligence', e.target.value)}
-                            className="w-full input input-bordered input-xs" />
-                        </div>
-                        <div className="form-control">
-                          <label className="py-0 label"><span className="text-xs label-text">Sức hút</span></label>
-                          <input type="number" min="0" max="10" value={entityEditForm.attributes.Charisma ?? 0}
-                            onChange={(e) => handleAttributeChange('Charisma', e.target.value)}
-                            className="w-full input input-bordered input-xs" />
-                        </div>
-                      </div>
-                    )}
                     <div className="flex gap-1 mt-1">
                       <button onClick={saveEditEntity} className="btn btn-primary btn-xs">
                         <CheckCircleIcon className="w-3.5 h-3.5" /> Lưu
@@ -350,13 +354,23 @@ function WorldDetailView({
                     </div>
                      <Tag color="ghost">{char.entity_type}</Tag>
                     {char.description && <p className="opacity-70 text-sm">{char.description}</p>}
-                    {char.attributes && (
-                      <div className="text-sm">
-                        <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> Sức mạnh: {char.attributes.Strength}</p>
-                        <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg> Trí tuệ: {char.attributes.Intelligence}</p>
-                        <p><svg xmlns="http://www.w3.org/2000/svg" className="inline w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> Sức hút: {char.attributes.Charisma}</p>
-                      </div>
-                    )}
+                    {(() => {
+                      const charStories = getCharacterStories(char)
+                      if (charStories.length === 0) return null
+                      return (
+                        <div className="mt-2">
+                          <p className="text-xs opacity-50 mb-1">{t('pages.worldDetail.appearsIn')}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {charStories.slice(0, 4).map(s => (
+                              <Tag key={s.story_id} as={Link} to={`/stories/${s.story_id}`} size="sm" outline>
+                                {s.title}
+                              </Tag>
+                            ))}
+                            {charStories.length > 4 && <Tag color="ghost" size="sm">+{charStories.length - 4}</Tag>}
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </>
                 )}
               </div>
@@ -371,24 +385,87 @@ function WorldDetailView({
           {locations.map(loc => (
             <div key={loc.location_id} className="bg-base-100 shadow card">
               <div className="card-body">
-                <div className="flex justify-between items-start">
-                  <h3 className="card-title"><MapPinIcon className="inline w-4 h-4" /> {loc.name}</h3>
-                  {canEdit && (
-                    <button
-                      onClick={() => onDeleteLocation(loc.location_id, loc.name)}
-                      className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
-                      title="Xóa địa điểm"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                {loc.location_type && <Tag color="ghost">{loc.location_type}</Tag>}
-                {loc.description && <p className="opacity-70 text-sm">{loc.description}</p>}
-                {loc.coordinates && (
-                  <p className="opacity-50 text-xs">
-                    Tọa độ: ({Math.round(loc.coordinates.x)}, {Math.round(loc.coordinates.y)})
-                  </p>
+                {editingLocationId === loc.location_id ? (
+                  <>
+                    <div className="form-control">
+                      <label className="py-0 label"><span className="text-xs label-text">Tên</span></label>
+                      <input
+                        type="text"
+                        value={locationEditForm.name}
+                        onChange={(e) => handleLocationFieldChange('name', e.target.value)}
+                        className="input input-bordered input-sm"
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="py-0 label"><span className="text-xs label-text">Loại</span></label>
+                      <input
+                        type="text"
+                        value={locationEditForm.location_type}
+                        onChange={(e) => handleLocationFieldChange('location_type', e.target.value)}
+                        className="input input-bordered input-sm"
+                        placeholder="làng, thành phố, rừng..."
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="py-0 label"><span className="text-xs label-text">Mô tả</span></label>
+                      <textarea
+                        value={locationEditForm.description}
+                        onChange={(e) => handleLocationFieldChange('description', e.target.value)}
+                        className="h-16 textarea textarea-bordered textarea-sm"
+                      />
+                    </div>
+                    <div className="flex gap-1 mt-1">
+                      <button onClick={saveEditLocation} className="btn btn-primary btn-xs">
+                        <CheckCircleIcon className="w-3.5 h-3.5" /> Lưu
+                      </button>
+                      <button onClick={cancelEditLocation} className="btn btn-ghost btn-xs">
+                        <XMarkIcon className="w-3.5 h-3.5" /> Hủy
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-start">
+                      <h3 className="card-title"><MapPinIcon className="inline w-4 h-4" /> {loc.name}</h3>
+                      {canEdit && (
+                        <div className="flex gap-0.5">
+                          <button
+                            onClick={() => startEditLocation(loc)}
+                            className="btn btn-ghost btn-xs"
+                            title="Sửa địa điểm"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => onDeleteLocation(loc.location_id, loc.name)}
+                            className="hover:bg-error text-error hover:text-error-content btn btn-ghost btn-xs"
+                            title="Xóa địa điểm"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {loc.location_type && <Tag color="ghost">{loc.location_type}</Tag>}
+                    {loc.description && <p className="opacity-70 text-sm">{loc.description}</p>}
+                    {(() => {
+                      const locStories = getLocationStories(loc)
+                      if (locStories.length === 0) return null
+                      return (
+                        <div className="mt-2">
+                          <p className="text-xs opacity-50 mb-1">{t('pages.worldDetail.appearsIn')}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {locStories.slice(0, 4).map(s => (
+                              <Tag key={s.story_id} as={Link} to={`/stories/${s.story_id}`} size="sm" outline>
+                                {s.title}
+                              </Tag>
+                            ))}
+                            {locStories.length > 4 && <Tag color="ghost" size="sm">+{locStories.length - 4}</Tag>}
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </>
                 )}
               </div>
             </div>

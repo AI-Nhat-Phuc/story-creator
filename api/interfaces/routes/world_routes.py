@@ -20,6 +20,7 @@ from schemas.world_schemas import (
     ListWorldStoriesQuerySchema,
     CreateEntitySchema,
     UpdateEntitySchema,
+    UpdateLocationSchema,
     UpdateNovelSchema,
     ReorderChaptersSchema,
     NovelContentQuerySchema,
@@ -488,6 +489,35 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         flush_data()
 
         return deleted_response("Entity deleted successfully")
+
+    @world_bp.route('/api/worlds/<world_id>/locations/<location_id>', methods=['PUT'])
+    @token_required
+    @validate_request(UpdateLocationSchema)
+    def update_location(world_id, location_id):
+        """Update a location in a world."""
+        world_data = storage.load_world(world_id)
+        if not world_data:
+            raise ResourceNotFoundError('World', world_id)
+
+        location_data = storage.load_location(location_id)
+        if not location_data:
+            raise ResourceNotFoundError('Location', location_id)
+
+        owner_id = world_data.get('owner_id')
+        collaborators = world_data.get('collaborators', [])
+        collab_ids = [c.get('user_id') for c in collaborators]
+        if owner_id and g.current_user.user_id != owner_id and g.current_user.user_id not in collab_ids and g.current_user.role != 'admin':
+            raise PermissionDeniedError('edit', 'location')
+
+        data = request.validated_data
+        for field in ['name', 'location_type', 'description']:
+            if field in data:
+                location_data[field] = data[field]
+
+        storage.save_location(location_data)
+        flush_data()
+
+        return success_response(location_data, "Location updated successfully")
 
     @world_bp.route('/api/worlds/<world_id>/locations/<location_id>', methods=['DELETE'])
     @token_required

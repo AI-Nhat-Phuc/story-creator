@@ -57,6 +57,7 @@ export const worldsAPI = {
   deleteEntity: (worldId, entityId) => api.delete(`/worlds/${worldId}/entities/${entityId}`),
   updateEntity: (worldId, entityId, data) => api.put(`/worlds/${worldId}/entities/${entityId}`, data),
   deleteLocation: (worldId, locationId) => api.delete(`/worlds/${worldId}/locations/${locationId}`),
+  updateLocation: (worldId, locationId, data) => api.put(`/worlds/${worldId}/locations/${locationId}`, data),
 }
 
 // Stories API
