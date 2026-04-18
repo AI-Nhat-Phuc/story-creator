@@ -1,5 +1,6 @@
 """Story routes for the API backend."""
 
+import uuid as _uuid
 from datetime import datetime
 from flask import Blueprint, request, g
 from core.models.world import World
@@ -161,6 +162,15 @@ def create_story_bp(storage, story_generator, flush_data):
         story.owner_id = g.current_user.user_id
         story.visibility = visibility
         story.format = data['format']
+
+        # Auto-create an immutable author token on first save
+        _user_data = storage.load_user(g.current_user.user_id) or {}
+        _user_sig = _user_data.get('metadata', {}).get('signature') or g.current_user.username
+        story.author_signature = {
+            'token': str(_uuid.uuid4()),
+            'display': _user_sig,
+            'owner_id': g.current_user.user_id,
+        }
         if data['content']:
             story.content = data['content']
 
@@ -376,6 +386,13 @@ def create_story_bp(storage, story_generator, flush_data):
             story_data['chapter_number'] = data['chapter_number']
         if data.get('order') is not None:
             story_data['order'] = data['order']
+        if 'author_signature' in data:
+            existing = story_data.get('author_signature') or {}
+            story_data['author_signature'] = {
+                'token': existing.get('token') or str(_uuid.uuid4()),
+                'display': data['author_signature'].get('display', existing.get('display', '')),
+                'owner_id': existing.get('owner_id') or story_data.get('owner_id'),
+            }
 
         story_data['updated_at'] = datetime.now().isoformat()
         storage.save_story(story_data)

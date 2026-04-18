@@ -31,7 +31,7 @@ function ThemeSelector() {
   }
 
   return (
-    <div className="flex flex-col gap-2 p-2">
+    <div className="flex flex-col gap-2 p-4">
       {/* Theme mode buttons */}
       <div className="flex gap-1">
         {MODES.map(({ id, labelKey }) => (
@@ -46,7 +46,7 @@ function ThemeSelector() {
       </div>
 
       {/* Color swatches — style={{ backgroundColor }} is intentional (palette preview) */}
-      <div className="flex gap-1 justify-center">
+      <div className="flex gap-1 justify-start">
         {SWATCHES.map(({ key, labelKey }) => (
           <div
             key={key}
@@ -58,21 +58,19 @@ function ThemeSelector() {
       </div>
 
       {/* Custom primary color picker */}
-      {mode === THEME_MODES.CUSTOM && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs opacity-70">{t('theme.primary')}</span>
-          <input
-            type="color"
-            value={primaryColor}
-            onChange={(e) => setPrimaryColor(e.target.value)}
-            className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent"
-          />
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <span className="text-xs opacity-70">{t('theme.primary')}</span>
+        <input
+          type="color"
+          value={primaryColor}
+          onChange={(e) => setPrimaryColor(e.target.value)}
+          className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent"
+        />
+      </div>
 
       {/* Language toggle */}
       <div className="border-t border-base-300 pt-2 mt-1">
-        <p className="text-xs opacity-60 mb-1">{t('theme.language')}</p>
+        <p className="text-xs opacity-60 mb-2">{t('theme.language')}</p>
         <div className="flex gap-1">
           {LANGUAGES.map(({ code, labelKey }) => (
             <button

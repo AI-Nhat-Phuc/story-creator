@@ -88,7 +88,7 @@ test.describe('Story Editor', () => {
     await editor.type('Hi')
 
     // Blur using the title input (reliably focusable)
-    await page.locator('input').first().click()
+    await page.locator('input[placeholder*="tiêu đề"], input[placeholder*="Tiêu đề"], input[placeholder*="title"], input[placeholder*="Title"]').first().click()
     await expect(editor).not.toBeFocused({ timeout: 2000 })
 
     // Click in the editor area well below the text, but within the visible viewport.

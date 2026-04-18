@@ -122,6 +122,11 @@ class UpdateProfileSchema(Schema):
         allow_none=True
     )
 
+    signatures = fields.List(
+        fields.Str(validate=validate.Length(min=1, max=200)),
+        validate=validate.Length(max=20)
+    )
+
     @validates('username')
     def validate_username(self, value, **kwargs):
         """Validate username contains only allowed characters."""

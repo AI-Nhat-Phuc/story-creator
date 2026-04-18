@@ -55,6 +55,7 @@ class Story:
         self.owner_id = owner_id
         self.shared_with = shared_with or []
         self.format = format  # 'plain' | 'markdown'
+        self.author_signature = None  # {token: str, display: str, owner_id: str} — token is immutable after creation
         self.locations: List[str] = []  # Location IDs where story takes place
         self.entities: List[str] = []  # Entity IDs participating in story
         self.time_cones: List[str] = []  # Time cone IDs for temporal context
@@ -77,6 +78,7 @@ class Story:
             "owner_id": self.owner_id,
             "shared_with": self.shared_with,
             "format": self.format,
+            "author_signature": self.author_signature,
             "locations": self.locations,
             "entities": self.entities,
             "time_cones": self.time_cones,
@@ -105,6 +107,7 @@ class Story:
             shared_with=data.get("shared_with", []),
             format=data.get("format", "plain")
         )
+        story.author_signature = data.get("author_signature")
         story.locations = data.get("locations", [])
         story.entities = data.get("entities", [])
         story.time_cones = data.get("time_cones", [])

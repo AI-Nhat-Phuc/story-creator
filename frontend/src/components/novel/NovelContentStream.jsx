@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { marked } from 'marked'
 
 /**
  * Stream of chapter content blocks.
@@ -34,9 +35,10 @@ function NovelContentStream({ blocks }) {
                 </Link>
               </header>
             )}
-            <div className="prose prose-lg max-w-none whitespace-pre-wrap leading-relaxed">
-              {block.content}
-            </div>
+            <div
+              className="prose prose-lg max-w-none leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: marked.parse(block.content || '') }}
+            />
             {!block.is_complete && (
               <p className="opacity-60 italic mt-4">
                 {t('pages.novel.continued')}

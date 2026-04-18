@@ -14,15 +14,20 @@ function StoryEditorView({
   editorRef,
   gpt,
   activeFormats,
-  userSignature,
+  signatures,
+  showSignatureModal,
+  onOpenSignatureModal,
+  onCloseSignatureModal,
+  onSignaturesChange,
+  onInsertSignature,
   onTitleChange,
   onContentUpdate,
   onSelectionChange,
   onSave,
   onPublish,
   onBack,
-  onInsertSignature,
   initialFormat,
+  showToast,
 }) {
   const [panelOpen, setPanelOpen] = useState(false)
 
@@ -66,19 +71,22 @@ function StoryEditorView({
         <LeftPanel
           gpt={gpt}
           headings={headings}
-          userSignature={userSignature}
+          signatures={signatures}
+          showSignatureModal={showSignatureModal}
+          onOpenSignatureModal={onOpenSignatureModal}
+          onCloseSignatureModal={onCloseSignatureModal}
+          onSignaturesChange={onSignaturesChange}
           onInsertSignature={onInsertSignature}
           panelOpen={panelOpen}
           onClosePanel={() => setPanelOpen(false)}
+          showToast={showToast}
         />
 
         <main
           className="flex-1 overflow-y-auto cursor-text"
           onFocus={() => setPanelOpen(false)}
           onClick={(e) => {
-            // Focus editor when clicking outside the actual ProseMirror content area
             if (!e.target.closest('.ProseMirror')) {
-              // Direct DOM focus avoids TipTap's internal setTimeout delay
               const pm = e.currentTarget.querySelector('.ProseMirror')
               pm?.focus()
               editorRef.current?.commands.focus('end')

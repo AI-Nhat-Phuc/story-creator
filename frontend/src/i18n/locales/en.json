@@ -285,6 +285,7 @@
       "signatureExists": "Signature already in document",
       "titlePlaceholder": "Story title…",
       "titleRequired": "Please enter a title",
+      "titleNoTitle": "(no title)",
       "back": "Back",
       "publish": "Publish",
       "save": "Save",
@@ -292,7 +293,25 @@
       "statusDraft": "Draft",
       "statusSaving": "Saving…",
       "statusSaved": "Saved",
-      "statusError": "Error"
+      "statusError": "Error",
+      "unsavedTitle": "Unsaved changes",
+      "unsavedMessage": "Would you like to save your draft or discard all changes?",
+      "saveDraft": "Save draft",
+      "discard": "Discard",
+      "titleSuggestTitle": "Save draft",
+      "titleSuggestMessage": "Give your story a title",
+      "titleSuggestPlaceholder": "Enter a title…",
+      "titleSuggestSkip": "Save without title"
+    },
+    "signatureModal": {
+      "title": "Signature",
+      "empty": "No signatures yet",
+      "manage": "Manage signatures",
+      "noSignature": "No signature",
+      "insert": "Insert",
+      "add": "Add",
+      "placeholder": "Author name or signature…",
+      "saveError": "Failed to save signatures"
     },
     "storyPrint": {
       "notFound": "Story not found.",
