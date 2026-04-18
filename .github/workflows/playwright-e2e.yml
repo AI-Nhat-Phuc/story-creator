@@ -18,8 +18,12 @@ permissions:
 jobs:
   e2e:
     name: Run E2E tests
-    # Only run when Vercel reports a successful deployment
-    if: github.event.deployment_status.state == 'success'
+    # Only run on successful preview deployments — never on Production to avoid
+    # polluting real user data. Vercel sets environment to "Production" for the
+    # main branch and "Preview" for PR / branch deployments.
+    if: >
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment != 'Production'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
