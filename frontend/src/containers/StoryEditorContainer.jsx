@@ -8,7 +8,6 @@ import { useAuth } from '../contexts/AuthContext'
 import StoryEditorView from '../components/storyEditor/StoryEditorView'
 import UnsavedChangesModal from '../components/storyEditor/UnsavedChangesModal'
 import TitleSuggestionModal from '../components/storyEditor/TitleSuggestionModal'
-import SignatureModal from '../components/storyEditor/SignatureModal'
 import TurndownService from 'turndown'
 import { marked } from 'marked'
 
@@ -90,7 +89,6 @@ function StoryEditorContainer({ showToast }) {
 
   // Ctrl+S / Cmd+S keyboard shortcut — use ref so the handler is always current
   const handleSaveRef = useRef(null)
-  useEffect(() => { handleSaveRef.current = handleSave }, [handleSave])
   useEffect(() => {
     const onKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -259,6 +257,7 @@ function StoryEditorContainer({ showToast }) {
     }
     doSave()
   }, [doSave])
+  useEffect(() => { handleSaveRef.current = handleSave }, [handleSave])
 
   const handleTitleModalConfirm = useCallback((chosenTitle) => {
     setShowTitleModal(false)
