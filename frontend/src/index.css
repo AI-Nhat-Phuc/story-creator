@@ -51,6 +51,10 @@ input, textarea, select {
   }
 }
 
+.badge {
+  padding-bottom: 0.5rem;
+}
+
 @media print {
   nav, .navbar, .btn, .modal, .modal-backdrop, .toast,
   .dropdown, .tabs, .badge, [role="button"] { display: none !important; }

@@ -129,16 +129,19 @@ jobs:
               const raw = fs.readFileSync('frontend/test-results/results.json', 'utf8')
               const report = JSON.parse(raw)
               const failures = []
+              const BAD_STATUSES = new Set(['failed', 'timedOut', 'interrupted'])
               for (const suite of (report.suites || [])) {
                 for (const spec of (suite.specs || [])) {
-                  const failed = (spec.tests || []).flatMap(t => t.results || []).filter(r => r.status === 'failed')
-                  if (!failed.length) continue
-                  const err = failed[0].error?.message?.split('\n')[0] || ''
-                  failures.push(`| \`${spec.title}\` | ${err.slice(0, 120)} |`)
+                  const bad = (spec.tests || []).flatMap(t => t.results || []).filter(r => BAD_STATUSES.has(r.status))
+                  if (!bad.length) continue
+                  const worst = bad[0]
+                  const label = worst.status === 'timedOut' ? '⏱ timeout' : '❌ failed'
+                  const err = worst.error?.message?.split('\n')[0] || worst.status
+                  failures.push(`| \`${spec.title}\` | ${label} | ${err.slice(0, 100)} |`)
                 }
               }
               failedLines = failures.length
-                ? `| Test | Error |\n|------|-------|\n${failures.join('\n')}`
+                ? `| Test | Status | Error |\n|------|--------|-------|\n${failures.join('\n')}`
                 : '_No structured failures found — see logs._'
             } catch (e) {
               failedLines = '_Could not parse `test-results/results.json`._'

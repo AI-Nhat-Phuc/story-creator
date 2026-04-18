@@ -179,7 +179,7 @@ function WorldDetailView({
                 )}
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-2 mb-2">
               <Tag color="primary">{world.world_type}</Tag>
               {world.visibility && (
                 <Tag color={world.visibility === 'public' ? 'success' : world.visibility === 'draft' ? 'warning' : 'ghost'}>
@@ -187,6 +187,12 @@ function WorldDetailView({
                 </Tag>
               )}
             </div>
+            {world.owner_username && (
+              <p className="flex items-center gap-1 text-sm opacity-60 mb-3">
+                <UserIcon className="w-4 h-4" />
+                <span>Tác giả: <span className="font-medium">{world.owner_username}</span></span>
+              </p>
+            )}
             <p className="text-lg">{world.description}</p>
           </>
         )}

@@ -6,6 +6,7 @@ import {
   GlobeAltIcon,
   ClockIcon,
   DocumentTextIcon,
+  UserIcon,
 } from '@heroicons/react/24/outline'
 import { marked } from 'marked'
 import Modal from '../Modal'
@@ -152,8 +153,17 @@ function StoriesView({
 
                 {/* ── Card footer ─────────────────────────────────── */}
                 <div className="px-4 py-2.5 border-t border-base-200 flex items-center gap-1.5 text-base-content/40 text-xs">
-                  <DocumentTextIcon className="w-3.5 h-3.5 shrink-0" />
-                  <span>Click để đọc thêm</span>
+                  {story.author_signature?.display ? (
+                    <>
+                      <UserIcon className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{story.author_signature.display}</span>
+                    </>
+                  ) : (
+                    <>
+                      <DocumentTextIcon className="w-3.5 h-3.5 shrink-0" />
+                      <span>Click để đọc thêm</span>
+                    </>
+                  )}
                   {story.visibility && (
                     <span className={`ml-auto badge badge-xs ${story.visibility === 'public' ? 'badge-success' : story.visibility === 'draft' ? 'badge-warning' : 'badge-ghost'}`}>
                       {t(`common.${story.visibility}`, story.visibility)}

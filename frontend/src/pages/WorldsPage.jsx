@@ -296,6 +296,12 @@ function WorldsPage({ showToast }) {
                   <BookOpenIcon className="w-3.5 h-3.5" />
                   {t('common.storiesCount', { count: world.stories?.length ?? 0 })}
                 </span>
+                {world.owner_username && (
+                  <span className="flex items-center gap-1 opacity-60 text-xs">
+                    <UserIcon className="w-3.5 h-3.5" />
+                    {world.owner_username}
+                  </span>
+                )}
               </div>
               <p className="line-clamp-3">{world.description}</p>
               <div className="justify-end mt-4 card-actions">
