@@ -171,21 +171,29 @@ function WorldTimeline({
             </div>
             <div className={`space-y-3 min-w-0 ${cardPos}`}>
               <div
-                className={`bg-base-100 shadow-lg p-4 timeline-box transition-transform max-w-full overflow-hidden ${isDragging ? 'scale-95' : ''}`}
+                className={`group bg-base-100 shadow-lg p-4 timeline-box transition-transform max-w-full overflow-hidden ${isDragging ? 'scale-95 opacity-50' : ''} ${canReorder ? 'cursor-grab active:cursor-grabbing' : ''}`}
                 draggable={canReorder}
                 onDragStart={canReorder ? handleDragStart(groupIndex) : undefined}
                 onDragEnd={canReorder ? handleDragEnd : undefined}
               >
+                {/* Drag handle strip — only shown when user can reorder */}
+                {canReorder && (
+                  <div
+                    className="flex items-center justify-center gap-1 py-1.5 px-4 -mx-4 -mt-4 mb-3 bg-base-200 group-hover:bg-base-300 border-b border-base-300 transition-colors"
+                    title={t('pages.worldTimeline.dragToReorder')}
+                  >
+                    {/* 3×2 grip dots */}
+                    <svg width="20" height="10" viewBox="0 0 20 10" className="text-base-content/40 group-hover:text-base-content/70 transition-colors" fill="currentColor">
+                      <circle cx="4"  cy="2.5" r="1.5"/><circle cx="10" cy="2.5" r="1.5"/><circle cx="16" cy="2.5" r="1.5"/>
+                      <circle cx="4"  cy="7.5" r="1.5"/><circle cx="10" cy="7.5" r="1.5"/><circle cx="16" cy="7.5" r="1.5"/>
+                    </svg>
+                    <span className="text-xs text-base-content/40 group-hover:text-base-content/60 transition-colors select-none">
+                      {t('pages.worldTimeline.dragToReorder')}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    {canReorder && (
-                      <span
-                        className="cursor-grab active:cursor-grabbing text-base-content/40 shrink-0"
-                        title={t('pages.worldTimeline.dragToReorder')}
-                      >
-                        <Bars3Icon className="w-4 h-4" />
-                      </span>
-                    )}
                     <Link to={`/stories/${story.story_id}`} className="link link-hover min-w-0">
                       <h3 className="font-bold text-xl truncate">{story.title}</h3>
                     </Link>
