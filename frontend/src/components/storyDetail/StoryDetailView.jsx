@@ -195,6 +195,11 @@ function StoryDetailView({
               <Tag color="neutral" icon={ClockIcon}>
                 {formattedWorldTime}
               </Tag>
+              {story.author_signature?.display && (
+                <Tag color="ghost" icon={UserIcon}>
+                  {story.author_signature.display}
+                </Tag>
+              )}
               {story.visibility && (
                 <Tag color={story.visibility === 'public' ? 'success' : story.visibility === 'draft' ? 'warning' : 'ghost'}>
                   {t(`common.${story.visibility}`, story.visibility)}

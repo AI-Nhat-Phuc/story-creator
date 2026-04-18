@@ -518,6 +518,17 @@ class MongoStorage:
         doc = self.users.find_one({'user_id': user_id})
         return self._clean_doc(doc)
 
+    def load_users_by_ids(self, user_ids) -> Dict[str, str]:
+        """Return {user_id: username} for a batch of user IDs."""
+        if not user_ids:
+            return {}
+        self._connect()
+        docs = list(self.users.find(
+            {'user_id': {'$in': list(user_ids)}},
+            {'_id': 0, 'user_id': 1, 'username': 1}
+        ))
+        return {d['user_id']: d.get('username', '') for d in docs}
+
     def find_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
         self._connect()
         doc = self.users.find_one({'username': username})

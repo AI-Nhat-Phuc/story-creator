@@ -59,6 +59,7 @@ function NovelView({
         title={novel?.title || ''}
         description={novel?.description || ''}
         totalWordCount={totalWordCount}
+        authorName={novel?.owner_username || ''}
       />
 
       {worldDescription && (

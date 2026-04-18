@@ -67,6 +67,11 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         items, total = storage.list_worlds_summary(
             user_id=user_id, page=page, per_page=per_page,
         )
+        if items:
+            owner_ids = {item['owner_id'] for item in items if item.get('owner_id')}
+            username_map = storage.load_users_by_ids(owner_ids)
+            for item in items:
+                item['owner_username'] = username_map.get(item.get('owner_id', ''), '')
         return paginated_response(items, page, per_page, total)
 
     @world_bp.route('/api/worlds', methods=['POST'])
@@ -190,6 +195,10 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         if not PermissionService.can_view(user_id, world_data):
             raise PermissionDeniedError('view', 'world')
 
+        world_data = dict(world_data)
+        if world_data.get('owner_id'):
+            username_map = storage.load_users_by_ids({world_data['owner_id']})
+            world_data['owner_username'] = username_map.get(world_data['owner_id'], '')
         return success_response(world_data)
 
     @world_bp.route('/api/worlds/<world_id>', methods=['PUT'])
@@ -842,13 +851,19 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                 'updated_at': story.get('updated_at')
             })
 
+        owner_id = world_data.get('owner_id')
+        owner_username = ''
+        if owner_id:
+            username_map = storage.load_users_by_ids({owner_id})
+            owner_username = username_map.get(owner_id, '')
         return success_response({
             'title': novel.get('title', world_data.get('name')),
             'description': novel.get('description', ''),
             'world_description': world_data.get('description', ''),
             'chapters': chapters,
             'total_word_count': total_word_count,
-            'owner_id': world_data.get('owner_id'),
+            'owner_id': owner_id,
+            'owner_username': owner_username,
             'co_authors': world_data.get('co_authors', [])
         })
 
