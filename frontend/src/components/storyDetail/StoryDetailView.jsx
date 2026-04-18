@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'
+import Modal from '../Modal'
 import Tag from '../Tag'
 import { marked } from 'marked'
 import {
@@ -12,7 +13,6 @@ import {
   ClockIcon,
   ClipboardDocumentListIcon,
   PencilIcon,
-  XMarkIcon,
   TrashIcon,
   SparklesIcon,
   BookOpenIcon,
@@ -353,69 +353,62 @@ function StoryDetailView({
         </button>
       )}
 
-      {/* Mobile: Analysis bottom sheet modal */}
-      {story.content && showAnalysisPanel && (
-        <div
-          className="sm:hidden modal modal-open modal-bottom-sheet"
-          onClick={() => setShowAnalysisPanel(false)}
-        >
-          <div className="modal-box" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="flex items-center gap-2 font-semibold">
-                <SparklesIcon className="w-4 h-4 text-warning" />
-                Phân tích AI
-              </h3>
-              <button className="btn btn-ghost btn-sm btn-circle" onClick={() => setShowAnalysisPanel(false)}>
-                <XMarkIcon className="w-4 h-4" />
-              </button>
+      {/* Mobile: Analysis bottom sheet — uses custom Modal (no DaisyUI modal-open scroll lock) */}
+      <Modal
+        open={!!(story.content && showAnalysisPanel)}
+        onClose={() => setShowAnalysisPanel(false)}
+        title={
+          <span className="flex items-center gap-2">
+            <SparklesIcon className="w-4 h-4 text-warning" />
+            Phân tích AI
+          </span>
+        }
+        className="sm:hidden"
+      >
+        <div className="space-y-4">
+          {!analyzedEntities && (
+            <>
+              {!hasLinks && (
+                <GptButton onClick={onAnalyzeStory} loading={gptAnalyzing} loadingText="Đang phân tích..." variant="primary" size="sm">
+                  Phân tích nhân vật & địa điểm
+                </GptButton>
+              )}
+              {hasLinks && (
+                <GptButton onClick={onReanalyzeStory} loading={gptAnalyzing} loadingText="Đang phân tích lại..." variant="warning" size="sm">
+                  Phân tích lại
+                </GptButton>
+              )}
+            </>
+          )}
+          {linkedCharacters.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
+                <UserIcon className="w-3.5 h-3.5 text-primary" /> Nhân vật
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {linkedCharacters.map((char) => (
+                  <Tag key={char.entity_id} color="primary" outline size="sm" icon={UserIcon}>{char.name}</Tag>
+                ))}
+              </div>
             </div>
-            <div className="space-y-4">
-              {!analyzedEntities && (
-                <>
-                  {!hasLinks && (
-                    <GptButton onClick={onAnalyzeStory} loading={gptAnalyzing} loadingText="Đang phân tích..." variant="primary" size="sm">
-                      Phân tích nhân vật & địa điểm
-                    </GptButton>
-                  )}
-                  {hasLinks && (
-                    <GptButton onClick={onReanalyzeStory} loading={gptAnalyzing} loadingText="Đang phân tích lại..." variant="warning" size="sm">
-                      Phân tích lại
-                    </GptButton>
-                  )}
-                </>
-              )}
-              {linkedCharacters.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
-                    <UserIcon className="w-3.5 h-3.5 text-primary" /> Nhân vật
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {linkedCharacters.map((char) => (
-                      <Tag key={char.entity_id} color="primary" outline size="sm" icon={UserIcon}>{char.name}</Tag>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {linkedLocations.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
-                    <MapPinIcon className="w-3.5 h-3.5 text-secondary" /> Địa điểm
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {linkedLocations.map((loc) => (
-                      <Tag key={loc.location_id} color="secondary" outline size="sm" icon={MapPinIcon}>{loc.name}</Tag>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {!hasLinks && !gptAnalyzing && !analyzedEntities && (
-                <p className="text-base-content/40 text-sm italic">Chưa có liên kết nhân vật hay địa điểm nào.</p>
-              )}
+          )}
+          {linkedLocations.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1 mb-2 text-xs font-semibold text-base-content/60 uppercase tracking-wide">
+                <MapPinIcon className="w-3.5 h-3.5 text-secondary" /> Địa điểm
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {linkedLocations.map((loc) => (
+                  <Tag key={loc.location_id} color="secondary" outline size="sm" icon={MapPinIcon}>{loc.name}</Tag>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="modal-backdrop" onClick={() => setShowAnalysisPanel(false)}></div>
+          )}
+          {!hasLinks && !gptAnalyzing && !analyzedEntities && (
+            <p className="text-base-content/40 text-sm italic">Chưa có liên kết nhân vật hay địa điểm nào.</p>
+          )}
         </div>
-      )}
+      </Modal>
 
       {/* GPT Analyzed Entities Modal */}
       <AnalyzedEntitiesEditor
