@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { SparklesIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { SparklesIcon, EyeIcon, CheckIcon } from '@heroicons/react/24/outline'
 import LoadingSpinner from '../LoadingSpinner'
 
 function GptToolsPanel({
@@ -70,20 +70,21 @@ function GptToolsPanel({
           {suggestions.map((s, i) => (
             <div key={i} className="bg-base-200 rounded p-2 text-sm space-y-1">
               <p className="text-base-content line-clamp-3">{s}</p>
-              <div className="flex gap-1">
+              <div className="flex gap-1 justify-end">
                 <button
                   onMouseDown={(e) => { e.preventDefault(); setPreviewIdx(i) }}
-                  className="btn btn-xs btn-outline flex-1 gap-1"
+                  className="btn btn-xs btn-ghost gap-1"
                   title="Xem trước"
                 >
-                  <EyeIcon className="w-3 h-3" />
-                  <span className="hidden sm:inline">Xem trước</span>
+                  <EyeIcon className="w-3.5 h-3.5" />
+                  <span>Xem trước</span>
                 </button>
                 <button
                   onMouseDown={(e) => { e.preventDefault(); handleApply(s) }}
-                  className="btn btn-xs btn-primary flex-1"
+                  className="btn btn-xs btn-primary btn-square"
+                  title="Áp dụng"
                 >
-                  Áp dụng
+                  <CheckIcon className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
