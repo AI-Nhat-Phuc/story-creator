@@ -57,8 +57,12 @@ function GptButton({
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled || loading}
-      className={`btn gap-2 transition-all duration-200 ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+      // Use disabled only for the explicit disabled prop — NOT for loading.
+      // DaisyUI resets background + text colour on [disabled], which kills the
+      // gradient and makes the loading text invisible (low contrast bug).
+      // For loading we use pointer-events-none + opacity instead.
+      disabled={disabled}
+      className={`btn gap-2 transition-all duration-200 ${sizeStyles[size]} ${variantStyles[variant]} ${loading ? 'pointer-events-none opacity-75 cursor-wait' : ''} ${className}`}
       {...props}
     >
       {loading ? (
