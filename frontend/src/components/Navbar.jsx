@@ -111,7 +111,7 @@ function Navbar() {
           <label tabIndex={0} className="btn btn-ghost btn-circle">
             <SwatchIcon className="w-5 h-5" />
           </label>
-          <div tabIndex={0} className="dropdown-content bg-base-100 shadow rounded-box z-50 mt-3 w-56 text-base-content">
+          <div tabIndex={0} className="dropdown-content bg-base-100 shadow rounded-box z-50 mt-3 w-64 text-base-content">
             <ThemeSelector />
           </div>
         </div>
