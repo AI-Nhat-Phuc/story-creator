@@ -18,14 +18,14 @@ function EditorHeader({
   const titleRef = useRef(null)
   const [titleError, setTitleError] = useState(false)
 
-  const STATUS_BADGE = {
-    new:    { cls: 'badge-ghost',   label: t('pages.storyEditor.statusNew')    },
-    idle:   { cls: 'badge-warning', label: t('pages.storyEditor.statusDraft')  },
-    saving: { cls: '',              label: t('pages.storyEditor.statusSaving') },
-    saved:  { cls: '',              label: t('pages.storyEditor.statusSaved')  },
-    error:  { cls: 'badge-error',   label: t('pages.storyEditor.statusError')  },
+  const STATUS_TEXT = {
+    new:    { cls: 'text-base-content/40',          label: t('pages.storyEditor.statusNew')    },
+    idle:   { cls: 'text-warning font-medium',      label: t('pages.storyEditor.statusDraft')  },
+    saving: { cls: 'text-base-content/50 italic',   label: t('pages.storyEditor.statusSaving') },
+    saved:  { cls: 'text-base-content/50',          label: t('pages.storyEditor.statusSaved')  },
+    error:  { cls: 'text-error font-medium',        label: t('pages.storyEditor.statusError')  },
   }
-  const badge = STATUS_BADGE[saveStatus] || STATUS_BADGE.idle
+  const badge = STATUS_TEXT[saveStatus] || STATUS_TEXT.idle
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -70,10 +70,7 @@ function EditorHeader({
       </div>
 
       <div className="flex items-center gap-1 shrink-0">
-        {saveStatus === 'saved'
-          ? <span className="text-xs text-base-content/50 shrink-0">{badge.label}</span>
-          : <span className={`badge ${badge.cls} badge-sm shrink-0`}>{badge.label}</span>
-        }
+        <span className={`text-xs shrink-0 ${badge.cls}`}>{badge.label}</span>
 
         {wordCount > 0 && (
           <span className="text-xs text-base-content/50 shrink-0 hidden sm:inline">
