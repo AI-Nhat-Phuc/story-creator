@@ -16,8 +16,8 @@ describe('LIGHT_PALETTE (B-3)', () => {
     expect(keys).toEqual(expect.arrayContaining(['primary', 'secondary', 'accent', 'base100', 'base200']))
   })
 
-  it('primary is #4A90D9', () => {
-    expect(LIGHT_PALETTE.primary.toLowerCase()).toBe('#4a90d9')
+  it('primary is #6366F1', () => {
+    expect(LIGHT_PALETTE.primary.toLowerCase()).toBe('#6366f1')
   })
 
   it('base-100 is #FFFFFF (white)', () => {

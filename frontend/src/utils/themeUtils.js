@@ -7,8 +7,8 @@ export const THEME_MODES = {
 }
 
 export const LIGHT_PALETTE = {
-  primary:   '#4A90D9',
-  secondary: '#6BA3BE',
+  primary:   '#6366F1',
+  secondary: '#818CF8',
   accent:    '#F5A623',
   base100:   '#FFFFFF',
   base200:   '#F2F4F6',

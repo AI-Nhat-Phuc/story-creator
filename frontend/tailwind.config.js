@@ -20,8 +20,8 @@ export default {
     themes: [
       {
         "sc-light": {
-          "primary":   "#4A90D9",
-          "secondary": "#6BA3BE",
+          "primary":   "#6366F1",
+          "secondary": "#818CF8",
           "accent":    "#F5A623",
           "base-100":  "#FFFFFF",
           "base-200":  "#F2F4F6",
