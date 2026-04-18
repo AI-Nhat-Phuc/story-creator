@@ -349,7 +349,8 @@
       "linkSuccessWithCount": "Đã liên kết và tạo mới {{chars}} nhân vật, {{locs}} địa điểm!",
       "linkError": "Lỗi liên kết",
       "readMore": "Xem thêm",
-      "openReader": "Mở chế độ đọc"
+      "openReader": "Mở chế độ đọc",
+      "viewFullInNovel": "Xem đầy đủ trong phần Novel →"
     },
     "storyDetailView": {
       "detailInfo": "Thông tin chi tiết",
@@ -385,7 +386,8 @@
       "deleteStory": "Xóa câu chuyện",
       "linkedWith": "Liên kết với:",
       "moreLocations": "+{{count}} địa điểm",
-      "dragToReorder": "Kéo để sắp xếp lại"
+      "dragToReorder": "Kéo để sắp xếp lại",
+      "viewFullInNovel": "Xem đầy đủ trong Novel →"
     }
   }
 }

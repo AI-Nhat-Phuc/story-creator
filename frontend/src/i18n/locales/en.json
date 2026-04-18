@@ -348,7 +348,8 @@
       "linkSuccessWithCount": "Linked and created {{chars}} characters, {{locs}} locations!",
       "linkError": "Link error",
       "readMore": "Read more",
-      "openReader": "Open reader"
+      "openReader": "Open reader",
+      "viewFullInNovel": "Read full story in Novel →"
     },
     "storyDetailView": {
       "detailInfo": "Details",
@@ -384,7 +385,8 @@
       "deleteStory": "Delete story",
       "linkedWith": "Linked with:",
       "moreLocations": "+{{count}} locations",
-      "dragToReorder": "Drag to reorder"
+      "dragToReorder": "Drag to reorder",
+      "viewFullInNovel": "Read full content in Novel →"
     }
   }
 }

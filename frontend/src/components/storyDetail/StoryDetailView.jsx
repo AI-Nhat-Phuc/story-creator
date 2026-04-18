@@ -45,15 +45,6 @@ function StoryDetailView({
   const highlightRef = useRef(null)
   const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
 
-  // When highlightPosition targets a paragraph past the preview cut-off, or
-  // user clicks "Read more", expand to show full content inline.
-  const [expanded, setExpanded] = useState(false)
-
-  // Reset expansion when navigating to a different story.
-  useEffect(() => {
-    setExpanded(false)
-  }, [story?.story_id])
-
   useEffect(() => {
     if (highlightPosition >= 0 && highlightRef.current) {
       setTimeout(() => {
@@ -64,7 +55,7 @@ function StoryDetailView({
 
   const allParagraphs = story.content ? story.content.split('\n') : []
   const isLong = allParagraphs.length > PREVIEW_LINE_COUNT
-  const showTruncated = isLong && !expanded && highlightPosition < 0
+  const showTruncated = isLong && highlightPosition < 0
 
   const renderStoryContent = () => {
     if (!story.content) return null
@@ -216,16 +207,15 @@ function StoryDetailView({
               )}
             </div>
             {renderStoryContent()}
-            {isLong && !expanded && (
-              <div className="mt-4">
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm gap-1"
-                  onClick={() => setExpanded(true)}
+            {isLong && highlightPosition < 0 && world && (
+              <p className="mt-3 text-sm text-base-content/50 italic">
+                <Link
+                  to={`/worlds/${world.world_id}/novel`}
+                  className="link link-hover text-primary/70"
                 >
-                  {t('pages.storyDetail.readMore')}
-                </button>
-              </div>
+                  {t('pages.storyDetail.viewFullInNovel')}
+                </Link>
+              </p>
             )}
             {/* Mobile: Export PDF at bottom of content */}
             <a

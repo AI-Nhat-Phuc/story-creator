@@ -209,10 +209,14 @@ function WorldTimeline({
                   )}
                 </div>
                 {(story.content_preview || story.content) && (
-                  <p className="text-sm text-base-content/60 mt-1 line-clamp-2">
-                    {story.content_preview
-                      ? story.content_preview.slice(0, 120)
-                      : story.content.replace(/<[^>]*>/g, '').slice(0, 120)}
+                  <p className="text-sm text-base-content/50 italic mt-1">
+                    <Link
+                      to={`/worlds/${story.world_id}/novel`}
+                      className="link link-hover text-primary/60"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      {t('pages.worldTimeline.viewFullInNovel')}
+                    </Link>
                   </p>
                 )}
                 <div className="flex items-center gap-2 mt-1 text-xs text-base-content/40">
