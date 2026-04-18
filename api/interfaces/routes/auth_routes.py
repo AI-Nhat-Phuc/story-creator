@@ -269,6 +269,8 @@ def create_auth_bp(storage, auth_service, limiter=None):
             user_data['email'] = data['email']
         if 'signature' in data:
             user_data.setdefault('metadata', {})['signature'] = data['signature']
+        if 'signatures' in data:
+            user_data.setdefault('metadata', {})['signatures'] = data['signatures']
 
         storage.save_user(user_data)
         user_data.pop('password_hash', None)

@@ -6,11 +6,19 @@ import { usePageTitle } from '../hooks/usePageTitle'
 import { storiesAPI, gptAPI, authAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import StoryEditorView from '../components/storyEditor/StoryEditorView'
+import UnsavedChangesModal from '../components/storyEditor/UnsavedChangesModal'
+import TitleSuggestionModal from '../components/storyEditor/TitleSuggestionModal'
+import SignatureModal from '../components/storyEditor/SignatureModal'
 import TurndownService from 'turndown'
 import { marked } from 'marked'
 
 const turndownSvc = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-' })
 const toMarkdown = (html) => turndownSvc.turndown(html || '')
+
+const extractTitleSuggestion = (html) => {
+  const text = (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  return text.substring(0, 80).trim()
+}
 
 function StoryEditorContainer({ showToast }) {
   const { t } = useTranslation()
@@ -31,7 +39,12 @@ function StoryEditorContainer({ showToast }) {
   const [initialFormat, setInitialFormat] = useState('html')
   const [gpt, setGpt] = useState({ isLoading: false, suggestions: [], selectionLength: 0 })
   const [activeFormats, setActiveFormats] = useState({})
-  const [userSignature, setUserSignature] = useState('')
+  const [signatures, setSignatures] = useState([])
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false)
+  const [pendingNavigate, setPendingNavigate] = useState(null)
+  const [showTitleModal, setShowTitleModal] = useState(false)
+  const [titleSuggestion, setTitleSuggestion] = useState('')
+  const [showSignatureModal, setShowSignatureModal] = useState(false)
   const editTitle = usePageTitle('storyEdit', editor.title || null)
 
   // Refs — mirror mutable values so doSave is always reading current data (no stale closures)
@@ -44,9 +57,6 @@ function StoryEditorContainer({ showToast }) {
   const gptSelectionRef = useRef(null)
 
   useEffect(() => {
-    // Wait for token verification before deciding user is unauthenticated.
-    // Without this guard, a direct page load (full URL navigation) triggers a
-    // redirect to /login before verifyToken resolves — visible on Vercel cold starts.
     if (!authLoading && user === null) {
       navigate('/login')
     }
@@ -55,14 +65,41 @@ function StoryEditorContainer({ showToast }) {
   useEffect(() => {
     if (!user) return
     const storyLoad = storyId ? loadStory() : checkForDraft()
-    Promise.all([storyLoad, loadUserSignature()])
+    Promise.all([storyLoad, loadUserSignatures()])
   }, [user, storyId])
 
+  // Flush on unmount
   useEffect(() => {
     return () => {
       clearTimeout(saveTimerRef.current)
       doSave()
     }
+  }, [])
+
+  // Warn on browser close/refresh when dirty
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isDirty()) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
+
+  // Ctrl+S / Cmd+S keyboard shortcut — use ref so the handler is always current
+  const handleSaveRef = useRef(null)
+  useEffect(() => { handleSaveRef.current = handleSave }, [handleSave])
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        handleSaveRef.current?.()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
   const loadStory = async () => {
@@ -71,9 +108,7 @@ function StoryEditorContainer({ showToast }) {
       const data = res.data
       const title = data.title || ''
       const rawContent = data.content || ''
-      // Always load into the editor as HTML; convert markdown→HTML when needed
       const editorContent = data.format === 'markdown' ? marked.parse(rawContent) : rawContent
-      // lastSavedRef tracks markdown so dirty-check works after round-trip
       const markdownBaseline = data.format === 'markdown' ? rawContent : toMarkdown(rawContent)
       storyIdRef.current = storyId
       setInitialFormat('html')
@@ -95,14 +130,29 @@ function StoryEditorContainer({ showToast }) {
     setEditor(prev => ({ ...prev, isLoading: false }))
   }
 
-  const loadUserSignature = async () => {
+  const loadUserSignatures = async () => {
     try {
       const res = await authAPI.getCurrentUser()
-      setUserSignature(res.data?.signature || '')
+      const meta = res.data?.metadata || {}
+      // Support both new `signatures` array and legacy single `signature`
+      const sigList = Array.isArray(meta.signatures) && meta.signatures.length > 0
+        ? meta.signatures
+        : (meta.signature ? [meta.signature] : [])
+      setSignatures(sigList)
     } catch {
       // not critical
     }
   }
+
+  const isDirty = useCallback(() => {
+    const { title, content } = editorDataRef.current
+    const markdownContent = toMarkdown(content)
+    const last = lastSavedRef.current
+    if (!storyIdRef.current) {
+      return title.trim() !== '' || markdownContent.trim() !== ''
+    }
+    return title !== last.title || markdownContent !== last.content
+  }, [])
 
   const wordCount = useMemo(() => {
     const raw = editorRef.current
@@ -122,30 +172,31 @@ function StoryEditorContainer({ showToast }) {
       .map(n => ({ level: n.attrs?.level ?? 1, text: n.content?.[0]?.text ?? '' }))
   }, [editor.content])
 
-  // doSave reads from refs — stable callback, no stale closure issues
   const doSave = useCallback(async () => {
-    const { title, content } = editorDataRef.current  // HTML from editor
+    const { title, content } = editorDataRef.current
     const markdownContent = toMarkdown(content)
-    const last = lastSavedRef.current  // markdown baseline
+    const last = lastSavedRef.current
     if (title === last.title && markdownContent === last.content) return
-    if (!storyIdRef.current && !title.trim()) return
+
+    // Allow saving without title — fallback to "(no title)"
+    const effectiveTitle = title.trim() || t('pages.storyEditor.titleNoTitle')
 
     setEditor(prev => ({ ...prev, saveStatus: 'saving' }))
     try {
       if (!storyIdRef.current) {
         const res = await storiesAPI.create({
           world_id: worldIdRef.current,
-          title: title.trim(),
+          title: effectiveTitle,
           content: markdownContent,
           visibility: 'draft',
           format: 'markdown',
         })
         storyIdRef.current = res.data.story_id
-        lastSavedRef.current = { title, content: markdownContent }
+        lastSavedRef.current = { title: effectiveTitle, content: markdownContent }
         setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
       } else {
-        await storiesAPI.patch(storyIdRef.current, { title, content: markdownContent, format: 'markdown' })
-        lastSavedRef.current = { title, content: markdownContent }
+        await storiesAPI.patch(storyIdRef.current, { title: effectiveTitle, content: markdownContent, format: 'markdown' })
+        lastSavedRef.current = { title: effectiveTitle, content: markdownContent }
         setEditor(prev => ({ ...prev, saveStatus: 'saved' }))
       }
     } catch (err) {
@@ -197,10 +248,62 @@ function StoryEditorContainer({ showToast }) {
     setActiveFormats(getActiveFormats(editorInstance))
   }, [getActiveFormats])
 
+  // Manual save — shows title modal if title is empty but content exists
   const handleSave = useCallback(() => {
     clearTimeout(saveTimerRef.current)
+    const { title, content } = editorDataRef.current
+    if (!title.trim() && (content || '').replace(/<[^>]+>/g, '').trim()) {
+      setTitleSuggestion(extractTitleSuggestion(content))
+      setShowTitleModal(true)
+      return
+    }
     doSave()
   }, [doSave])
+
+  const handleTitleModalConfirm = useCallback((chosenTitle) => {
+    setShowTitleModal(false)
+    editorDataRef.current = { ...editorDataRef.current, title: chosenTitle }
+    setEditor(prev => ({ ...prev, title: chosenTitle }))
+    doSave()
+  }, [doSave])
+
+  const handleTitleModalSkip = useCallback(() => {
+    setShowTitleModal(false)
+    doSave()
+  }, [doSave])
+
+  const doNavigateBack = useCallback(() => {
+    navigate(storyIdRef.current
+      ? `/stories/${storyIdRef.current}`
+      : worldId ? `/worlds/${worldId}` : '/stories')
+  }, [navigate, worldId])
+
+  const handleBack = useCallback(() => {
+    if (isDirty()) {
+      setPendingNavigate(() => doNavigateBack)
+      setShowUnsavedModal(true)
+      return
+    }
+    doNavigateBack()
+  }, [isDirty, doNavigateBack])
+
+  const handleUnsavedSave = useCallback(async () => {
+    setShowUnsavedModal(false)
+    await doSave()
+    pendingNavigate?.()
+    setPendingNavigate(null)
+  }, [doSave, pendingNavigate])
+
+  const handleUnsavedDiscard = useCallback(() => {
+    setShowUnsavedModal(false)
+    pendingNavigate?.()
+    setPendingNavigate(null)
+  }, [pendingNavigate])
+
+  const handleUnsavedCancel = useCallback(() => {
+    setShowUnsavedModal(false)
+    setPendingNavigate(null)
+  }, [])
 
   const handlePublish = useCallback(async () => {
     if (!storyIdRef.current) await doSave()
@@ -216,12 +319,6 @@ function StoryEditorContainer({ showToast }) {
       showToast(t('pages.storyEditor.publishError'), 'error')
     }
   }, [doSave, showToast, t])
-
-  const handleBack = useCallback(() => {
-    navigate(storyIdRef.current
-      ? `/stories/${storyIdRef.current}`
-      : worldId ? `/worlds/${worldId}` : '/stories')
-  }, [navigate, worldId])
 
   const callGpt = useCallback(async (mode) => {
     const editorInstance = editorRef.current
@@ -260,15 +357,15 @@ function StoryEditorContainer({ showToast }) {
     setGpt(prev => ({ ...prev, suggestions: [] }))
   }, [])
 
-  const handleInsertSignature = useCallback(() => {
+  const handleInsertSignature = useCallback((sigText) => {
     const editorInstance = editorRef.current
-    if (!editorInstance || !userSignature) return
-    if (editorInstance.getText().includes(`— ${userSignature}`)) {
+    if (!editorInstance || !sigText) return
+    if (editorInstance.getText().includes(`— ${sigText}`)) {
       showToast(t('pages.storyEditor.signatureExists'), 'info')
       return
     }
-    editorInstance.chain().focus().insertContent(`<p>— ${userSignature}</p>`).run()
-  }, [userSignature, showToast, t])
+    editorInstance.chain().focus().insertContent(`<p>— ${sigText}</p>`).run()
+  }, [showToast, t])
 
   const gptProps = {
     ...gpt,
@@ -287,6 +384,7 @@ function StoryEditorContainer({ showToast }) {
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
       </Helmet>
+
       <StoryEditorView
         editor={editor}
         wordCount={wordCount}
@@ -295,16 +393,38 @@ function StoryEditorContainer({ showToast }) {
         editorRef={editorRef}
         gpt={gptProps}
         activeFormats={activeFormats}
-        userSignature={userSignature}
+        signatures={signatures}
+        showSignatureModal={showSignatureModal}
+        onOpenSignatureModal={() => setShowSignatureModal(true)}
+        onCloseSignatureModal={() => setShowSignatureModal(false)}
+        onSignaturesChange={setSignatures}
+        onInsertSignature={handleInsertSignature}
         onTitleChange={handleTitleChange}
         onContentUpdate={handleContentUpdate}
         onSelectionChange={handleSelectionChange}
         onSave={handleSave}
         onPublish={handlePublish}
         onBack={handleBack}
-        onInsertSignature={handleInsertSignature}
         initialFormat={initialFormat}
+        showToast={showToast}
       />
+
+      {showUnsavedModal && (
+        <UnsavedChangesModal
+          onSave={handleUnsavedSave}
+          onDiscard={handleUnsavedDiscard}
+          onCancel={handleUnsavedCancel}
+        />
+      )}
+
+      {showTitleModal && (
+        <TitleSuggestionModal
+          suggestion={titleSuggestion}
+          onConfirm={handleTitleModalConfirm}
+          onSkip={handleTitleModalSkip}
+          onCancel={() => setShowTitleModal(false)}
+        />
+      )}
     </>
   )
 }

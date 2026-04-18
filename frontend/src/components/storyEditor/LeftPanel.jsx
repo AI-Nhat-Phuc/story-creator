@@ -1,12 +1,28 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import GptToolsPanel from './GptToolsPanel'
 import DocumentOutline from './DocumentOutline'
+import SignatureModal from './SignatureModal'
 import { PencilSquareIcon } from '@heroicons/react/24/outline'
 
-function LeftPanel({ gpt, headings, userSignature, onInsertSignature, panelOpen, onClosePanel }) {
+function LeftPanel({
+  gpt,
+  headings,
+  signatures,
+  showSignatureModal,
+  onOpenSignatureModal,
+  onCloseSignatureModal,
+  onSignaturesChange,
+  onInsertSignature,
+  panelOpen,
+  onClosePanel,
+  showToast,
+}) {
+  const { t } = useTranslation()
+
   return (
     <>
-      {/* Mobile backdrop — tap to close */}
+      {/* Mobile backdrop */}
       {panelOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black/50 z-10"
@@ -16,12 +32,10 @@ function LeftPanel({ gpt, headings, userSignature, onInsertSignature, panelOpen,
 
       <aside className={[
         'flex flex-col gap-5 p-4 bg-base-100 overflow-y-auto',
-        // Mobile: full-width bottom sheet
         'fixed bottom-0 left-0 right-0 z-20 max-h-[75vh]',
         'rounded-t-2xl border-t border-base-300 shadow-2xl',
         'transition-transform duration-300 ease-out',
         panelOpen ? 'translate-y-0' : 'translate-y-full',
-        // Desktop: always-visible left sidebar
         'md:relative md:inset-auto md:max-h-none md:h-auto',
         'md:rounded-none md:border-t-0 md:border-r md:shadow-none',
         'md:translate-y-0 md:w-56 md:shrink-0',
@@ -38,16 +52,16 @@ function LeftPanel({ gpt, headings, userSignature, onInsertSignature, panelOpen,
 
         <div className="space-y-2">
           <div className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
-            Signature
+            {t('pages.signatureModal.title')}
           </div>
           <button
-            onClick={onInsertSignature}
-            disabled={!userSignature}
+            onClick={onOpenSignatureModal}
             className="btn btn-sm btn-outline w-full justify-start gap-2"
-            title={userSignature ? `Insert: — ${userSignature}` : 'No signature set'}
           >
             <PencilSquareIcon className="w-4 h-4" />
-            {userSignature ? 'Insert sig' : 'No signature'}
+            {signatures.length > 0
+              ? t('pages.signatureModal.manage')
+              : t('pages.signatureModal.noSignature')}
           </button>
         </div>
 
@@ -60,6 +74,16 @@ function LeftPanel({ gpt, headings, userSignature, onInsertSignature, panelOpen,
           <DocumentOutline headings={headings} />
         </div>
       </aside>
+
+      {showSignatureModal && (
+        <SignatureModal
+          signatures={signatures}
+          onClose={onCloseSignatureModal}
+          onInsert={onInsertSignature}
+          onSignaturesChange={onSignaturesChange}
+          showToast={showToast}
+        />
+      )}
     </>
   )
 }

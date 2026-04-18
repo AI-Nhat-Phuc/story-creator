@@ -89,6 +89,8 @@ class User:
         'gpt_requests_per_day',
         'gpt_requests_today',
         'gpt_last_reset',
+        'signature',
+        'signatures',
     )
 
     def to_safe_dict(self) -> Dict[str, Any]:

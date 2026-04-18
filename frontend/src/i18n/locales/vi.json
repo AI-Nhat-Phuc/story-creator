@@ -286,6 +286,7 @@
       "signatureExists": "Chữ ký đã có trong tài liệu",
       "titlePlaceholder": "Tiêu đề câu chuyện…",
       "titleRequired": "Vui lòng nhập tiêu đề",
+      "titleNoTitle": "(không tiêu đề)",
       "back": "Quay lại",
       "publish": "Xuất bản",
       "save": "Lưu",
@@ -293,7 +294,25 @@
       "statusDraft": "Nháp",
       "statusSaving": "Đang lưu…",
       "statusSaved": "Đã lưu",
-      "statusError": "Lỗi"
+      "statusError": "Lỗi",
+      "unsavedTitle": "Có thay đổi chưa lưu",
+      "unsavedMessage": "Bạn muốn lưu bản nháp hay bỏ hoàn toàn?",
+      "saveDraft": "Lưu nháp",
+      "discard": "Bỏ thay đổi",
+      "titleSuggestTitle": "Lưu bản nháp",
+      "titleSuggestMessage": "Đặt tiêu đề cho câu chuyện của bạn",
+      "titleSuggestPlaceholder": "Nhập tiêu đề…",
+      "titleSuggestSkip": "Lưu không có tiêu đề"
+    },
+    "signatureModal": {
+      "title": "Chữ ký",
+      "empty": "Chưa có chữ ký nào",
+      "manage": "Quản lý chữ ký",
+      "noSignature": "Chưa có chữ ký",
+      "insert": "Chèn",
+      "add": "Thêm",
+      "placeholder": "Tên tác giả hoặc chữ ký…",
+      "saveError": "Không thể lưu chữ ký"
     },
     "storyPrint": {
       "notFound": "Không tìm thấy câu chuyện.",

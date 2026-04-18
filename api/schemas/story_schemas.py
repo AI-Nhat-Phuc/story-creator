@@ -108,6 +108,8 @@ class UpdateStorySchema(Schema):
         validate=validate.Range(min=1)
     )
 
+    author_signature = fields.Dict(keys=fields.Str(), values=fields.Raw())
+
     @validates_schema
     def validate_not_empty(self, data, **kwargs):
         """Ensure at least one field is being updated."""
