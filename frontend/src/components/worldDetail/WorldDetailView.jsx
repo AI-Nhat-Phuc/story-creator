@@ -1,5 +1,7 @@
+'use client'
+
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../../utils/router-compat'
 import { useTranslation } from 'react-i18next'
 import WorldTimeline from './WorldTimeline'
 import UnlinkedStoriesModal from './UnlinkedStoriesModal'

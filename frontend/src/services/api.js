@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api')
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === 'production' ? '/api' : '/api')
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,12 +11,15 @@ const api = axios.create({
   },
 })
 
-// Attach auth token to every request (module-level so it's active before any useEffect)
+// Attach auth token to every request. Guard localStorage so SSR (server-side
+// axios calls during Next.js render) doesn't throw "localStorage is not defined".
 api.interceptors.request.use(
   (config) => {
-    const authToken = localStorage.getItem('auth_token')
-    if (authToken) {
-      config.headers.Authorization = `Bearer ${authToken}`
+    if (typeof window !== 'undefined') {
+      const authToken = localStorage.getItem('auth_token')
+      if (authToken) {
+        config.headers.Authorization = `Bearer ${authToken}`
+      }
     }
     return config
   },

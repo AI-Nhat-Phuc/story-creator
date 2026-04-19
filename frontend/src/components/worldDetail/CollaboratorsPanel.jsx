@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react'
 import { UserPlusIcon, XMarkIcon, UsersIcon } from '@heroicons/react/24/outline'
 

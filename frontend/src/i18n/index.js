@@ -25,9 +25,4 @@ const persistLang = (lang) => {
 
 i18n.on('languageChanged', persistLang)
 
-// Clean up listener on HMR module disposal to prevent accumulation
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => i18n.off('languageChanged', persistLang))
-}
-
 export default i18n

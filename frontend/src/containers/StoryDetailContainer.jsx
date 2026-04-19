@@ -1,5 +1,7 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate } from '../utils/router-compat'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { usePageTitle } from '../hooks/usePageTitle'

@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { gptAPI } from '../services/api'
 
@@ -30,6 +32,7 @@ export function GptTaskProvider({ children, showToast }) {
 
   // ---- localStorage helpers ----
   const loadStoredTasks = useCallback(() => {
+    if (typeof window === 'undefined') return {}
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       return raw ? JSON.parse(raw) : {}
@@ -39,6 +42,7 @@ export function GptTaskProvider({ children, showToast }) {
   }, [])
 
   const saveStoredTasks = useCallback((taskMap) => {
+    if (typeof window === 'undefined') return
     try {
       // Only store non-completed tasks
       const pending = {}

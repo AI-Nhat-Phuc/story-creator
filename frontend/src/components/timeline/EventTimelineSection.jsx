@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useRef } from 'react'
 import EventTimelineContainer from '../../containers/EventTimelineContainer'
 
@@ -12,6 +14,7 @@ import EventTimelineContainer from '../../containers/EventTimelineContainer'
  */
 function EventTimelineSection({ showToast, worldsList = [] }) {
   const [expanded, setExpanded] = useState(() => {
+    if (typeof window === 'undefined') return false
     try {
       const prefs = JSON.parse(localStorage.getItem('timelinePrefs') || '{}')
       return prefs.expanded ?? false
@@ -20,19 +23,30 @@ function EventTimelineSection({ showToast, worldsList = [] }) {
 
   const [worlds, setWorlds] = useState(worldsList)
   const [selectedWorldId, setSelectedWorldId] = useState(() => {
+    if (typeof window === 'undefined') return ''
     return localStorage.getItem('lastViewedWorldId') || ''
   })
   const [direction, setDirection] = useState(() => {
+    if (typeof window === 'undefined') return 'horizontal'
     try {
       const prefs = JSON.parse(localStorage.getItem('timelinePrefs') || '{}')
       return prefs.direction ?? 'horizontal'
     } catch { return 'horizontal' }
   })
   const [isVisible, setIsVisible] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const sectionRef = useRef(null)
 
+  // Track viewport width client-side only to avoid SSR window access
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 768)
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
   // Force vertical on mobile
-  const effectiveDirection = typeof window !== 'undefined' && window.innerWidth < 768 ? 'vertical' : direction
+  const effectiveDirection = isMobile ? 'vertical' : direction
 
   // IntersectionObserver for lazy loading
   useEffect(() => {
