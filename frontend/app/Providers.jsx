@@ -1,7 +1,7 @@
 'use client'
 
 import { HelmetProvider } from 'react-helmet-async'
-import dynamic from 'next/dynamic'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { ThemeProvider } from '../src/contexts/ThemeContext'
 import { AuthProvider } from '../src/contexts/AuthContext'
 import { GptTaskProvider } from '../src/contexts/GptTaskContext'
@@ -9,12 +9,6 @@ import { ToastProvider, useToast } from '../src/contexts/ToastContext'
 import Toast from '../src/components/Toast'
 import { useKeepAlive } from '../src/hooks/useKeepAlive'
 import '../src/i18n'
-
-// Google OAuth SDK touches `window` at import time — defer to client only.
-const GoogleOAuthProvider = dynamic(
-  () => import('@react-oauth/google').then((m) => m.GoogleOAuthProvider),
-  { ssr: false }
-)
 
 function ToastOutlet() {
   const { toast } = useToast()
