@@ -223,6 +223,8 @@ node_modules/
 */node_modules/
 frontend/dist/
 frontend/.env.local
+.next/
+frontend/.next/
 
 # Playwright test artifacts
 test-results/
