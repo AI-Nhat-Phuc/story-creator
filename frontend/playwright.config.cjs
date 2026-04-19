@@ -57,11 +57,11 @@ module.exports = defineConfig({
   ...(!process.env.CI && !process.env.BASE_URL ? {
     webServer: [
       {
-        // React frontend (Vite)
+        // Next.js frontend
         command: 'npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: true,
-        timeout: 30000,
+        timeout: 60000,
       },
       {
         // Flask API backend

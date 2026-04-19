@@ -1,5 +1,7 @@
+'use client'
+
 import React, { useRef, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../../utils/router-compat'
 import { useTranslation } from 'react-i18next'
 import GptButton from '../GptButton'
 import AnalyzedEntitiesEditor from '../AnalyzedEntitiesEditor'

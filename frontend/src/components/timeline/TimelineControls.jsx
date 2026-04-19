@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * TimelineControls - Control panel for the timeline canvas
  * Provides zoom controls and direction toggle

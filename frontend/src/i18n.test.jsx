@@ -18,8 +18,28 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import React, { Suspense } from 'react'
-import { MemoryRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+
+// Mock Next.js router hooks for components that use the router-compat shim.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: () => {},
+    replace: () => {},
+    back: () => {},
+    forward: () => {},
+    refresh: () => {},
+    prefetch: () => {},
+  }),
+  useParams: () => ({}),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/',
+}))
+
+// Mock next/link to render a plain anchor (test env has no Next runtime).
+vi.mock('next/link', () => ({
+  default: ({ href, children, ...rest }) =>
+    React.createElement('a', { href, ...rest }, children),
+}))
 
 // Mock Google OAuth to avoid GoogleOAuthProvider requirement
 vi.mock('@react-oauth/google', () => ({
@@ -225,7 +245,7 @@ describe('§1 — en.json key parity with vi.json', () => {
 
 describe('§2 — LoginPage renders with <title>', () => {
   it('sets document title to login meta title', async () => {
-    const { default: LoginPage } = await import('./pages/LoginPage.jsx')
+    const { default: LoginPage } = await import('./views/LoginPage.jsx')
     const { AuthProvider } = await import('./contexts/AuthContext.jsx')
     const { ThemeProvider } = await import('./contexts/ThemeContext.jsx')
     const helmetContext = {}
@@ -235,9 +255,9 @@ describe('§2 — LoginPage renders with <title>', () => {
         <HelmetProvider context={helmetContext}>
           <ThemeProvider>
             <AuthProvider>
-              <MemoryRouter>
+              
                 <LoginPage showToast={() => {}} />
-              </MemoryRouter>
+              
             </AuthProvider>
           </ThemeProvider>
         </HelmetProvider>
@@ -253,7 +273,7 @@ describe('§2 — LoginPage renders with <title>', () => {
 
 describe('§2 — RegisterPage renders with <title>', () => {
   it('sets document title to register meta title', async () => {
-    const { default: RegisterPage } = await import('./pages/RegisterPage.jsx')
+    const { default: RegisterPage } = await import('./views/RegisterPage.jsx')
     const { AuthProvider } = await import('./contexts/AuthContext.jsx')
     const { ThemeProvider } = await import('./contexts/ThemeContext.jsx')
     const helmetContext = {}
@@ -263,9 +283,9 @@ describe('§2 — RegisterPage renders with <title>', () => {
         <HelmetProvider context={helmetContext}>
           <ThemeProvider>
             <AuthProvider>
-              <MemoryRouter>
+              
                 <RegisterPage showToast={() => {}} />
-              </MemoryRouter>
+              
             </AuthProvider>
           </ThemeProvider>
         </HelmetProvider>
@@ -281,7 +301,7 @@ describe('§2 — RegisterPage renders with <title>', () => {
 
 describe('§2 — Dashboard renders with <title>', () => {
   it('sets document title to dashboard meta title', async () => {
-    const { default: Dashboard } = await import('./pages/Dashboard.jsx')
+    const { default: Dashboard } = await import('./views/Dashboard.jsx')
     const { AuthProvider } = await import('./contexts/AuthContext.jsx')
     const { ThemeProvider } = await import('./contexts/ThemeContext.jsx')
 
@@ -290,9 +310,9 @@ describe('§2 — Dashboard renders with <title>', () => {
         <HelmetProvider>
           <ThemeProvider>
             <AuthProvider>
-              <MemoryRouter>
+              
                 <Dashboard showToast={() => {}} />
-              </MemoryRouter>
+              
             </AuthProvider>
           </ThemeProvider>
         </HelmetProvider>
@@ -358,9 +378,9 @@ describe('§1 — Navbar uses i18n for nav labels', () => {
     render(
       <ThemeProvider>
         <AuthProvider>
-          <MemoryRouter>
+          
             <Navbar />
-          </MemoryRouter>
+          
         </AuthProvider>
       </ThemeProvider>
     )

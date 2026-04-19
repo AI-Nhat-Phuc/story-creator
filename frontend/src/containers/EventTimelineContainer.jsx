@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '../utils/router-compat'
 import { ReactFlowProvider } from '@xyflow/react'
 import { eventsAPI, gptAPI } from '../services/api'
 import TimelineCanvas from '../components/timeline/TimelineCanvas'

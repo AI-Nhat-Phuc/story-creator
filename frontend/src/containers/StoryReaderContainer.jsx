@@ -1,5 +1,7 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams } from '../utils/router-compat'
 import { useTranslation } from 'react-i18next'
 import { storiesAPI } from '../services/api'
 import StoryReaderView from '../components/storyReader/StoryReaderView'

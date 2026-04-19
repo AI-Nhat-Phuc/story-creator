@@ -1,3 +1,5 @@
+'use client'
+
 import React, { createContext, useContext, useState, useLayoutEffect } from 'react'
 import {
   LIGHT_PALETTE,
@@ -15,6 +17,7 @@ const ThemeContext = createContext(null)
 const STORAGE_KEY = 'sc_theme'
 
 function loadFromStorage() {
+  if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
@@ -25,6 +28,7 @@ function loadFromStorage() {
 }
 
 function saveToStorage(mode, primaryColor) {
+  if (typeof window === 'undefined') return
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ mode, primaryColor }))
   } catch {
@@ -46,10 +50,12 @@ function contrastOklch(hex) {
 }
 
 function clearCustomVars() {
+  if (typeof document === 'undefined') return
   CSS_VARS.forEach((v) => document.documentElement.style.removeProperty(v))
 }
 
 function injectCustomVars(palette) {
+  if (typeof document === 'undefined') return
   document.documentElement.style.setProperty('--p', hexToDaisyOklch(palette.primary))
   document.documentElement.style.setProperty('--pc', contrastOklch(palette.primary))
   document.documentElement.style.setProperty('--s', hexToDaisyOklch(palette.secondary))
@@ -68,6 +74,7 @@ export function getPalette(mode, primaryColor) {
 
 // Accept a pre-computed palette to avoid double-deriving in custom mode
 function applyTheme(mode, palette) {
+  if (typeof document === 'undefined') return
   const html = document.documentElement
   if (mode === THEME_MODES.LIGHT) {
     html.setAttribute('data-theme', 'sc-light')

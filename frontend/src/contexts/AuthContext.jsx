@@ -1,3 +1,5 @@
+'use client'
+
 import React, { createContext, useState, useContext, useEffect } from 'react'
 import { authAPI } from '../services/api'
 import api from '../services/api'
@@ -19,7 +21,9 @@ export const AuthProvider = ({ children }) => {
   // to a protected URL causes an immediate redirect to /login because user===null
   // before verifyToken resolves (visible as a race condition on Vercel cold starts).
   const [loading, setLoading] = useState(true)
-  const [token, setToken] = useState(localStorage.getItem('auth_token'))
+  const [token, setToken] = useState(() =>
+    typeof window === 'undefined' ? null : localStorage.getItem('auth_token')
+  )
 
   // Setup axios response interceptor to handle 401 errors
   // (Request interceptor with token is in api.js at module level to avoid race conditions)

@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import { EditorRoot, EditorContent, StarterKit, Placeholder } from 'novel'
 import Underline from '@tiptap/extension-underline'

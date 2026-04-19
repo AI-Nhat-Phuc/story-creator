@@ -1,5 +1,7 @@
+'use client'
+
 import React, { useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../../utils/router-compat'
 import { PencilSquareIcon, Bars3Icon } from '@heroicons/react/24/outline'
 
 function formatDate(iso) {

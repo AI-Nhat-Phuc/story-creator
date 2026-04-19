@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react'
 import { SparklesIcon, EyeIcon, CheckIcon } from '@heroicons/react/24/outline'
 import LoadingSpinner from '../LoadingSpinner'

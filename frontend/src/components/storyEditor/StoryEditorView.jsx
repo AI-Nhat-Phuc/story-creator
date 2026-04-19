@@ -1,10 +1,17 @@
+'use client'
+
 import React, { useState } from 'react'
+import dynamic from 'next/dynamic'
 import EditorHeader from './EditorHeader'
 import LeftPanel from './LeftPanel'
-import NovelEditor from './NovelEditor'
 import FormattingToolbar from './FormattingToolbar'
 import LoadingSpinner from '../LoadingSpinner'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+
+const NovelEditor = dynamic(() => import('./NovelEditor'), {
+  ssr: false,
+  loading: () => <LoadingSpinner />,
+})
 
 function StoryEditorView({
   editor,
