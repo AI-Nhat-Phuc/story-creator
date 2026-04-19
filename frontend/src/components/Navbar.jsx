@@ -40,6 +40,10 @@ function Navbar() {
   const handleDeclineInvitation = handleInvitationAction(invitationsAPI.decline)
 
   const handleLogoutClick = () => {
+    // Close DaisyUI dropdown by blurring the active element
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
     setShowLogoutModal(true)
   }
 
