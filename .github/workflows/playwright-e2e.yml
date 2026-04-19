@@ -49,32 +49,46 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       # Wait until the deployment URL returns 2xx WITH the bypass header.
-      # A 401 means Vercel Deployment Protection is blocking — treat as not ready.
+      # A 401/403 means Vercel Deployment Protection is blocking — treat as
+      # not ready, capture the response body so the log explains what the
+      # platform is returning, and fail with a descriptive message.
       - name: Wait for deployment to be reachable
+        id: wait
         env:
           DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
           BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           echo "Target URL: $DEPLOY_URL"
+          if [ -z "$BYPASS_SECRET" ]; then
+            echo "::warning::VERCEL_AUTOMATION_BYPASS_SECRET is empty — requests without the bypass header will be blocked if Deployment Protection is enabled."
+          fi
+          LAST_STATUS=0
           for i in $(seq 1 18); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            STATUS=$(curl -s -o /tmp/deploy-body -w "%{http_code}" \
               -H "x-vercel-protection-bypass: ${BYPASS_SECRET}" \
               -L --max-time 10 \
               "$DEPLOY_URL")
+            LAST_STATUS=$STATUS
             echo "Attempt $i: HTTP $STATUS"
             if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
               echo "Deployment is reachable (HTTP $STATUS)."
+              echo "reachable=true" >> "$GITHUB_OUTPUT"
               exit 0
-            fi
-            if [ "$STATUS" -eq 401 ] || [ "$STATUS" -eq 403 ]; then
-              echo "::error::Deployment returned HTTP $STATUS — Vercel Deployment Protection is active."
-              echo "::error::Set the VERCEL_AUTOMATION_BYPASS_SECRET secret in repo Settings → Secrets."
-              echo "::error::See: https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection"
-              exit 1
             fi
             sleep 5
           done
-          echo "::error::Deployment did not become reachable after 90 s." && exit 1
+          echo "reachable=false" >> "$GITHUB_OUTPUT"
+          echo "last_status=$LAST_STATUS" >> "$GITHUB_OUTPUT"
+          echo "::error::Deployment was not reachable after 90 s (last HTTP $LAST_STATUS)."
+          if [ "$LAST_STATUS" = "401" ] || [ "$LAST_STATUS" = "403" ]; then
+            echo "::error::Vercel Deployment Protection is blocking the E2E runner."
+            echo "::error::Confirm VERCEL_AUTOMATION_BYPASS_SECRET is set in repo Settings → Secrets → Actions, and that 'Protection Bypass for Automation' is enabled on the Vercel project."
+            echo "::error::See: https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection"
+          fi
+          echo "--- response body (first 500 chars) ---"
+          head -c 500 /tmp/deploy-body || true
+          echo
+          exit 1
 
       - name: Run Playwright E2E tests
         working-directory: frontend
@@ -123,28 +137,40 @@ jobs:
             }
             const prNumber = openPR.number
 
-            // Parse Playwright JSON results for failed test details
+            // Parse Playwright JSON results for failed test details.
+            // Suites can nest (file-suite → describe-suite → specs), so walk
+            // the tree recursively instead of looking only two levels deep.
             let failedLines = ''
-            try {
-              const raw = fs.readFileSync('frontend/test-results/results.json', 'utf8')
-              const report = JSON.parse(raw)
-              const failures = []
-              const BAD_STATUSES = new Set(['failed', 'timedOut', 'interrupted'])
-              for (const suite of (report.suites || [])) {
-                for (const spec of (suite.specs || [])) {
-                  const bad = (spec.tests || []).flatMap(t => t.results || []).filter(r => BAD_STATUSES.has(r.status))
-                  if (!bad.length) continue
-                  const worst = bad[0]
-                  const label = worst.status === 'timedOut' ? '⏱ timeout' : '❌ failed'
-                  const err = worst.error?.message?.split('\n')[0] || worst.status
-                  failures.push(`| \`${spec.title}\` | ${label} | ${err.slice(0, 100)} |`)
+            const resultsPath = 'frontend/test-results/results.json'
+            if (!fs.existsSync(resultsPath)) {
+              failedLines = [
+                '_No `test-results/results.json` was produced — the Playwright step likely did not run._',
+                '_Common cause: the "Wait for deployment to be reachable" step failed (e.g. Vercel Deployment Protection is blocking). Check the job log for details._',
+              ].join('\n\n')
+            } else {
+              try {
+                const raw = fs.readFileSync(resultsPath, 'utf8')
+                const report = JSON.parse(raw)
+                const BAD_STATUSES = new Set(['failed', 'timedOut', 'interrupted'])
+                const failures = []
+                const walk = (suite) => {
+                  for (const spec of (suite.specs || [])) {
+                    const bad = (spec.tests || []).flatMap(t => t.results || []).filter(r => BAD_STATUSES.has(r.status))
+                    if (!bad.length) continue
+                    const worst = bad[0]
+                    const label = worst.status === 'timedOut' ? '⏱ timeout' : '❌ failed'
+                    const err = worst.error?.message?.split('\n')[0] || worst.status
+                    failures.push(`| \`${spec.title}\` | ${label} | ${err.slice(0, 120)} |`)
+                  }
+                  for (const child of (suite.suites || [])) walk(child)
                 }
+                for (const suite of (report.suites || [])) walk(suite)
+                failedLines = failures.length
+                  ? `| Test | Status | Error |\n|------|--------|-------|\n${failures.join('\n')}`
+                  : '_Job failed but no individual test was marked as failed — the wait/setup step likely failed. Check the job log._'
+              } catch (e) {
+                failedLines = `_Could not parse \`test-results/results.json\`: ${e.message}_`
               }
-              failedLines = failures.length
-                ? `| Test | Status | Error |\n|------|--------|-------|\n${failures.join('\n')}`
-                : '_No structured failures found — see logs._'
-            } catch (e) {
-              failedLines = '_Could not parse `test-results/results.json`._'
             }
 
             const body = [
