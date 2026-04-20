@@ -1,15 +1,23 @@
 {
-  "framework": "nextjs",
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/.next",
-  "installCommand": "echo skip",
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "api/app.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/app.py" },
+    { "src": "/(.*)", "dest": "/frontend/$1" }
+  ],
   "crons": [
     {
       "path": "/api/health",
       "schedule": "0 0 * * *"
     }
-  ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/app.py" }
   ]
 }
