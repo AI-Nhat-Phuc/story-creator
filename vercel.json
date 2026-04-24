@@ -11,8 +11,7 @@
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/app.py" },
-    { "src": "/(.*)", "dest": "/frontend/$1" }
+    { "src": "/api/(.*)", "dest": "/api/app.py" }
   ],
   "crons": [
     {
