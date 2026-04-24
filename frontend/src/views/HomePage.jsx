@@ -2,22 +2,16 @@
 
 import React from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import LoadingSpinner from '../components/LoadingSpinner'
 import Dashboard from './Dashboard'
 import DiscoveryContainer from '../containers/DiscoveryContainer'
 
 function HomePage({ initialStories = [], initialWorlds = [] }) {
   const { user, loading } = useAuth()
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner />
-      </div>
-    )
-  }
-
-  if (user?.role === 'admin') {
+  // Admins get the Dashboard, but only after auth settles. Until then (and for
+  // all non-admin users) we render DiscoveryContainer, which lets SSR paint the
+  // server-fetched stories/worlds immediately instead of a loading spinner.
+  if (!loading && user?.role === 'admin') {
     return <Dashboard />
   }
 
