@@ -8,9 +8,17 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
-    // Dev-only: proxy /api/* to Flask on :5000. In production Vercel's
-    // vercel.json rewrite sends /api/* to api/app.py instead.
-    if (process.env.NODE_ENV === 'production') return []
+    if (process.env.NODE_ENV === 'production') {
+      // Vercel's vercel.json catch-all prepends /frontend/ to the incoming
+      // URL before it reaches this Next.js app (because @vercel/next is
+      // registered at src:"frontend/package.json"). Strip that prefix so
+      // app-router page matching (e.g. app/login/page.jsx) works.
+      return [
+        { source: '/frontend', destination: '/' },
+        { source: '/frontend/:path*', destination: '/:path*' },
+      ]
+    }
+    // Dev: proxy /api/* to Flask on :5000.
     return [
       {
         source: '/api/:path*',
