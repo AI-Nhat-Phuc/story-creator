@@ -12,7 +12,7 @@ import EventTimelineContainer from '../../containers/EventTimelineContainer'
  * - Persists preferences in localStorage
  * - Receives worlds list from parent (avoids extra API call)
  */
-function EventTimelineSection({ showToast, worldsList = [] }) {
+function EventTimelineSection({ worldsList = [] }) {
   const [expanded, setExpanded] = useState(() => {
     if (typeof window === 'undefined') return false
     try {
@@ -175,7 +175,6 @@ function EventTimelineSection({ showToast, worldsList = [] }) {
               <EventTimelineContainer
                 worldId={selectedWorldId}
                 direction={effectiveDirection}
-                showToast={showToast}
                 onWorldNotFound={() => {
                   // World no longer exists — clear stale localStorage entry
                   // and reset selection so the auto-select picks a valid world.

@@ -6,7 +6,7 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import Dashboard from './Dashboard'
 import DiscoveryContainer from '../containers/DiscoveryContainer'
 
-function HomePage({ showToast }) {
+function HomePage({ initialStories = [], initialWorlds = [] }) {
   const { user, loading } = useAuth()
 
   if (loading) {
@@ -18,10 +18,10 @@ function HomePage({ showToast }) {
   }
 
   if (user?.role === 'admin') {
-    return <Dashboard showToast={showToast} />
+    return <Dashboard />
   }
 
-  return <DiscoveryContainer showToast={showToast} />
+  return <DiscoveryContainer initialStories={initialStories} initialWorlds={initialWorlds} />
 }
 
 export default HomePage

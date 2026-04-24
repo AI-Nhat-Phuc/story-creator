@@ -9,20 +9,22 @@ import GptButton from '../components/GptButton'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { BoltIcon } from '@heroicons/react/24/outline'
 import { useGptTasks } from '../contexts/GptTaskContext'
+import { useToast } from '../contexts/ToastContext'
 
 /**
  * EventTimelineContainer - Data fetching and state management
  * for the event timeline section on Dashboard.
  */
-function EventTimelineContainer({ worldId, direction, showToast, onWorldNotFound }) {
+function EventTimelineContainer({ worldId, direction, onWorldNotFound }) {
   const navigate = useNavigate()
   const { registerTask } = useGptTasks()
+  const { showToast } = useToast()
   const [timeline, setTimeline] = useState(null)
   const [loading, setLoading] = useState(false)
   const [extracting, setExtracting] = useState(false)
   const [extractProgress, setExtractProgress] = useState('')
 
-  // Use ref for showToast to avoid re-creating callbacks on every render
+  // Use ref for showToast to avoid stale closure in callbacks
   const showToastRef = useRef(showToast)
   useEffect(() => { showToastRef.current = showToast }, [showToast])
 

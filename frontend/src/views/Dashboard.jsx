@@ -7,6 +7,7 @@ import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { statsAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import RoleBadge from '../components/RoleBadge'
 import Tag from '../components/Tag'
@@ -22,8 +23,9 @@ const EventTimelineSection = dynamic(() => import('../components/timeline/EventT
   ssr: false,
   loading: () => <LoadingSpinner size="sm" />,
 })
-function Dashboard({ showToast }) {
+function Dashboard() {
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const { isAuthenticated, user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -242,7 +244,6 @@ function Dashboard({ showToast }) {
       {stats?.total_worlds > 0 && (
         <Suspense fallback={<LoadingSpinner />}>
           <EventTimelineSection
-            showToast={showToast}
             worldsList={stats?.worlds_summary || []}
           />
         </Suspense>
