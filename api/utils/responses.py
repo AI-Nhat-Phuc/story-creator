@@ -2,6 +2,8 @@
 
 from flask import jsonify
 
+from .i18n import t
+
 
 def success_response(data, message=None, status=200):
     """Return standardized success response.
@@ -70,7 +72,7 @@ def paginated_response(items, page, per_page, total):
     return jsonify(response), 200
 
 
-def created_response(data, message="Resource created successfully"):
+def created_response(data, message=None):
     """Return 201 Created response.
 
     Args:
@@ -84,10 +86,10 @@ def created_response(data, message="Resource created successfully"):
         >>> created_response({'world_id': '123'})
         {'success': True, 'data': {'world_id': '123'}, 'message': '...'}, 201
     """
-    return success_response(data, message, status=201)
+    return success_response(data, message or t('responses.created'), status=201)
 
 
-def deleted_response(message="Resource deleted successfully"):
+def deleted_response(message=None):
     """Return success response for deletion.
 
     Args:
@@ -100,10 +102,10 @@ def deleted_response(message="Resource deleted successfully"):
         >>> deleted_response("World deleted")
         {'success': True, 'data': None, 'message': 'World deleted'}, 200
     """
-    return success_response(None, message, status=200)
+    return success_response(None, message or t('responses.deleted'), status=200)
 
 
-def accepted_response(data=None, message="Request accepted for processing"):
+def accepted_response(data=None, message=None):
     """Return 202 Accepted response for async operations.
 
     Args:
@@ -117,7 +119,7 @@ def accepted_response(data=None, message="Request accepted for processing"):
         >>> accepted_response({'task_id': 'abc123'}, 'GPT generation started')
         {'success': True, 'data': {'task_id': 'abc123'}, 'message': '...'}, 202
     """
-    return success_response(data, message, status=202)
+    return success_response(data, message or t('responses.accepted'), status=202)
 
 
 def no_content_response():

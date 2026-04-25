@@ -13,6 +13,7 @@ from services import CharacterService, PermissionService, NovelService
 from interfaces.auth_middleware import token_required, optional_auth
 from utils.responses import success_response, created_response, deleted_response, paginated_response
 from utils.validation import validate_request, validate_query_params
+from utils.i18n import t
 from schemas.world_schemas import (
     CreateWorldSchema,
     UpdateWorldSchema,
@@ -159,7 +160,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
         flush_data()
 
-        return created_response(world.to_dict(), "World created successfully")
+        return created_response(world.to_dict(), t('world.created'))
 
     @world_bp.route('/api/worlds/<world_id>', methods=['GET'])
     @optional_auth
@@ -281,7 +282,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.save_world(world_data)
         flush_data()
 
-        return success_response(world_data, "World updated successfully")
+        return success_response(world_data, t('world.updated'))
 
     @world_bp.route('/api/worlds/<world_id>', methods=['DELETE'])
     @token_required
@@ -323,7 +324,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.delete_world(world_id)
         flush_data()
 
-        return deleted_response("World deleted successfully")
+        return deleted_response(t('world.deleted'))
 
     @world_bp.route('/api/worlds/<world_id>/stories', methods=['GET'])
     @optional_auth
@@ -453,7 +454,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.save_entity(entity_data)
         flush_data()
 
-        return success_response(entity_data, "Entity updated successfully")
+        return success_response(entity_data, t('entity.updated'))
 
     @world_bp.route('/api/worlds/<world_id>/entities/<entity_id>', methods=['DELETE'])
     @token_required
@@ -497,7 +498,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.delete_entity(entity_id)
         flush_data()
 
-        return deleted_response("Entity deleted successfully")
+        return deleted_response(t('entity.deleted'))
 
     @world_bp.route('/api/worlds/<world_id>/locations/<location_id>', methods=['PUT'])
     @token_required
@@ -526,7 +527,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.save_location(location_data)
         flush_data()
 
-        return success_response(location_data, "Location updated successfully")
+        return success_response(location_data, t('location.updated'))
 
     @world_bp.route('/api/worlds/<world_id>/locations/<location_id>', methods=['DELETE'])
     @token_required
@@ -570,7 +571,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.delete_location(location_id)
         flush_data()
 
-        return deleted_response("Location deleted successfully")
+        return deleted_response(t('location.deleted'))
 
     @world_bp.route('/api/worlds/<world_id>/relationships', methods=['GET'])
     def world_relationships(world_id):
@@ -625,7 +626,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         if len(stories_data) < 2:
             return success_response(
                 {'linked_count': 0, 'links': [], 'unlinked_stories': []},
-                'Cần ít nhất 2 câu chuyện để liên kết'
+                t('world.need_two_stories_to_link')
             )
 
         stories = [Story.from_dict(s) for s in stories_data]
@@ -675,7 +676,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             'linked_count': linked_count,
             'links': all_links,
             'unlinked_stories': unlinked_stories
-        }, f'Đã liên kết {linked_count} câu chuyện')
+        }, t('world.auto_link_done', count=linked_count))
 
     @world_bp.route('/api/worlds/<world_id>/share', methods=['POST'])
     @token_required
@@ -722,14 +723,14 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
             raise PermissionDeniedError('share', 'world')
 
         if world_data.get('visibility') == 'public':
-            raise BusinessRuleError('Thế giới công khai không cần chia sẻ')
+            raise BusinessRuleError(t('world.public_no_share'))
 
         data = request.json
         user_ids = data.get('user_ids', [])
 
         for user_id in user_ids:
             if not storage.load_user(user_id):
-                raise APIValidationError(f'User {user_id} không tồn tại')
+                raise APIValidationError(t('world.share_user_not_found', user_id=user_id))
 
         current_shared = world_data.get('shared_with', [])
         for user_id in user_ids:
@@ -740,7 +741,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.save_world(world_data)
         flush_data()
 
-        return success_response({'shared_with': current_shared}, 'Đã chia sẻ thế giới')
+        return success_response({'shared_with': current_shared}, t('world.shared'))
 
     @world_bp.route('/api/worlds/<world_id>/unshare', methods=['POST'])
     @token_required
@@ -791,7 +792,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.save_world(world_data)
         flush_data()
 
-        return success_response({'shared_with': world_data['shared_with']}, 'Đã xóa quyền truy cập')
+        return success_response({'shared_with': world_data['shared_with']}, t('world.unshared'))
 
     # ------------------------------------------------------------------
     # SUB-4 — Novel Structure
@@ -1030,7 +1031,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         storage.save_world(world_data)
         flush_data()
 
-        return success_response({'chapters': updated_chapters}, "Chapters reordered")
+        return success_response({'chapters': updated_chapters}, t('novel.chapters_reordered'))
 
     return world_bp
 

@@ -8,6 +8,7 @@ from core.exceptions import (
 )
 from utils.responses import success_response, paginated_response
 from utils.validation import validate_request, validate_query_params
+from utils.i18n import t
 from interfaces.auth_middleware import token_required, admin_required, moderator_required
 from core.permissions import Role, Permission, ROLE_INFO, get_role_permissions, get_role_quota
 from schemas.admin_schemas import ChangeUserRoleSchema, BanUserSchema, ListUsersQuerySchema
@@ -149,7 +150,7 @@ def create_admin_bp(storage, auth_service):
             raise ResourceNotFoundError('User', user_id)
 
         if user_id == g.current_user.user_id:
-            raise BusinessRuleError('Không thể thay đổi role của chính mình')
+            raise BusinessRuleError(t('admin.cannot_change_own_role'))
 
         old_role = user_data.get('role', 'user')
         user_data['role'] = new_role
@@ -170,7 +171,7 @@ def create_admin_bp(storage, auth_service):
                     'gpt_requests_per_day': user.metadata.get('gpt_requests_per_day')
                 }
             }
-        }, f'Đã đổi role từ {old_role} sang {new_role}')
+        }, t('admin.role_changed', old_role=old_role, new_role=new_role))
 
     @admin_bp.route('/api/admin/users/<user_id>/ban', methods=['POST'])
     @token_required
@@ -208,7 +209,7 @@ def create_admin_bp(storage, auth_service):
             raise ResourceNotFoundError('User', user_id)
 
         if user_id == g.current_user.user_id:
-            raise BusinessRuleError('Không thể ban chính mình')
+            raise BusinessRuleError(t('admin.cannot_ban_self'))
 
         if g.current_user.role == 'moderator' and user_data.get('role') == 'admin':
             raise PermissionDeniedError('ban admin users')
@@ -223,7 +224,7 @@ def create_admin_bp(storage, auth_service):
         action = 'ban' if banned else 'unban'
         return success_response(
             {'banned': banned},
-            f'Đã {action} user {user_data.get("username")}'
+            t('admin.user_action_done', action=action, username=user_data.get('username'))
         )
 
     @admin_bp.route('/api/admin/roles', methods=['GET'])

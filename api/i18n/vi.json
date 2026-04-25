@@ -30,7 +30,11 @@
     "updated": "Đã cập nhật thế giới",
     "deleted": "Đã xóa thế giới",
     "auto_link_done": "Đã liên kết {count} câu chuyện",
-    "share_user_not_found": "User {user_id} không tồn tại"
+    "share_user_not_found": "User {user_id} không tồn tại",
+    "public_no_share": "Thế giới công khai không cần chia sẻ",
+    "need_two_stories_to_link": "Cần ít nhất 2 câu chuyện để liên kết",
+    "shared": "Đã chia sẻ thế giới",
+    "unshared": "Đã xóa quyền truy cập"
   },
   "story": {
     "untitled": "Câu chuyện chưa đặt tên",

@@ -10,6 +10,7 @@ from core.exceptions import (
 )
 from utils.responses import success_response
 from utils.validation import validate_request
+from utils.i18n import t
 from interfaces.auth_middleware import token_required
 from services import BatchAnalyzeService
 from schemas.gpt_schemas import (
@@ -258,7 +259,7 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
         story_genre = data.get('story_genre', '')
 
         if not world_description and not story_description:
-            raise APIValidationError('Either world_description or story_description is required')
+            raise APIValidationError(t('gpt.missing_description'))
 
         task_id = str(uuid.uuid4())
         label = story_title or 'thế giới'
@@ -360,11 +361,11 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
         story_ids = data.get('story_ids', [])
 
         if not world_id:
-            raise APIValidationError('world_id is required')
+            raise APIValidationError(t('gpt.missing_world_id'))
 
         MAX_BATCH = 3
         if len(story_ids) > MAX_BATCH:
-            raise BusinessRuleError(f'Tối đa {MAX_BATCH} câu chuyện mỗi lần phân tích')
+            raise BusinessRuleError(t('gpt.max_batch_exceeded', max=MAX_BATCH))
 
         world_data = storage.load_world(world_id)
         if not world_data:
@@ -535,7 +536,7 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
             suggestions = (suggestions + [raw, raw, raw])[:3]
         except Exception:
             logger.error("GPT paraphrase failed", exc_info=True)
-            raise ExternalServiceError('GPT', 'GPT request failed')
+            raise ExternalServiceError('GPT', t('gpt.request_failed'))
 
         return success_response({'suggestions': suggestions})
 

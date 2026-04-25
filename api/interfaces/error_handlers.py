@@ -4,6 +4,8 @@ from flask import jsonify
 from werkzeug.exceptions import HTTPException
 import logging
 
+from utils.i18n import t
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +40,7 @@ def register_error_handlers(app):
             'success': False,
             'error': {
                 'code': 'internal_error',
-                'message': 'An unexpected error occurred. Please try again later.'
+                'message': t('errors.unexpected')
             }
         }), 500
 
@@ -49,7 +51,7 @@ def register_error_handlers(app):
             'success': False,
             'error': {
                 'code': 'not_found',
-                'message': 'The requested endpoint does not exist.'
+                'message': t('errors.endpoint_not_found')
             }
         }), 404
 
@@ -60,7 +62,7 @@ def register_error_handlers(app):
             'success': False,
             'error': {
                 'code': 'method_not_allowed',
-                'message': 'The HTTP method is not allowed for this endpoint.'
+                'message': t('errors.method_not_allowed')
             }
         }), 405
 
@@ -72,7 +74,7 @@ def register_error_handlers(app):
             'success': False,
             'error': {
                 'code': 'internal_error',
-                'message': 'An internal server error occurred. Please try again later.'
+                'message': t('errors.internal_server_error')
             }
         }), 500
 

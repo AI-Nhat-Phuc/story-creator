@@ -7,6 +7,7 @@ from core.exceptions import (
     BusinessRuleError
 )
 from utils.responses import success_response, deleted_response
+from utils.i18n import t
 from utils.validation import validate_request
 from interfaces.auth_middleware import token_required
 from schemas.event_schemas import UpdateEventSchema, AddEventConnectionSchema
@@ -86,7 +87,7 @@ def create_event_bp(storage, gpt_results, backend):
 
         stories = storage.list_stories(world_id)
         if not stories:
-            raise BusinessRuleError('No stories found in this world')
+            raise BusinessRuleError(t('event.no_stories'))
 
         force = request.args.get('force', 'false').lower() == 'true'
 
@@ -95,7 +96,7 @@ def create_event_bp(storage, gpt_results, backend):
             'status': 'pending',
             'total_stories': len(stories),
             'task_type': 'extract_world_events',
-            'label': f'Trích xuất sự kiện: {world.get("name", "")}'
+            'label': t('event.extracting', name=world.get('name', ''))
         }
 
         def on_success(result):
@@ -112,7 +113,7 @@ def create_event_bp(storage, gpt_results, backend):
         return success_response({
             'task_id': task_id,
             'status': 'pending',
-            'message': f'Đang phân tích {len(stories)} câu chuyện trong 1 prompt...'
+            'message': t('event.analyzing_batch', count=len(stories))
         })
 
     @event_bp.route('/api/stories/<story_id>/events/extract', methods=['POST'])
@@ -154,7 +155,7 @@ def create_event_bp(storage, gpt_results, backend):
         gpt_results[task_id] = {
             'status': 'pending',
             'task_type': 'extract_story_events',
-            'label': f'Trích xuất sự kiện: {story.get("title", "")}'
+            'label': t('event.extracting', name=story.get('title', ''))
         }
 
         def on_success(result):
@@ -171,7 +172,7 @@ def create_event_bp(storage, gpt_results, backend):
         return success_response({
             'task_id': task_id,
             'status': 'pending',
-            'message': 'Đang phân tích câu chuyện...'
+            'message': t('event.analyzing_story')
         })
 
     @event_bp.route('/api/stories/<story_id>/events/cache', methods=['DELETE'])
@@ -199,7 +200,7 @@ def create_event_bp(storage, gpt_results, backend):
         deleted = backend.event_service.clear_story_cache(story_id)
         return success_response(
             {'cache_cleared': deleted},
-            'Cache đã được xóa' if deleted else 'Không có cache để xóa'
+            t('event.cache_cleared') if deleted else t('event.cache_empty')
         )
 
     @event_bp.route('/api/events/<event_id>', methods=['PUT'])
@@ -243,13 +244,13 @@ def create_event_bp(storage, gpt_results, backend):
 
         success = storage.update_event(event_id, update_data)
         if not success:
-            raise BusinessRuleError('Failed to update event')
+            raise BusinessRuleError(t('event.update_failed'))
 
         updated = storage.load_event(event_id)
         if hasattr(storage, 'flush'):
             storage.flush()
 
-        return success_response(updated, "Event updated successfully")
+        return success_response(updated, t('event.updated'))
 
     @event_bp.route('/api/events/<event_id>', methods=['DELETE'])
     @token_required
@@ -275,12 +276,12 @@ def create_event_bp(storage, gpt_results, backend):
 
         success = storage.delete_event(event_id)
         if not success:
-            raise BusinessRuleError('Failed to delete event')
+            raise BusinessRuleError(t('event.delete_failed'))
 
         if hasattr(storage, 'flush'):
             storage.flush()
 
-        return deleted_response('Event đã được xóa')
+        return deleted_response(t('event.deleted'))
 
     @event_bp.route('/api/events/<event_id>/connections', methods=['POST'])
     @token_required
@@ -337,7 +338,7 @@ def create_event_bp(storage, gpt_results, backend):
         for c in connections:
             if (c.get('target_event_id') == new_conn['target_event_id'] and
                     c.get('relation_type') == new_conn['relation_type']):
-                return success_response({'connection': new_conn}, 'Connection already exists')
+                return success_response({'connection': new_conn}, t('event.connection_exists'))
 
         connections.append(new_conn)
         storage.update_event(event_id, {'connections': connections})
@@ -345,6 +346,6 @@ def create_event_bp(storage, gpt_results, backend):
         if hasattr(storage, 'flush'):
             storage.flush()
 
-        return success_response({'connection': new_conn}, "Connection added successfully")
+        return success_response({'connection': new_conn}, t('event.connection_added'))
 
     return event_bp

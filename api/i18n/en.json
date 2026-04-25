@@ -15,22 +15,26 @@
     "create": "create"
   },
   "resources": {
-    "world": "world",
-    "story": "story",
-    "entity": "entity",
-    "location": "location",
-    "event": "event",
-    "user": "user",
-    "invitation": "invitation",
-    "novel": "novel",
-    "chapter": "chapter"
+    "world": "World",
+    "story": "Story",
+    "entity": "Entity",
+    "location": "Location",
+    "event": "Event",
+    "user": "User",
+    "invitation": "Invitation",
+    "novel": "Novel",
+    "chapter": "Chapter"
   },
   "world": {
     "created": "World created successfully",
     "updated": "World updated successfully",
     "deleted": "World deleted successfully",
     "auto_link_done": "Linked {count} stories",
-    "share_user_not_found": "User {user_id} does not exist"
+    "share_user_not_found": "User {user_id} does not exist",
+    "public_no_share": "Public worlds do not need to be shared",
+    "need_two_stories_to_link": "At least 2 stories are required to link",
+    "shared": "World shared",
+    "unshared": "Access removed"
   },
   "story": {
     "untitled": "Untitled Story",
