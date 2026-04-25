@@ -19,20 +19,33 @@ function getServerApiBase() {
 
 async function fetchDiscoveryData() {
   const base = getServerApiBase()
-  try {
-    const [storiesRes, worldsRes] = await Promise.all([
-      fetch(`${base}/stories`, { next: { revalidate: 60 } }),
-      fetch(`${base}/worlds`, { next: { revalidate: 60 } }),
-    ])
-    const storiesJson = storiesRes.ok ? await storiesRes.json() : {}
-    const worldsJson = worldsRes.ok ? await worldsRes.json() : {}
-    return {
-      stories: storiesJson.data ?? [],
-      worlds: worldsJson.data ?? [],
+  // Vercel Deployment Protection (preview URLs) blocks unauthenticated
+  // requests to the deployment. Forward the bypass secret when present so
+  // a Next.js Server Component can call its sibling Flask function.
+  const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+    || process.env.VERCEL_BYPASS_SECRET
+  const headers = bypass ? { 'x-vercel-protection-bypass': bypass } : {}
+
+  const safeFetch = async (url) => {
+    try {
+      const res = await fetch(url, { headers, next: { revalidate: 60 } })
+      if (!res.ok) {
+        console.error(`[discovery] ${url} -> HTTP ${res.status}`)
+        return []
+      }
+      const json = await res.json()
+      return json.data ?? []
+    } catch (err) {
+      console.error(`[discovery] ${url} -> ${err?.message || err}`)
+      return []
     }
-  } catch {
-    return { stories: [], worlds: [] }
   }
+
+  const [stories, worlds] = await Promise.all([
+    safeFetch(`${base}/stories`),
+    safeFetch(`${base}/worlds`),
+  ])
+  return { stories, worlds }
 }
 
 export default async function Page() {
