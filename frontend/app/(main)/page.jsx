@@ -1,4 +1,14 @@
-import HomePage from '../../src/views/HomePage'
+import DiscoverySection from '../../src/components/discovery/DiscoverySection'
+import HomeAuthGate from '../../src/views/HomeAuthGate'
+import { getServerLocale, getServerT } from '../../src/i18n/serverI18n'
+
+export async function generateMetadata() {
+  const t = getServerT()
+  return {
+    title: t('meta.home.title'),
+    description: t('meta.home.description'),
+  }
+}
 
 function getServerApiBase() {
   if (process.env.VERCEL_URL) {
@@ -17,15 +27,23 @@ async function fetchDiscoveryData() {
     const storiesJson = storiesRes.ok ? await storiesRes.json() : {}
     const worldsJson = worldsRes.ok ? await worldsRes.json() : {}
     return {
-      initialStories: storiesJson.data ?? [],
-      initialWorlds: worldsJson.data ?? [],
+      stories: storiesJson.data ?? [],
+      worlds: worldsJson.data ?? [],
     }
   } catch {
-    return { initialStories: [], initialWorlds: [] }
+    return { stories: [], worlds: [] }
   }
 }
 
 export default async function Page() {
-  const { initialStories, initialWorlds } = await fetchDiscoveryData()
-  return <HomePage initialStories={initialStories} initialWorlds={initialWorlds} />
+  const [{ stories, worlds }, locale] = await Promise.all([
+    fetchDiscoveryData(),
+    Promise.resolve(getServerLocale()),
+  ])
+
+  return (
+    <HomeAuthGate>
+      <DiscoverySection stories={stories} worlds={worlds} locale={locale} />
+    </HomeAuthGate>
+  )
 }

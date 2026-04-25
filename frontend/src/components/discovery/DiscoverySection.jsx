@@ -1,11 +1,8 @@
-'use client'
-
 import React from 'react'
-import { Link } from '../../utils/router-compat'
-import { useTranslation } from 'react-i18next'
-import LoadingSpinner from '../LoadingSpinner'
+import Link from 'next/link'
 import Tag from '../Tag'
 import { BookOpenIcon, GlobeAltIcon, ArrowRightIcon, MapIcon } from '@heroicons/react/24/outline'
+import { getServerT } from '../../i18n/serverI18n'
 
 const GENRE_COLOR = {
   adventure: 'success',
@@ -14,67 +11,40 @@ const GENRE_COLOR = {
   discovery: 'info',
 }
 
+function processStories(stories, worlds) {
+  const worldMap = Object.fromEntries((worlds || []).map(w => [w.world_id, w.name]))
+  return [...(stories || [])]
+    .sort((a, b) => (b.updated_at || b.created_at || '').localeCompare(a.updated_at || a.created_at || ''))
+    .slice(0, 8)
+    .map(s => ({
+      ...s,
+      world_name: worldMap[s.world_id] || null,
+      content_preview: s.content_preview
+        || (s.content ? s.content.replace(/<[^>]*>/g, '').slice(0, 160) : ''),
+    }))
+}
+
 function StoryCard({ story, featured = false }) {
   const date = story.updated_at || story.created_at
-
-  if (featured) {
-    return (
-      <Link
-        to={`/stories/${story.story_id}`}
-        className="col-span-2 bg-base-100 rounded-2xl shadow-md hover:shadow-lg transition p-6 flex flex-col gap-3 group"
-      >
-        <h3 className="font-extrabold text-2xl leading-snug group-hover:text-primary transition-colors line-clamp-2">
-          {story.title}
-        </h3>
-        {story.content_preview && (
-          <p className="text-base-content/70 text-sm leading-relaxed line-clamp-3">
-            {story.content_preview}
-          </p>
-        )}
-        <div className="flex items-center gap-2 mt-auto flex-wrap">
-          {story.genre && (
-            <Tag color={GENRE_COLOR[story.genre] || 'accent'} size="sm">{story.genre}</Tag>
-          )}
-          {story.world_name && (
-            <Link
-              to={`/worlds/${story.world_id}`}
-              onClick={e => e.stopPropagation()}
-              className="flex items-center gap-1 text-xs text-base-content/50 hover:text-primary transition"
-            >
-              <MapIcon className="w-3 h-3" />{story.world_name}
-            </Link>
-          )}
-          {date && (
-            <span className="text-xs text-base-content/40 ml-auto">
-              {new Date(date).toLocaleDateString()}
-            </span>
-          )}
-        </div>
-      </Link>
-    )
-  }
+  const wrapperClass = featured
+    ? 'col-span-2 bg-base-100 rounded-2xl shadow-md hover:shadow-lg transition p-6 flex flex-col gap-3 group'
+    : 'bg-base-100 rounded-2xl shadow hover:shadow-md transition p-4 flex flex-col gap-2 group'
+  const titleClass = featured
+    ? 'font-extrabold text-2xl leading-snug group-hover:text-primary transition-colors line-clamp-2'
+    : 'font-bold text-base leading-snug group-hover:text-primary transition-colors line-clamp-2'
+  const previewClass = featured
+    ? 'text-base-content/70 text-sm leading-relaxed line-clamp-3'
+    : 'text-sm text-base-content/60 line-clamp-2 flex-1'
 
   return (
-    <Link
-      to={`/stories/${story.story_id}`}
-      className="bg-base-100 rounded-2xl shadow hover:shadow-md transition p-4 flex flex-col gap-2 group"
-    >
-      <h3 className="font-bold text-base leading-snug group-hover:text-primary transition-colors line-clamp-2">
-        {story.title}
-      </h3>
-      {story.content_preview && (
-        <p className="text-sm text-base-content/60 line-clamp-2 flex-1">
-          {story.content_preview}
-        </p>
-      )}
+    <Link href={`/stories/${story.story_id}`} className={wrapperClass}>
+      <h3 className={titleClass}>{story.title}</h3>
+      {story.content_preview && <p className={previewClass}>{story.content_preview}</p>}
       <div className="flex items-center gap-2 mt-auto pt-1 flex-wrap">
-        {story.genre && (
-          <Tag color={GENRE_COLOR[story.genre] || 'accent'} size="sm">{story.genre}</Tag>
-        )}
+        {story.genre && <Tag color={GENRE_COLOR[story.genre] || 'accent'} size="sm">{story.genre}</Tag>}
         {story.world_name && (
           <Link
-            to={`/worlds/${story.world_id}`}
-            onClick={e => e.stopPropagation()}
+            href={`/worlds/${story.world_id}`}
             className="flex items-center gap-1 text-xs text-base-content/50 hover:text-primary transition"
           >
             <MapIcon className="w-3 h-3" />{story.world_name}
@@ -93,7 +63,7 @@ function StoryCard({ story, featured = false }) {
 function WorldCard({ world }) {
   return (
     <Link
-      to={`/worlds/${world.world_id}`}
+      href={`/worlds/${world.world_id}`}
       className="bg-base-100 rounded-2xl shadow hover:shadow-md transition p-4 flex flex-col gap-2 group"
     >
       <h3 className="font-bold text-base leading-snug group-hover:text-primary transition-colors line-clamp-1">
@@ -118,29 +88,21 @@ function SectionHeader({ icon: Icon, title, linkTo, linkLabel }) {
         <Icon className="w-5 h-5 text-primary" />
         {title}
       </h2>
-      <Link to={linkTo} className="flex items-center gap-1 text-sm text-base-content/50 hover:text-primary transition">
+      <Link href={linkTo} className="flex items-center gap-1 text-sm text-base-content/50 hover:text-primary transition">
         {linkLabel} <ArrowRightIcon className="w-4 h-4" />
       </Link>
     </div>
   )
 }
 
-function DiscoveryView({ stories, worlds, isLoading }) {
-  const { t } = useTranslation()
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner />
-      </div>
-    )
-  }
-
+function DiscoverySection({ stories: rawStories = [], worlds: rawWorlds = [], locale = 'vi' }) {
+  const t = getServerT(locale)
+  const stories = processStories(rawStories, rawWorlds)
+  const worlds = (rawWorlds || []).slice(0, 6)
   const [featured, ...rest] = stories
 
   return (
     <div className="space-y-10 max-w-6xl mx-auto">
-      {/* Stories section */}
       <section>
         <SectionHeader
           icon={BookOpenIcon}
@@ -158,7 +120,6 @@ function DiscoveryView({ stories, worlds, isLoading }) {
         )}
       </section>
 
-      {/* Worlds section */}
       <section>
         <SectionHeader
           icon={GlobeAltIcon}
@@ -178,4 +139,4 @@ function DiscoveryView({ stories, worlds, isLoading }) {
   )
 }
 
-export default DiscoveryView
+export default DiscoverySection
