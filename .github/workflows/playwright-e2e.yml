@@ -120,6 +120,10 @@ jobs:
         with:
           script: |
             const fs = require('fs')
+            // Hidden marker so we can find and delete previous failure
+            // comments posted by this workflow. Bots only — humans never
+            // type this string.
+            const MARKER = '<!-- e2e-failure-comment -->'
             const sha = context.payload.deployment?.sha || context.sha
             const deployUrl = context.payload.deployment_status?.target_url || ''
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
@@ -174,6 +178,7 @@ jobs:
             }
 
             const body = [
+              MARKER,
               '## ❌ E2E Tests Failed',
               '',
               `**Deploy:** ${deployUrl}`,
@@ -185,6 +190,25 @@ jobs:
               '> Screenshots and videos are attached as artifacts on the Actions run.',
             ].join('\n')
 
+            // Delete all previous failure comments from this workflow so
+            // only the latest run's report remains on the PR.
+            const stale = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100,
+            })
+            for (const c of stale) {
+              if (c.body && c.body.includes(MARKER)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: c.id,
+                })
+                console.log(`Deleted stale failure comment ${c.id}`)
+              }
+            }
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -192,3 +216,42 @@ jobs:
               body,
             })
             console.log(`Commented on PR #${prNumber}`)
+
+      - name: Clear failure comments on PR when E2E passes
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const MARKER = '<!-- e2e-failure-comment -->'
+            const sha = context.payload.deployment?.sha || context.sha
+
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: sha,
+            })
+            const openPR = prs.find(pr => pr.state === 'open')
+            if (!openPR) {
+              console.log(`No open PR found for commit ${sha} — nothing to clean up`)
+              return
+            }
+            const prNumber = openPR.number
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100,
+            })
+            let cleared = 0
+            for (const c of comments) {
+              if (c.body && c.body.includes(MARKER)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: c.id,
+                })
+                cleared++
+              }
+            }
+            console.log(`E2E passed — removed ${cleared} stale failure comment(s) from PR #${prNumber}`)
