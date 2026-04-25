@@ -1,0 +1,103 @@
+{
+  "errors": {
+    "resource_not_found": "{type} not found: {id}",
+    "permission_denied": "Permission denied: cannot {action} {type}",
+    "unexpected": "An unexpected error occurred. Please try again later.",
+    "endpoint_not_found": "The requested endpoint does not exist.",
+    "method_not_allowed": "The HTTP method is not allowed for this endpoint.",
+    "internal_server_error": "An internal server error occurred. Please try again later."
+  },
+  "actions": {
+    "view": "view",
+    "edit": "edit",
+    "delete": "delete",
+    "share": "share",
+    "create": "create"
+  },
+  "resources": {
+    "world": "world",
+    "story": "story",
+    "entity": "entity",
+    "location": "location",
+    "event": "event",
+    "user": "user",
+    "invitation": "invitation",
+    "novel": "novel",
+    "chapter": "chapter"
+  },
+  "world": {
+    "created": "World created successfully",
+    "updated": "World updated successfully",
+    "deleted": "World deleted successfully",
+    "auto_link_done": "Linked {count} stories",
+    "share_user_not_found": "User {user_id} does not exist"
+  },
+  "story": {
+    "untitled": "Untitled Story",
+    "created": "Story created successfully",
+    "updated": "Story updated successfully",
+    "deleted": "Story deleted successfully",
+    "default_locations_title": "Locations in the story",
+    "quota_exceeded": "You have reached your public story limit"
+  },
+  "entity": {
+    "updated": "Entity updated successfully",
+    "deleted": "Entity deleted successfully"
+  },
+  "location": {
+    "updated": "Location updated successfully",
+    "deleted": "Location deleted successfully"
+  },
+  "novel": {
+    "chapters_reordered": "Chapters reordered"
+  },
+  "collaborator": {
+    "cannot_invite_self": "You cannot invite yourself as a co-author",
+    "already_coauthor": "User is already a co-author of this world",
+    "invite_pending": "An invitation for this user is already pending",
+    "max_reached": "This world has reached the maximum of 10 co-authors",
+    "invitation_sent": "Invitation sent",
+    "removed": "Co-author removed",
+    "invitation_accepted": "Invitation accepted",
+    "invitation_declined": "Invitation declined"
+  },
+  "event": {
+    "no_stories": "No stories found in this world",
+    "analyzing_story": "Analyzing story...",
+    "analyzing_batch": "Analyzing {count} stories in 1 prompt...",
+    "extracting": "Extracting events: {name}",
+    "cache_cleared": "Cache cleared",
+    "cache_empty": "No cache to clear",
+    "update_failed": "Failed to update event",
+    "updated": "Event updated successfully",
+    "delete_failed": "Failed to delete event",
+    "deleted": "Event deleted",
+    "connection_exists": "Connection already exists",
+    "connection_added": "Connection added successfully"
+  },
+  "auth": {
+    "missing_google_token": "Missing Google token",
+    "invalid_google_token": "Invalid Google token",
+    "google_audience_mismatch": "Google token audience mismatch",
+    "google_token_expired": "Google token expired",
+    "missing_auth_header": "Missing or invalid Authorization header",
+    "invalid_token": "Token is invalid or expired"
+  },
+  "admin": {
+    "cannot_change_own_role": "You cannot change your own role",
+    "role_changed": "Role changed from {old_role} to {new_role}",
+    "cannot_ban_self": "You cannot ban yourself",
+    "user_action_done": "User {username} has been {action}"
+  },
+  "gpt": {
+    "missing_description": "Either world_description or story_description is required",
+    "missing_world_id": "world_id is required",
+    "max_batch_exceeded": "Maximum {max} stories per analysis",
+    "request_failed": "GPT request failed"
+  },
+  "responses": {
+    "created": "Resource created successfully",
+    "deleted": "Resource deleted successfully",
+    "accepted": "Request accepted for processing"
+  }
+}

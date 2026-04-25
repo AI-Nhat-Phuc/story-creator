@@ -20,6 +20,16 @@ api.interceptors.request.use(
       if (authToken) {
         config.headers.Authorization = `Bearer ${authToken}`
       }
+      // Tell the backend which locale to render error/success messages in.
+      // Read from cookie (mirrors localStorage via i18n/index.js) so this also
+      // works for any future server-side axios calls.
+      const cookieMatch = typeof document !== 'undefined'
+        ? document.cookie.match(/(?:^|;\s*)sc_lang=([^;]+)/)
+        : null
+      const lang = cookieMatch
+        ? decodeURIComponent(cookieMatch[1])
+        : (localStorage.getItem('sc_lang') || 'vi')
+      config.headers['Accept-Language'] = lang
     }
     return config
   },
