@@ -1,0 +1,20 @@
+# Files Vercel should not include in the build context.
+#
+# api/ is included automatically (Vercel auto-detects api/*.py as Python
+# functions). We only need to exclude things that are NOT needed at deploy
+# time but live at the repo root, where Vercel might otherwise mistake them
+# for project-level Python code.
+
+# Backend test suites — only needed for local development and CI test runs.
+api/test*.py
+
+# Local development artifacts
+.venv/
+logs/
+*.db
+*.db-*
+
+# Documentation that bloats the function bundle
+docs/
+FLASK_API_REFACTORING.md
+CLAUDE.md
