@@ -221,16 +221,14 @@ static/dist/
 # Frontend
 node_modules/
 */node_modules/
-frontend/dist/
-frontend/.env.local
 .next/
-frontend/.next/
+out/
+next-env.d.ts
+.env.local
 
 # Playwright test artifacts
 test-results/
 playwright-report/
-frontend/test-results/
-frontend/playwright-report/
 .playwright-mcp/
 
 # Temporary files

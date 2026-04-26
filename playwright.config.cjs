@@ -65,7 +65,7 @@ module.exports = defineConfig({
       },
       {
         // Flask API backend
-        command: 'python ../api/main.py -i api',
+        command: 'python api/main.py -i api',
         url: 'http://localhost:5000/api/health',
         reuseExistingServer: true,
         timeout: 30000,
