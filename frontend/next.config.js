@@ -9,23 +9,10 @@ const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
     if (process.env.NODE_ENV === 'production') {
-      // Vercel's vercel.json catch-all prepends /frontend/ to the incoming
-      // URL before it reaches this Next.js app (because @vercel/next is
-      // registered at src:"frontend/package.json"). Strip that prefix so
-      // app-router page matching (e.g. app/login/page.jsx,
-      // app/(main)/worlds/[worldId]/page.jsx) works.
-      //
-      // beforeFiles is critical: afterFiles only fires after Next.js has
-      // already tried to match the URL against the file system and route
-      // tree, which fails for `/frontend/worlds/[worldId]` (Next.js has
-      // no /frontend/* routes) — so dynamic detail pages 404 before the
-      // rewrite ever gets a chance to run.
-      return {
-        beforeFiles: [
-          { source: '/frontend', destination: '/' },
-          { source: '/frontend/:path*', destination: '/:path*' },
-        ],
-      }
+      // Vercel routes /api/* to Flask via vercel.json; everything else is
+      // handled by @vercel/next via `handle: filesystem`. No URL mangling
+      // is needed here.
+      return []
     }
     // Dev: proxy /api/* to Flask on :5000.
     return [
