@@ -31,6 +31,12 @@ function Tag({
 
   const classes = [
     'badge',
+    // inline-flex + items-center keeps icon + text vertically centred so
+    // the visible top / bottom padding looks even (DaisyUI's default
+    // can read off-balance once we add icons or wrap text in `truncate`).
+    'inline-flex',
+    'items-center',
+    'leading-none',
     // truncate = white-space: nowrap + overflow-hidden + text-ellipsis.
     // Combined with max-w-full it lets a tag shrink and clip with "…"
     // when its content (e.g. a long story title) would otherwise push
@@ -39,7 +45,9 @@ function Tag({
     'truncate',
     'max-w-full',
     'min-w-0',
-    'py-1',
+    // Equal vertical padding (py-1.5 = 6px top & bottom) regardless of
+    // what DaisyUI's badge size class would otherwise apply.
+    'py-1.5',
     color && `badge-${color}`,
     size && `badge-${size}`,
     outline && 'badge-outline',

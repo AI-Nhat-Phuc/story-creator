@@ -176,7 +176,9 @@ function WorldTimeline({
             <div className={metaPos}>
               <time className="opacity-70 font-mono text-sm px-2">{timeLabel}</time>
             </div>
-            <div className="timeline-middle">
+            {/* self-center vertically aligns the marker with the middle of
+                the card body instead of pinning it to the top. */}
+            <div className="timeline-middle self-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 ${palette.iconText}`}>
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
               </svg>
@@ -204,10 +206,12 @@ function WorldTimeline({
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between items-center gap-2">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
                     <Link to={`/stories/${story.story_id}`} className="link link-hover block min-w-0 flex-1">
-                      <h3 className="font-bold text-xl truncate">{story.title}</h3>
+                      {/* break-words lets long titles wrap to a new line
+                          instead of being clipped with ellipsis. */}
+                      <h3 className="font-bold text-xl break-words">{story.title}</h3>
                     </Link>
                   </div>
                   {onDeleteStory && (
