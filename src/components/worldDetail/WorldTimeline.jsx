@@ -134,10 +134,20 @@ function WorldTimeline({
           badgeColor: 'accent'
         }
 
-        // Zigzag: odd-indexed rows flip sides on md+ screens.
+        // Zigzag layout — but only on md+ screens.
+        //
+        // On mobile (< md) the alternating timeline-start / timeline-end
+        // positions push cards halfway off-screen, since each side gets only
+        // ~half the viewport. Force every card to timeline-end on mobile so
+        // DaisyUI's `timeline-compact` can render a single right-aligned
+        // column. The meta label is hidden on mobile to save space.
         const flip = groupIndex % 2 === 1
-        const metaPos = flip ? 'timeline-end md:text-left' : 'timeline-start md:text-right'
-        const cardPos = flip ? 'timeline-start' : 'timeline-end'
+        const metaPos = flip
+          ? 'hidden md:block timeline-end md:text-left'
+          : 'hidden md:block timeline-start md:text-right'
+        const cardPos = flip
+          ? 'timeline-end md:timeline-start'
+          : 'timeline-end'
         const isDragging = draggingIdx === groupIndex
         const showGap = canReorder && draggingIdx !== null && hoverIdx === groupIndex && draggingIdx !== groupIndex
 
@@ -195,8 +205,8 @@ function WorldTimeline({
                   </div>
                 )}
                 <div className="flex justify-between items-center gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Link to={`/stories/${story.story_id}`} className="link link-hover min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Link to={`/stories/${story.story_id}`} className="link link-hover block min-w-0 flex-1">
                       <h3 className="font-bold text-xl truncate">{story.title}</h3>
                     </Link>
                   </div>
