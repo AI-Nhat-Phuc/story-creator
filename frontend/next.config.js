@@ -9,10 +9,21 @@ const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
     if (process.env.NODE_ENV === 'production') {
-      // Vercel routes /api/* to Flask via vercel.json; everything else is
-      // handled by @vercel/next via `handle: filesystem`. No URL mangling
-      // is needed here.
-      return []
+      // @vercel/next is registered with `src: "frontend/package.json"`, so
+      // its routes (and everything that hands off to Next.js) live under
+      // /frontend/...  vercel.json catch-all rewrites every user URL into
+      // that namespace; we strip the prefix here so the App Router matches
+      // pages at the URLs the user actually visited.
+      //
+      // beforeFiles is critical: with afterFiles, Next.js checks the route
+      // tree first and 404s on /frontend/worlds/[id] before the rewrite
+      // ever runs (no app/frontend/* routes exist).
+      return {
+        beforeFiles: [
+          { source: '/frontend', destination: '/' },
+          { source: '/frontend/:path*', destination: '/:path*' },
+        ],
+      }
     }
     // Dev: proxy /api/* to Flask on :5000.
     return [

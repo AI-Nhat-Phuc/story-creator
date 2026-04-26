@@ -12,6 +12,7 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/app.py" },
+    { "src": "/(.*)", "dest": "/frontend/$1", "continue": true },
     { "handle": "filesystem" }
   ],
   "crons": [
