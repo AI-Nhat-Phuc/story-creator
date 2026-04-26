@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useLayoutEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 import {
   LIGHT_PALETTE,
   DARK_PALETTE,
@@ -89,10 +89,15 @@ function applyTheme(mode, palette) {
   }
 }
 
-function getInitialState() {
+function getDefaultState() {
+  return { mode: THEME_MODES.LIGHT, primaryColor: DEFAULT_PRIMARY }
+}
+
+function getStoredState() {
   const saved = loadFromStorage()
-  const mode = saved?.mode ?? THEME_MODES.LIGHT
-  const raw = saved?.primaryColor ?? DEFAULT_PRIMARY
+  if (!saved) return null
+  const mode = saved.mode ?? THEME_MODES.LIGHT
+  const raw = saved.primaryColor ?? DEFAULT_PRIMARY
   const primaryColor = isValidHex(raw) ? raw : DEFAULT_PRIMARY
   return { mode, primaryColor }
 }
@@ -104,12 +109,21 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }) {
-  const [{ mode, primaryColor }, setTheme] = useState(getInitialState)
+  // Initialise with defaults so the SSR HTML matches the client's first
+  // render. The user's saved theme is applied in the post-mount effect
+  // below — any theme-driven UI re-renders without a hydration warning.
+  const [{ mode, primaryColor }, setTheme] = useState(getDefaultState)
 
-  // useLayoutEffect runs before paint — prevents flash of unstyled theme
-  useLayoutEffect(() => {
-    applyTheme(mode, getPalette(mode, primaryColor))
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const stored = getStoredState()
+    if (stored) {
+      setTheme(stored)
+      applyTheme(stored.mode, getPalette(stored.mode, stored.primaryColor))
+    } else {
+      applyTheme(mode, getPalette(mode, primaryColor))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function setMode(newMode) {
     setTheme((prev) => ({ ...prev, mode: newMode }))

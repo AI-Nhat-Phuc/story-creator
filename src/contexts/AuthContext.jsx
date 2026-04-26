@@ -21,9 +21,9 @@ export const AuthProvider = ({ children }) => {
   // to a protected URL causes an immediate redirect to /login because user===null
   // before verifyToken resolves (visible as a race condition on Vercel cold starts).
   const [loading, setLoading] = useState(true)
-  const [token, setToken] = useState(() =>
-    typeof window === 'undefined' ? null : localStorage.getItem('auth_token')
-  )
+  // Initialise to null so SSR and the client's first render match. The real
+  // token is hydrated from localStorage in the verifyToken effect below.
+  const [token, setToken] = useState(null)
 
   // Setup axios response interceptor to handle 401 errors
   // (Request interceptor with token is in api.js at module level to avoid race conditions)
@@ -51,6 +51,9 @@ export const AuthProvider = ({ children }) => {
     const verifyToken = async () => {
       const savedToken = localStorage.getItem('auth_token')
       if (savedToken) {
+        // Hydrate React state to match what's already in localStorage so any
+        // consumer reading `token` from context after mount sees the truth.
+        setToken(savedToken)
         try {
           const response = await authAPI.verify()
           if (response.data.success) {
