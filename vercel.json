@@ -3,9 +3,6 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/app.py" }
   ],
-  "functions": {
-    "api/app.py": { "runtime": "@vercel/python@4.3.0" }
-  },
   "crons": [
     {
       "path": "/api/health",
