@@ -799,7 +799,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
     # ------------------------------------------------------------------
 
     @world_bp.route('/api/worlds/<world_id>/novel', methods=['GET'])
-    @token_required
+    @optional_auth
     def get_novel(world_id):
         """Get novel metadata and ordered chapter list for a world.
         ---
@@ -823,7 +823,11 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         novel = world_data.get('novel') or {}
         chapter_order = novel.get('chapter_order', [])
 
-        all_stories = storage.list_stories(world_id=world_id, user_id=g.current_user.user_id)
+        # Match /novel/content, /world detail and /world/stories — when no
+        # auth token is present we treat the visitor as anonymous so only
+        # public stories surface in the chapter list.
+        user_id = g.current_user.user_id if hasattr(g, 'current_user') else None
+        all_stories = storage.list_stories(world_id=world_id, user_id=user_id)
         stories_by_id = {s['story_id']: s for s in all_stories}
 
         if chapter_order:
