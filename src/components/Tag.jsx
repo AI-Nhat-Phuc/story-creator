@@ -31,7 +31,14 @@ function Tag({
 
   const classes = [
     'badge',
-    'whitespace-nowrap',
+    // truncate = white-space: nowrap + overflow-hidden + text-ellipsis.
+    // Combined with max-w-full it lets a tag shrink and clip with "…"
+    // when its content (e.g. a long story title) would otherwise push
+    // the parent flex container past the viewport. min-w-0 is required
+    // for the shrink to actually take effect inside a flex-wrap parent.
+    'truncate',
+    'max-w-full',
+    'min-w-0',
     'py-1',
     color && `badge-${color}`,
     size && `badge-${size}`,
@@ -41,8 +48,12 @@ function Tag({
     .filter(Boolean)
     .join(' ')
 
+  // If a string was passed as children, use it as the default title so
+  // hover/long-press reveals the full text when truncate clips it.
+  const tooltip = props.title ?? (typeof children === 'string' ? children : undefined)
+
   return (
-    <Component className={classes} {...props}>
+    <Component className={classes} title={tooltip} {...props}>
       {Icon && <Icon className={`inline shrink-0 ${iconSizeClass}`} aria-hidden="true" />}
       {children}
     </Component>
