@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from '../utils/router-compat'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
@@ -23,6 +23,24 @@ function Navbar() {
   const navigate = useNavigate()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [invitations, setInvitations] = useState([])
+
+  // Mobile auto-hide on scroll down, reveal on scroll up.
+  // Desktop ignores `hidden` because the transform classes are gated by max-md:.
+  const [hidden, setHidden] = useState(false)
+  const lastYRef = useRef(0)
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      const dy = y - lastYRef.current
+      lastYRef.current = y
+      // Ignore tiny jitters and bounces near the top of the page.
+      if (Math.abs(dy) < 8) return
+      if (y < 80) { setHidden(false); return }
+      setHidden(dy > 0)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -95,7 +113,17 @@ function Navbar() {
   )
 
   return (
-    <div className="bg-primary shadow-lg text-primary-content navbar">
+    <div
+      className={[
+        'bg-primary shadow-lg text-primary-content navbar',
+        // Sticky on every breakpoint so users always have nav within reach.
+        'sticky top-0 z-40 transition-transform duration-200 will-change-transform',
+        // Mobile-only auto-hide: slide off-screen when the user is scrolling
+        // down through content, slide back when they scroll up. The
+        // `max-md:` prefix scopes the transform to < md so desktop stays put.
+        hidden ? 'max-md:-translate-y-full' : 'max-md:translate-y-0',
+      ].join(' ')}
+    >
       <div className="flex-1">
         <Link to="/" className="text-xl normal-case btn btn-ghost">
           <BookOpenIcon className="inline w-5 h-5" /> Story Creator
