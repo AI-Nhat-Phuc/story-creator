@@ -45,9 +45,9 @@ function Tag({
     'truncate',
     'max-w-full',
     'min-w-0',
-    // Equal vertical padding (py-1.5 = 6px top & bottom) regardless of
-    // what DaisyUI's badge size class would otherwise apply.
-    'py-1.5',
+    // Equal vertical padding of 0.5rem (py-2) on top & bottom regardless
+    // of what DaisyUI's badge size class would otherwise apply.
+    'py-2',
     color && `badge-${color}`,
     size && `badge-${size}`,
     outline && 'badge-outline',
