@@ -134,20 +134,11 @@ function WorldTimeline({
           badgeColor: 'accent'
         }
 
-        // Zigzag layout — but only on md+ screens.
-        //
-        // On mobile (< md) the alternating timeline-start / timeline-end
-        // positions push cards halfway off-screen, since each side gets only
-        // ~half the viewport. Force every card to timeline-end on mobile so
-        // DaisyUI's `timeline-compact` can render a single right-aligned
-        // column. The meta label is hidden on mobile to save space.
-        const flip = groupIndex % 2 === 1
-        const metaPos = flip
-          ? 'hidden md:block timeline-end md:text-left'
-          : 'hidden md:block timeline-start md:text-right'
-        const cardPos = flip
-          ? 'timeline-end md:timeline-start'
-          : 'timeline-end'
+        // No more zigzag — every row uses the same layout. On mobile the
+        // card sits on `timeline-end`, on md+ it moves to `timeline-start`
+        // so the meta label can occupy the right column.
+        const metaPos = 'hidden md:block timeline-end md:text-left'
+        const cardPos = 'timeline-end md:timeline-start'
         const isDragging = draggingIdx === groupIndex
         const showGap = canReorder && draggingIdx !== null && hoverIdx === groupIndex && draggingIdx !== groupIndex
 
@@ -176,14 +167,11 @@ function WorldTimeline({
             <div className={metaPos}>
               <time className="opacity-70 font-mono text-sm px-2">{timeLabel}</time>
             </div>
-            {/* DevTools showed this cell rendering as 20×20 (icon-sized)
-                even with `!self-stretch`. DaisyUI defines its own
-                .timeline-middle rules at the same specificity, so neither
-                Tailwind's `!self-stretch` nor inline-style align-self:
-                stretch reliably wins. Use an arbitrary-value class with
-                an explicit !important — the resulting CSS is
-                `align-self: stretch !important;` which beats DaisyUI. */}
-            <div className="timeline-middle [align-self:stretch_!important] flex items-center">
+            {/* `!self-stretch` makes the cell span the row's full height
+                (= card height) so the SVG flex-centers vertically against
+                the card's middle. Verified `align-self:stretch!important`
+                lands in the built CSS, beating DaisyUI's default. */}
+            <div className="timeline-middle !self-stretch flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 ${palette.iconText}`}>
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
               </svg>
