@@ -134,11 +134,16 @@ function WorldTimeline({
           badgeColor: 'accent'
         }
 
-        // No more zigzag — every row uses the same layout. On mobile the
-        // card sits on `timeline-end`, on md+ it moves to `timeline-start`
-        // so the meta label can occupy the right column.
-        const metaPos = 'hidden md:block timeline-end md:text-left'
-        const cardPos = 'timeline-end md:timeline-start'
+        // Mobile (< md): every card stacks on the right of the line, single
+        // column. md+: alternate sides per row (zigzag) — odd rows put the
+        // card on the left and meta on the right; even rows do the reverse.
+        const flip = groupIndex % 2 === 1
+        const metaPos = flip
+          ? 'hidden md:block timeline-end md:text-left'
+          : 'hidden md:block timeline-start md:text-right'
+        const cardPos = flip
+          ? 'timeline-end md:timeline-start'
+          : 'timeline-end'
         const isDragging = draggingIdx === groupIndex
         const showGap = canReorder && draggingIdx !== null && hoverIdx === groupIndex && draggingIdx !== groupIndex
 
