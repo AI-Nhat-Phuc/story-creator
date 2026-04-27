@@ -80,10 +80,16 @@ jobs:
           fi
           LAST_STATUS=0
           for i in $(seq 1 18); do
+            # `|| echo "000"` keeps the loop alive when curl returns
+            # non-zero (timeout = 28, connect refused = 7, dns fail = 6).
+            # GitHub Actions runs scripts with `set -e` by default, so
+            # without this fallback the very first slow response would
+            # abort the whole step with the curl exit code instead of
+            # cycling through to the next retry.
             STATUS=$(curl -s -o /tmp/deploy-body -w "%{http_code}" \
               -H "x-vercel-protection-bypass: ${BYPASS_SECRET}" \
               -L --max-time 10 \
-              "$DEPLOY_URL")
+              "$DEPLOY_URL" || echo "000")
             LAST_STATUS=$STATUS
             echo "Attempt $i: HTTP $STATUS"
             if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
