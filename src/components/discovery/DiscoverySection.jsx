@@ -26,8 +26,12 @@ function processStories(stories, worlds) {
 
 function StoryCard({ story, featured = false }) {
   const date = story.updated_at || story.created_at
+  // `col-span-2` only kicks in at `sm:` and above. On mobile the grid is
+  // a single column, so spanning 2 there forces the implicit grid to
+  // become 2-wide for one row only — making every other card render
+  // narrower than the viewport with a sliver of dead space on the side.
   const wrapperClass = featured
-    ? 'col-span-2 bg-base-100 rounded-2xl shadow-md hover:shadow-lg transition p-6 flex flex-col gap-3 group'
+    ? 'sm:col-span-2 bg-base-100 rounded-2xl shadow-md hover:shadow-lg transition p-6 flex flex-col gap-3 group'
     : 'bg-base-100 rounded-2xl shadow hover:shadow-md transition p-4 flex flex-col gap-2 group'
   const titleClass = featured
     ? 'font-extrabold text-2xl leading-snug group-hover:text-primary transition-colors line-clamp-2'
