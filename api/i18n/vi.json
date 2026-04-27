@@ -1,0 +1,107 @@
+{
+  "errors": {
+    "resource_not_found": "Không tìm thấy {type}: {id}",
+    "permission_denied": "Không có quyền: không thể {action} {type}",
+    "unexpected": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.",
+    "endpoint_not_found": "Endpoint không tồn tại.",
+    "method_not_allowed": "Phương thức HTTP không được phép cho endpoint này.",
+    "internal_server_error": "Đã xảy ra lỗi máy chủ nội bộ. Vui lòng thử lại sau."
+  },
+  "actions": {
+    "view": "xem",
+    "edit": "chỉnh sửa",
+    "delete": "xóa",
+    "share": "chia sẻ",
+    "create": "tạo"
+  },
+  "resources": {
+    "world": "thế giới",
+    "story": "câu chuyện",
+    "entity": "nhân vật",
+    "location": "địa điểm",
+    "event": "sự kiện",
+    "user": "người dùng",
+    "invitation": "lời mời",
+    "novel": "tiểu thuyết",
+    "chapter": "chương"
+  },
+  "world": {
+    "created": "Đã tạo thế giới",
+    "updated": "Đã cập nhật thế giới",
+    "deleted": "Đã xóa thế giới",
+    "auto_link_done": "Đã liên kết {count} câu chuyện",
+    "share_user_not_found": "User {user_id} không tồn tại",
+    "public_no_share": "Thế giới công khai không cần chia sẻ",
+    "need_two_stories_to_link": "Cần ít nhất 2 câu chuyện để liên kết",
+    "shared": "Đã chia sẻ thế giới",
+    "unshared": "Đã xóa quyền truy cập"
+  },
+  "story": {
+    "untitled": "Câu chuyện chưa đặt tên",
+    "created": "Đã tạo câu chuyện",
+    "updated": "Đã cập nhật câu chuyện",
+    "deleted": "Đã xóa câu chuyện",
+    "default_locations_title": "Địa điểm trong câu chuyện",
+    "quota_exceeded": "Bạn đã đạt giới hạn câu chuyện công khai"
+  },
+  "entity": {
+    "updated": "Đã cập nhật nhân vật",
+    "deleted": "Đã xóa nhân vật"
+  },
+  "location": {
+    "updated": "Đã cập nhật địa điểm",
+    "deleted": "Đã xóa địa điểm"
+  },
+  "novel": {
+    "chapters_reordered": "Đã sắp xếp lại các chương"
+  },
+  "collaborator": {
+    "cannot_invite_self": "Bạn không thể mời chính mình làm đồng tác giả",
+    "already_coauthor": "Người dùng đã là đồng tác giả của thế giới này",
+    "invite_pending": "Đã có lời mời đang chờ cho người dùng này",
+    "max_reached": "Thế giới này đã đạt số đồng tác giả tối đa là 10",
+    "invitation_sent": "Đã gửi lời mời",
+    "removed": "Đã xóa đồng tác giả",
+    "invitation_accepted": "Đã chấp nhận lời mời",
+    "invitation_declined": "Đã từ chối lời mời"
+  },
+  "event": {
+    "no_stories": "Không tìm thấy câu chuyện nào trong thế giới này",
+    "analyzing_story": "Đang phân tích câu chuyện...",
+    "analyzing_batch": "Đang phân tích {count} câu chuyện trong 1 prompt...",
+    "extracting": "Trích xuất sự kiện: {name}",
+    "cache_cleared": "Cache đã được xóa",
+    "cache_empty": "Không có cache để xóa",
+    "update_failed": "Không thể cập nhật sự kiện",
+    "updated": "Đã cập nhật sự kiện",
+    "delete_failed": "Không thể xóa sự kiện",
+    "deleted": "Đã xóa sự kiện",
+    "connection_exists": "Liên kết đã tồn tại",
+    "connection_added": "Đã thêm liên kết"
+  },
+  "auth": {
+    "missing_google_token": "Thiếu Google token",
+    "invalid_google_token": "Google token không hợp lệ",
+    "google_audience_mismatch": "Google token sai audience",
+    "google_token_expired": "Google token đã hết hạn",
+    "missing_auth_header": "Thiếu hoặc sai Authorization header",
+    "invalid_token": "Token không hợp lệ hoặc đã hết hạn"
+  },
+  "admin": {
+    "cannot_change_own_role": "Không thể thay đổi role của chính mình",
+    "role_changed": "Đã đổi role từ {old_role} sang {new_role}",
+    "cannot_ban_self": "Không thể ban chính mình",
+    "user_action_done": "Đã {action} user {username}"
+  },
+  "gpt": {
+    "missing_description": "Cần truyền world_description hoặc story_description",
+    "missing_world_id": "Cần truyền world_id",
+    "max_batch_exceeded": "Tối đa {max} câu chuyện mỗi lần phân tích",
+    "request_failed": "Yêu cầu GPT thất bại"
+  },
+  "responses": {
+    "created": "Tạo thành công",
+    "deleted": "Xóa thành công",
+    "accepted": "Đã nhận yêu cầu để xử lý"
+  }
+}

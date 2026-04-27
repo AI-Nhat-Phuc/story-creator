@@ -11,6 +11,7 @@ from core.exceptions import (
 from interfaces.auth_middleware import token_required
 from utils.responses import success_response, created_response, deleted_response
 from utils.validation import validate_request
+from utils.i18n import t
 from schemas.world_schemas import AddCollaboratorSchema
 
 
@@ -73,17 +74,17 @@ def create_collaborator_bp(storage, flush_data):
         invitee_id = invitee['user_id']
 
         if invitee_id == g.current_user.user_id:
-            raise APIValidationError('You cannot invite yourself as a co-author')
+            raise APIValidationError(t('collaborator.cannot_invite_self'))
 
         if invitee_id in world_data.get('co_authors', []):
-            raise ConflictError('User is already a co-author of this world')
+            raise ConflictError(t('collaborator.already_coauthor'))
 
         existing_inv = storage.find_invitation(world_id, invitee_id)
         if existing_inv and existing_inv.get('status') == 'pending':
-            raise ConflictError('An invitation for this user is already pending')
+            raise ConflictError(t('collaborator.invite_pending'))
 
         if len(world_data.get('co_authors', [])) >= 10:
-            raise APIValidationError('This world has reached the maximum of 10 co-authors')
+            raise APIValidationError(t('collaborator.max_reached'))
 
         invitation = Invitation(
             world_id=world_id,
@@ -97,7 +98,7 @@ def create_collaborator_bp(storage, flush_data):
             'invitation_id': invitation.invitation_id,
             'invitee': invitee.get('username'),
             'world_id': world_id
-        }, "Invitation sent")
+        }, t('collaborator.invitation_sent'))
 
     @collab_bp.route('/api/worlds/<world_id>/collaborators', methods=['GET'])
     @token_required
@@ -171,7 +172,7 @@ def create_collaborator_bp(storage, flush_data):
             storage.save_world(world_data)
             flush_data()
 
-        return deleted_response("Co-author removed")
+        return deleted_response(t('collaborator.removed'))
 
     @collab_bp.route('/api/users/me/invitations', methods=['GET'])
     @token_required
@@ -236,7 +237,7 @@ def create_collaborator_bp(storage, flush_data):
         storage.save_invitation(inv_data)
         flush_data()
 
-        return success_response({'world_id': inv_data['world_id']}, "Invitation accepted")
+        return success_response({'world_id': inv_data['world_id']}, t('collaborator.invitation_accepted'))
 
     @collab_bp.route('/api/users/me/invitations/<invitation_id>/decline', methods=['POST'])
     @token_required
@@ -264,6 +265,6 @@ def create_collaborator_bp(storage, flush_data):
         storage.save_invitation(inv_data)
         flush_data()
 
-        return success_response({}, "Invitation declined")
+        return success_response({}, t('collaborator.invitation_declined'))
 
     return collab_bp

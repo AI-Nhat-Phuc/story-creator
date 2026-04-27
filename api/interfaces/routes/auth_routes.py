@@ -12,6 +12,7 @@ from core.exceptions import (
 )
 from utils.validation import validate_request
 from utils.responses import success_response
+from utils.i18n import t
 from interfaces.auth_middleware import token_required
 from schemas.auth_schemas import RegisterSchema, LoginSchema, ChangePasswordSchema, UpdateProfileSchema
 
@@ -306,7 +307,7 @@ def create_auth_bp(storage, auth_service, limiter=None):
         google_token = data.get('token', '') if data else ''
 
         if not google_token:
-            raise APIValidationError('Missing Google token')
+            raise APIValidationError(t('auth.missing_google_token'))
 
         try:
             # Verify the access token was issued for THIS application.
@@ -331,16 +332,16 @@ def create_auth_bp(storage, auth_service, limiter=None):
                     timeout=10
                 )
                 if tokeninfo_resp.status_code != 200:
-                    raise APIValidationError('Invalid Google token')
+                    raise APIValidationError(t('auth.invalid_google_token'))
                 tokeninfo = tokeninfo_resp.json()
                 if tokeninfo.get('aud') != client_id:
-                    raise APIValidationError('Google token audience mismatch')
+                    raise APIValidationError(t('auth.google_audience_mismatch'))
                 try:
                     expires_in = int(tokeninfo.get('expires_in', 0))
                 except (TypeError, ValueError):
                     expires_in = 0
                 if expires_in <= 0:
-                    raise APIValidationError('Google token expired')
+                    raise APIValidationError(t('auth.google_token_expired'))
 
             response = requests.get(
                 'https://www.googleapis.com/oauth2/v3/userinfo',
@@ -349,7 +350,7 @@ def create_auth_bp(storage, auth_service, limiter=None):
             )
 
             if response.status_code != 200:
-                raise APIValidationError('Invalid Google token')
+                raise APIValidationError(t('auth.invalid_google_token'))
 
             user_info = response.json()
 
@@ -396,7 +397,7 @@ def _get_user_from_auth_header(request, auth_service):
 
     auth_header = request.headers.get('Authorization', '')
     if not auth_header.startswith('Bearer '):
-        raise AuthenticationError('Missing or invalid Authorization header')
+        raise AuthenticationError(t('auth.missing_auth_header'))
 
     token = auth_header[7:]
     user = auth_service.get_user_from_token(token)
@@ -415,6 +416,6 @@ def _get_user_from_auth_header(request, auth_service):
                 user_id=payload.get('user_id'),
             )
         else:
-            raise AuthenticationError('Token is invalid or expired')
+            raise AuthenticationError(t('auth.invalid_token'))
 
     return user

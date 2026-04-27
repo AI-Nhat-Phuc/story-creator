@@ -38,46 +38,76 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install frontend dependencies
-        working-directory: frontend
         run: npm ci
 
       - name: Install Playwright browsers
-        working-directory: frontend
         run: npx playwright install chromium --with-deps
 
+      # `deployment_status: success` fires the moment Vercel marks the
+      # deployment ready, but the project's "Vercel" check on the commit
+      # may still be propagating — and the URL routing / CDN layer is
+      # often a few seconds behind that. Block here until every Vercel
+      # check on this SHA has reached a successful conclusion before we
+      # start curling the URL. This eliminates the recurring "wait
+      # loop times out" failures whose only fix was re-running the job.
+      - name: Wait for Vercel check on this commit to finish
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.event.deployment.sha }}
+          # Match every check Vercel publishes (e.g. "Vercel",
+          # "Vercel — Preview — story-creator", future renames).
+          check-regexp: '^Vercel.*'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+          allowed-conclusions: success,skipped,neutral
+
       # Wait until the deployment URL returns 2xx WITH the bypass header.
-      # A 401 means Vercel Deployment Protection is blocking — treat as not ready.
+      # A 401/403 means Vercel Deployment Protection is blocking — treat as
+      # not ready, capture the response body so the log explains what the
+      # platform is returning, and fail with a descriptive message.
       - name: Wait for deployment to be reachable
+        id: wait
         env:
           DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
           BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           echo "Target URL: $DEPLOY_URL"
-          for i in $(seq 1 18); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              -H "x-vercel-protection-bypass: ${BYPASS_SECRET}" \
-              -L --max-time 10 \
-              "$DEPLOY_URL")
-            echo "Attempt $i: HTTP $STATUS"
-            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
-              echo "Deployment is reachable (HTTP $STATUS)."
-              exit 0
-            fi
-            if [ "$STATUS" -eq 401 ] || [ "$STATUS" -eq 403 ]; then
-              echo "::error::Deployment returned HTTP $STATUS — Vercel Deployment Protection is active."
-              echo "::error::Set the VERCEL_AUTOMATION_BYPASS_SECRET secret in repo Settings → Secrets."
-              echo "::error::See: https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection"
-              exit 1
-            fi
-            sleep 5
-          done
-          echo "::error::Deployment did not become reachable after 90 s." && exit 1
+          if [ -z "$BYPASS_SECRET" ]; then
+            echo "::warning::VERCEL_AUTOMATION_BYPASS_SECRET is empty — requests without the bypass header will be blocked if Deployment Protection is enabled."
+          fi
+          # Single request with a generous overall budget. curl's own
+          # --retry handles transient failures (5xx, timeouts, connection
+          # refused) so we don't need a bash retry loop. `|| echo "000"`
+          # keeps the script alive under `set -e` if curl still ends up
+          # exhausting its retries.
+          STATUS=$(curl -s -o /tmp/deploy-body -w "%{http_code}" \
+            -H "x-vercel-protection-bypass: ${BYPASS_SECRET}" \
+            -L --max-time 180 \
+            --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors \
+            "$DEPLOY_URL" || echo "000")
+          echo "HTTP $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "Deployment is reachable (HTTP $STATUS)."
+            echo "reachable=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "reachable=false" >> "$GITHUB_OUTPUT"
+          echo "last_status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "::error::Deployment was not reachable (HTTP $STATUS)."
+          if [ "$STATUS" = "401" ] || [ "$STATUS" = "403" ]; then
+            echo "::error::Vercel Deployment Protection is blocking the E2E runner."
+            echo "::error::Confirm VERCEL_AUTOMATION_BYPASS_SECRET is set in repo Settings → Secrets → Actions, and that 'Protection Bypass for Automation' is enabled on the Vercel project."
+            echo "::error::See: https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection"
+          fi
+          echo "--- response body (first 500 chars) ---"
+          head -c 500 /tmp/deploy-body || true
+          echo
+          exit 1
 
       - name: Run Playwright E2E tests
-        working-directory: frontend
         env:
           CI: 'true'
           BASE_URL: ${{ github.event.deployment_status.target_url }}
@@ -89,7 +119,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-${{ github.run_id }}
-          path: frontend/playwright-report/
+          path: playwright-report/
           retention-days: 7
 
       - name: Upload screenshots and videos on failure
@@ -97,7 +127,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-test-results-${{ github.run_id }}
-          path: frontend/test-results/
+          path: test-results/
           retention-days: 7
 
       - name: Comment failures on PR
@@ -106,6 +136,10 @@ jobs:
         with:
           script: |
             const fs = require('fs')
+            // Hidden marker so we can find and delete previous failure
+            // comments posted by this workflow. Bots only — humans never
+            // type this string.
+            const MARKER = '<!-- e2e-failure-comment -->'
             const sha = context.payload.deployment?.sha || context.sha
             const deployUrl = context.payload.deployment_status?.target_url || ''
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
@@ -123,31 +157,44 @@ jobs:
             }
             const prNumber = openPR.number
 
-            // Parse Playwright JSON results for failed test details
+            // Parse Playwright JSON results for failed test details.
+            // Suites can nest (file-suite → describe-suite → specs), so walk
+            // the tree recursively instead of looking only two levels deep.
             let failedLines = ''
-            try {
-              const raw = fs.readFileSync('frontend/test-results/results.json', 'utf8')
-              const report = JSON.parse(raw)
-              const failures = []
-              const BAD_STATUSES = new Set(['failed', 'timedOut', 'interrupted'])
-              for (const suite of (report.suites || [])) {
-                for (const spec of (suite.specs || [])) {
-                  const bad = (spec.tests || []).flatMap(t => t.results || []).filter(r => BAD_STATUSES.has(r.status))
-                  if (!bad.length) continue
-                  const worst = bad[0]
-                  const label = worst.status === 'timedOut' ? '⏱ timeout' : '❌ failed'
-                  const err = worst.error?.message?.split('\n')[0] || worst.status
-                  failures.push(`| \`${spec.title}\` | ${label} | ${err.slice(0, 100)} |`)
+            const resultsPath = 'test-results/results.json'
+            if (!fs.existsSync(resultsPath)) {
+              failedLines = [
+                '_No `test-results/results.json` was produced — the Playwright step likely did not run._',
+                '_Common cause: the "Wait for deployment to be reachable" step failed (e.g. Vercel Deployment Protection is blocking). Check the job log for details._',
+              ].join('\n\n')
+            } else {
+              try {
+                const raw = fs.readFileSync(resultsPath, 'utf8')
+                const report = JSON.parse(raw)
+                const BAD_STATUSES = new Set(['failed', 'timedOut', 'interrupted'])
+                const failures = []
+                const walk = (suite) => {
+                  for (const spec of (suite.specs || [])) {
+                    const bad = (spec.tests || []).flatMap(t => t.results || []).filter(r => BAD_STATUSES.has(r.status))
+                    if (!bad.length) continue
+                    const worst = bad[0]
+                    const label = worst.status === 'timedOut' ? '⏱ timeout' : '❌ failed'
+                    const err = worst.error?.message?.split('\n')[0] || worst.status
+                    failures.push(`| \`${spec.title}\` | ${label} | ${err.slice(0, 120)} |`)
+                  }
+                  for (const child of (suite.suites || [])) walk(child)
                 }
+                for (const suite of (report.suites || [])) walk(suite)
+                failedLines = failures.length
+                  ? `| Test | Status | Error |\n|------|--------|-------|\n${failures.join('\n')}`
+                  : '_Job failed but no individual test was marked as failed — the wait/setup step likely failed. Check the job log._'
+              } catch (e) {
+                failedLines = `_Could not parse \`test-results/results.json\`: ${e.message}_`
               }
-              failedLines = failures.length
-                ? `| Test | Status | Error |\n|------|--------|-------|\n${failures.join('\n')}`
-                : '_No structured failures found — see logs._'
-            } catch (e) {
-              failedLines = '_Could not parse `test-results/results.json`._'
             }
 
             const body = [
+              MARKER,
               '## ❌ E2E Tests Failed',
               '',
               `**Deploy:** ${deployUrl}`,
@@ -159,6 +206,25 @@ jobs:
               '> Screenshots and videos are attached as artifacts on the Actions run.',
             ].join('\n')
 
+            // Delete all previous failure comments from this workflow so
+            // only the latest run's report remains on the PR.
+            const stale = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100,
+            })
+            for (const c of stale) {
+              if (c.body && c.body.includes(MARKER)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: c.id,
+                })
+                console.log(`Deleted stale failure comment ${c.id}`)
+              }
+            }
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -166,3 +232,42 @@ jobs:
               body,
             })
             console.log(`Commented on PR #${prNumber}`)
+
+      - name: Clear failure comments on PR when E2E passes
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const MARKER = '<!-- e2e-failure-comment -->'
+            const sha = context.payload.deployment?.sha || context.sha
+
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: sha,
+            })
+            const openPR = prs.find(pr => pr.state === 'open')
+            if (!openPR) {
+              console.log(`No open PR found for commit ${sha} — nothing to clean up`)
+              return
+            }
+            const prNumber = openPR.number
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100,
+            })
+            let cleared = 0
+            for (const c of comments) {
+              if (c.body && c.body.includes(MARKER)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: c.id,
+                })
+                cleared++
+              }
+            }
+            console.log(`E2E passed — removed ${cleared} stale failure comment(s) from PR #${prNumber}`)

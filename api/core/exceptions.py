@@ -36,10 +36,19 @@ class ResourceNotFoundError(APIException):
         """Initialize resource not found error.
 
         Args:
-            resource_type: Type of resource (e.g., 'World', 'Story', 'User')
+            resource_type: Type of resource (e.g., 'World', 'Story', 'User').
+                Looked up via t('resources.<lowercase>'); falls back to the
+                raw value if no translation key exists.
             resource_id: ID of the missing resource
         """
-        message = f"{resource_type} not found: {resource_id}"
+        # Lazy import to avoid a circular dependency between core.exceptions
+        # and utils (utils.validation imports from core.exceptions).
+        from utils.i18n import t
+        type_key = f'resources.{resource_type.lower()}'
+        type_label = t(type_key)
+        if type_label == type_key:
+            type_label = resource_type
+        message = t('errors.resource_not_found', type=type_label, id=resource_id)
         details = {
             'resource_type': resource_type,
             'resource_id': resource_id
@@ -57,13 +66,27 @@ class PermissionDeniedError(APIException):
         """Initialize permission denied error.
 
         Args:
-            action: Action being attempted (e.g., 'view', 'edit', 'delete')
-            resource_type: Type of resource (optional)
+            action: Action being attempted (e.g., 'view', 'edit', 'delete').
+                Looked up via t('actions.<value>'); falls back to the raw
+                value if no translation key exists.
+            resource_type: Type of resource (optional). Looked up via
+                t('resources.<lowercase>') with the same fallback rule.
         """
+        # Lazy import to avoid a circular dependency.
+        from utils.i18n import t
+        action_key = f'actions.{action}'
+        action_label = t(action_key)
+        if action_label == action_key:
+            action_label = action
+
         if resource_type:
-            message = f"Permission denied: cannot {action} {resource_type}"
+            type_key = f'resources.{resource_type.lower()}'
+            type_label = t(type_key)
+            if type_label == type_key:
+                type_label = resource_type
+            message = t('errors.permission_denied', action=action_label, type=type_label)
         else:
-            message = f"Permission denied: {action}"
+            message = f"Permission denied: {action_label}"
 
         details = {
             'action': action,

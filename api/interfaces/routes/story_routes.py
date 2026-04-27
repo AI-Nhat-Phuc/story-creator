@@ -17,6 +17,7 @@ from core.exceptions import (
 from services import CharacterService, PermissionService, NovelService
 from interfaces.auth_middleware import token_required, optional_auth
 from utils.responses import success_response, created_response, deleted_response
+from utils.i18n import t
 from utils.validation import validate_request, validate_query_params, extract_pagination
 from schemas.story_schemas import CreateStorySchema, UpdateStorySchema, ListStoriesQuerySchema, LinkEntitiesSchema
 
@@ -133,12 +134,12 @@ def create_story_bp(storage, story_generator, flush_data):
             user = User.from_dict(user_data)
             if not user.can_create_public_story():
                 raise QuotaExceededError(
-                    'Bạn đã đạt giới hạn số câu chuyện công khai',
+                    t('story.quota_exceeded'),
                     current_count=user.metadata.get('public_stories_count', 0),
                     limit=user.metadata.get('public_stories_limit', 20)
                 )
 
-        title = data.get('title', 'Untitled Story')
+        title = data.get('title', t('story.untitled'))
         description = data.get('description', '')
         genre = data.get('genre', 'adventure')
         explicit_order = data.get('order')
@@ -194,7 +195,7 @@ def create_story_bp(storage, story_generator, flush_data):
 
         return created_response(
             {'story_id': story.story_id, 'story': story.to_dict()},
-            "Story created successfully"
+            t('story.created')
         )
 
     @story_bp.route('/api/stories/my-draft', methods=['GET'])
@@ -331,7 +332,7 @@ def create_story_bp(storage, story_generator, flush_data):
         storage.save_story(story_data)
         flush_data()
 
-        return success_response(story_data, "Story updated successfully")
+        return success_response(story_data, t('story.updated'))
 
     @story_bp.route('/api/stories/<story_id>', methods=['PATCH'])
     @token_required
@@ -444,7 +445,7 @@ def create_story_bp(storage, story_generator, flush_data):
         storage.delete_story(story_id)
         flush_data()
 
-        return deleted_response("Story deleted successfully")
+        return deleted_response(t('story.deleted'))
 
     @story_bp.route('/api/stories/<story_id>/neighbors', methods=['GET'])
     @optional_auth
@@ -590,7 +591,7 @@ def create_story_bp(storage, story_generator, flush_data):
                 elif auto_create:
                     new_location = Location(
                         name=loc_name,
-                        description=loc_desc or 'Địa điểm trong câu chuyện',
+                        description=loc_desc or t('story.default_locations_title'),
                         world_id=world_id,
                         metadata={'auto_created': True}
                     )
