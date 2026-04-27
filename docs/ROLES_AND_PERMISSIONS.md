@@ -299,7 +299,7 @@ if user.can_use_gpt():
 
 ## Frontend Implementation
 
-### 1. Admin Panel (`frontend/src/pages/AdminPanel.jsx`)
+### 1. Admin Panel (`src/pages/AdminPanel.jsx`)
 
 Trang quản trị dành cho admin/moderator:
 - Danh sách users với search và filter
@@ -309,7 +309,7 @@ Trang quản trị dành cho admin/moderator:
 
 **Access:** `/admin` (chỉ admin/moderator)
 
-### 2. Role Badge Component (`frontend/src/components/RoleBadge.jsx`)
+### 2. Role Badge Component (`src/components/RoleBadge.jsx`)
 
 ```jsx
 import RoleBadge from '../components/RoleBadge'
@@ -317,7 +317,7 @@ import RoleBadge from '../components/RoleBadge'
 <RoleBadge role="admin" size="md" />
 ```
 
-### 3. API Service (`frontend/src/services/api.js`)
+### 3. API Service (`src/services/api.js`)
 
 ```javascript
 import { adminAPI } from '../services/api'
@@ -338,7 +338,7 @@ const roles = await adminAPI.getRoles()
 const stats = await adminAPI.getAdminStats()
 ```
 
-### 4. Navigation (`frontend/src/components/Navbar.jsx`)
+### 4. Navigation (`src/components/Navbar.jsx`)
 
 Link "Admin" chỉ hiện với admin/moderator:
 

@@ -210,6 +210,7 @@ __marimo__/
 data/
 demo_data/
 *.db
+logs/
 *.db-*
 
 # Legacy files (deprecated)

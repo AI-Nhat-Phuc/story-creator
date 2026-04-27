@@ -41,10 +41,9 @@ Flask Templates (Port 5000) → Storage
 
 ```bash
 # Backend (Python)
-pip install -r api/requirements.txt
+pip install -r requirements.txt
 
 # Frontend (Node.js)
-cd frontend
 npm install
 cd ..
 
@@ -63,12 +62,11 @@ npm run dev
 
 Terminal 1 - Backend:
 ```bash
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 ```
 
 Terminal 2 - Frontend:
 ```bash
-cd frontend
 npm run dev
 ```
 
@@ -82,37 +80,30 @@ npm run dev
 
 ```
 story-creator/
-├── frontend/                   # React application
-│   ├── src/
-│   │   ├── components/        # UI components
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── Toast.jsx
-│   │   │   ├── LoadingSpinner.jsx
-│   │   │   └── timeline/      # ⚡ Event Timeline (React Flow)
-│   │   │       ├── EventTimelineSection.jsx  # Lazy-loaded section
-│   │   │       ├── TimelineCanvas.jsx        # React Flow canvas
-│   │   │       ├── EventNode.jsx             # Custom event node
-│   │   │       ├── YearCluster.jsx           # Year label node
-│   │   │       ├── ConnectionLine.jsx        # Custom edge
-│   │   │       └── TimelineControls.jsx      # Zoom/direction controls
-│   │   ├── containers/        # Data fetching containers
-│   │   │   ├── EventTimelineContainer.jsx  # Timeline data + GPT extraction
-│   │   │   ├── StoryDetailContainer.jsx
-│   │   │   └── WorldDetailContainer.jsx
-│   │   ├── pages/             # Page components
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── WorldsPage.jsx
-│   │   │   ├── WorldDetailPage.jsx
-│   │   │   └── StoriesPage.jsx
-│   │   ├── services/          # API client
-│   │   │   └── api.js
-│   │   ├── App.jsx            # Main app
-│   │   ├── main.jsx           # Entry point
-│   │   └── index.css          # Global styles
-│   ├── package.json
-│   ├── vite.config.js         # Vite configuration
-│   ├── tailwind.config.js     # TailwindCSS config
-│   └── README.md
+├── app/                        # Next.js app router (pages, layouts)
+├── src/                        # React components and client code
+│   ├── components/            # UI components
+│   │   ├── Navbar.jsx
+│   │   ├── Toast.jsx
+│   │   ├── LoadingSpinner.jsx
+│   │   └── timeline/          # ⚡ Event Timeline (React Flow)
+│   │       ├── EventTimelineSection.jsx  # Lazy-loaded section
+│   │       ├── TimelineCanvas.jsx        # React Flow canvas
+│   │       ├── EventNode.jsx             # Custom event node
+│   │       ├── YearCluster.jsx           # Year label node
+│   │       ├── ConnectionLine.jsx        # Custom edge
+│   │       └── TimelineControls.jsx      # Zoom/direction controls
+│   ├── containers/            # Data fetching containers
+│   │   ├── EventTimelineContainer.jsx  # Timeline data + GPT extraction
+│   │   ├── StoryDetailContainer.jsx
+│   │   └── WorldDetailContainer.jsx
+│   ├── views/                 # Page-level view components
+│   ├── services/              # API client
+│   │   └── api.js
+│   └── index.css              # Global styles
+├── package.json
+├── next.config.js             # Next.js configuration
+└── tailwind.config.js         # TailwindCSS config
 │
 ├── interfaces/
 │   ├── api_backend.py         # ✨ NEW: Pure REST API
@@ -192,7 +183,6 @@ story-creator/
 ### Frontend Development
 
 ```bash
-cd frontend
 
 # Development server with hot reload
 npm run dev
@@ -229,16 +219,16 @@ Dashboard có một section "Timeline Sự kiện" sử dụng React Flow (`@xyf
 
 ```bash
 # Run API server
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 
 # Run with debug mode
-.venv\Scripts\python.exe api/main.py -i api --debug
+python api/main.py -i api --debug
 
 # Run legacy template mode
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 
 # Run simulation mode
-.venv\Scripts\python.exe api/main.py -i simulation
+python api/main.py -i simulation
 ```
 
 **Adding new endpoints:**
@@ -359,7 +349,7 @@ VITE_API_URL=http://localhost:5000/api
 **Problem:** GPT analysis không trả về kết quả
 
 **Solution:**
-1. Kiểm tra API key: `.venv\Scripts\python.exe api/test_api_key.py`
+1. Kiểm tra API key: `python api/test_api_key.py`
 2. Tạo file `.env` với `OPENAI_API_KEY`
 3. Kiểm tra quota OpenAI
 4. Xem backend logs cho errors
@@ -371,7 +361,6 @@ VITE_API_URL=http://localhost:5000/api
 **Solution:**
 ```bash
 # Clear cache và reinstall
-cd frontend
 rm -rf node_modules package-lock.json
 npm install
 npm run build
@@ -383,7 +372,7 @@ Nếu bạn đang sử dụng web interface cũ:
 
 1. **Legacy mode vẫn hoạt động:**
    ```bash
-   .venv\Scripts\python.exe api/main.py -i api
+   python api/main.py -i api
    ```
 
 2. **Migrate sang API mode:**
@@ -415,7 +404,6 @@ gunicorn -w 4 -b 0.0.0.0:5000 "interfaces.api_backend:APIBackend().app"
 
 **Frontend:**
 ```bash
-cd frontend
 npm run build
 # Serve from ../static/dist/ using nginx/apache
 ```

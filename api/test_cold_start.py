@@ -391,7 +391,7 @@ class TestAppEntrypoint(unittest.TestCase):
 
     def test_requirements_no_tinydb(self):
         """BR-6: tinydb must not appear in requirements.txt."""
-        req_path = os.path.join(os.path.dirname(__file__), 'requirements.txt')
+        req_path = os.path.join(os.path.dirname(__file__), '..', 'requirements.txt')
         with open(req_path) as f:
             content = f.read().lower()
         self.assertNotIn('tinydb', content,
@@ -406,13 +406,13 @@ class TestFrontendKeepAlive(unittest.TestCase):
 
     def _hook_path(self):
         base = os.path.dirname(__file__)
-        return os.path.join(base, '..', 'frontend', 'src', 'hooks', 'useKeepAlive.js')
+        return os.path.join(base, '..', 'src', 'hooks', 'useKeepAlive.js')
 
     def test_keep_alive_file_exists(self):
-        """Behavior-5: frontend/src/hooks/useKeepAlive.js must exist."""
+        """Behavior-5: src/hooks/useKeepAlive.js must exist."""
         self.assertTrue(
             os.path.exists(self._hook_path()),
-            "frontend/src/hooks/useKeepAlive.js must be created"
+            "src/hooks/useKeepAlive.js must be created"
         )
 
     def test_keep_alive_exports_use_keep_alive(self):

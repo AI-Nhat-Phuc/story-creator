@@ -22,7 +22,7 @@ Inspired by LaFlo Records design:
 
 ## 🎭 DaisyUI Theme Configuration
 
-### Tailwind Config (`frontend/tailwind.config.js`)
+### Tailwind Config (`tailwind.config.js`)
 
 ```javascript
 module.exports = {
@@ -64,7 +64,7 @@ module.exports = {
 }
 ```
 
-### HTML Setup (`frontend/index.html`)
+### HTML Setup (`app/layout.jsx` / `app/globals.css`)
 
 ```html
 <html lang="vi" data-theme="storyCreator">

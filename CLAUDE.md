@@ -17,16 +17,16 @@ Interactive storytelling system with React frontend and Flask API backend, deplo
 npm run dev
 
 # Backend only (Flask API on port 5000)
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 
 # Backend with debug mode
-.venv\Scripts\python.exe api/main.py -i api --debug
+python api/main.py -i api --debug
 
-# Frontend only (Vite on port 3000)
-cd frontend && npm run dev
+# Frontend only (Next.js on port 3000)
+npm run dev:frontend
 
 # Simulation mode (requires OPENAI_API_KEY)
-.venv\Scripts\python.exe api/main.py -i simulation
+python api/main.py -i simulation
 ```
 
 **Access URLs**:
@@ -40,34 +40,31 @@ cd frontend && npm run dev
 npm run install:all
 
 # Or separately:
-npm run install:backend    # pip install -r api/requirements.txt
-npm run install:frontend   # cd frontend && npm install
+npm run install:backend    # pip install -r requirements.txt
+# npm install              # frontend (Next.js) deps
 ```
 
 ### Testing
 
 ```bash
-# Core functionality tests
-.venv\Scripts\python.exe api/test.py
-
 # NoSQL storage tests
-.venv\Scripts\python.exe api/test_nosql.py
+python api/test_nosql.py
 
 # API key validation tests
-.venv\Scripts\python.exe api/test_api_key.py
+python api/test_api_key.py
 
 # API integration tests
-.venv\Scripts\python.exe api/test_api.py
+python api/test_api.py
 
 # Permission system tests
-.venv\Scripts\python.exe api/test_permissions.py
+python api/test_permissions.py
 ```
 
 ### Building & Deployment
 
 ```bash
-# Build React frontend
-npm run build:frontend
+# Build frontend
+npm run build
 
 # Deploy to Vercel (from project root)
 vercel
@@ -85,7 +82,6 @@ story-creator/
 ├── api/                          # Python Flask backend
 │   ├── app.py                    # Vercel serverless entrypoint
 │   ├── main.py                   # Local development entrypoint
-│   ├── requirements.txt
 │   ├── ai/                       # GPT-4o-mini integration
 │   ├── core/
 │   │   ├── models/               # Domain models (World, Story, Entity, Location)
@@ -105,19 +101,18 @@ story-creator/
 │   │   └── validation.py         # @validate_request, @validate_query_params decorators
 │   └── visualization/            # Relationship diagrams
 │
-├── frontend/                     # React + Vite
-│   ├── src/
-│   │   ├── components/           # Reusable UI components
-│   │   ├── containers/           # Data-fetching containers
-│   │   ├── pages/                # Route pages
-│   │   ├── services/api.js       # Centralized Axios API client
-│   │   ├── contexts/             # AuthContext, GptTaskContext
-│   │   └── App.jsx
-│   ├── vite.config.js
-│   └── package.json
+├── app/                          # Next.js app router (pages, layouts)
+├── src/                          # React components and client code
+│   ├── components/               # Reusable UI components
+│   ├── containers/               # Data-fetching containers
+│   ├── contexts/                 # AuthContext, GptTaskContext
+│   ├── hooks/                    # useKeepAlive and other custom hooks
+│   ├── services/api.js           # Centralized Axios API client
+│   └── views/                    # Page-level view components
 │
+├── requirements.txt              # Python dependencies
 ├── vercel.json                   # Vercel deployment config
-├── package.json                  # Root npm scripts
+├── package.json                  # Root npm scripts + Next.js frontend
 └── .env                          # OPENAI_API_KEY, GOOGLE_*, FACEBOOK_*
 ```
 
@@ -168,7 +163,7 @@ from api.storage import NoSQLStorage
 
 ### Frontend API Client
 
-**All HTTP calls MUST go through** `frontend/src/services/api.js`:
+**All HTTP calls MUST go through** `src/services/api.js`:
 
 ```javascript
 import { worldsAPI, storiesAPI, gptAPI, authAPI } from '../services/api'
@@ -176,7 +171,7 @@ import { worldsAPI, storiesAPI, gptAPI, authAPI } from '../services/api'
 ```
 
 API base URL:
-- Development: `http://localhost:5000/api` (via Vite proxy)
+- Development: `http://localhost:5000/api` (via Next.js rewrites / proxy)
 - Production: `/api` (Vercel rewrites to `api/app.py`)
 
 ### Authentication
@@ -191,10 +186,9 @@ JWT-based authentication with:
 ### Vercel Deployment
 
 **Config** (`vercel.json`):
-- Build: `cd frontend && npm install && npm run build`
-- Output: `frontend/dist` (static files)
+- Build: `npm run build` (Next.js)
 - Rewrites: `/api/*` → `api/app.py` (serverless function)
-- SPA routing: all non-API routes → `index.html`
+- Next.js handles all other routing
 
 **Environment Variables** (set in Vercel dashboard):
 - `OPENAI_API_KEY` - for GPT features
@@ -216,9 +210,8 @@ JWT-based authentication with:
 - **Flasgger** 0.9+ - Swagger UI
 
 ### Frontend
+- **Next.js** 14 - Framework + build tool
 - **React** 18.2 - UI framework
-- **Vite** 5.0 - Build tool
-- **React Router** 6.20 - Client routing
 - **TailwindCSS** 3.4 + **DaisyUI** 4.6 - Styling
 - **Axios** 1.6 - HTTP client
 - **@xyflow/react** 12.10 - Timeline visualization
@@ -324,12 +317,10 @@ Model: `gpt-4o-mini`
 
 Tasks available in `.vscode/tasks.json`:
 - `Run API Backend` - Flask API
-- `Run React Frontend` - Vite dev server
+- `Run React Frontend` - Next.js dev server
 - `Full Stack Dev` - Both simultaneously
 - `Run Tests` - Test suites
 - `Build React` - Production build
-
-Always use `.venv/Scripts/python.exe` for Python commands on Windows.
 
 ## Environment Setup
 
@@ -337,11 +328,9 @@ Always use `.venv/Scripts/python.exe` for Python commands on Windows.
 # Create virtual environment (if not exists)
 python -m venv .venv
 
-# Activate (Windows PowerShell)
-.venv\Scripts\Activate.ps1
-
-# Activate (Windows bash)
-source .venv/Scripts/activate
+# Activate
+source .venv/bin/activate        # macOS/Linux
+# .venv\Scripts\Activate.ps1    # Windows PowerShell
 
 # Install dependencies
 npm run install:all

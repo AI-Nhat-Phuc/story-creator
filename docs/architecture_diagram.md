@@ -6,7 +6,7 @@
 graph TB
     subgraph Client["🌐 Client Layer (Browser)"]
         Frontend["Frontend (Vanilla JS)<br/>---<br/>• TailwindCSS + DaisyUI<br/>• Event Handlers<br/>• DOM Manipulation<br/>• Async Fetch API<br/>• GPT Task Polling"]
-        Templates["frontend/src/ (React components)<br/>frontend/src/services/api.js<br/>frontend/src/index.css"]
+        Templates["src/ (React components)<br/>src/services/api.js<br/>src/index.css"]
     end
 
     subgraph WebServer["⚙️ Web Server Layer (Flask)"]

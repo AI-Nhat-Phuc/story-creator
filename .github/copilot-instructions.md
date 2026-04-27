@@ -218,12 +218,12 @@ self.gpt_service.generate_world_description(
 ### Environment Setup
 ```powershell
 # Virtual environment (CRITICAL — always use .venv)
-.venv\Scripts\python.exe <script.py>
+python <script.py>
 
 # Install all dependencies
 npm run install:all
 # Or separately:
-pip install -r api/requirements.txt
+pip install -r requirements.txt
 cd frontend && npm install
 ```
 
@@ -234,14 +234,14 @@ cd frontend && npm install
 npm run dev
 
 # API backend only
-.venv\Scripts\python.exe api/main.py -i api         # Port 5000
-.venv\Scripts\python.exe api/main.py -i api --debug  # With debug mode
+python api/main.py -i api         # Port 5000
+python api/main.py -i api --debug  # With debug mode
 
 # React frontend only
-cd frontend && npm run dev                            # Port 3000
+npm run dev:frontend                            # Port 3000
 
 # Simulation mode (requires OPENAI_API_KEY)
-.venv\Scripts\python.exe api/main.py -i simulation
+python api/main.py -i simulation
 ```
 
 **Access:**
@@ -251,9 +251,9 @@ cd frontend && npm run dev                            # Port 3000
 
 ### Testing
 ```bash
-.venv\Scripts\python.exe api/test.py          # Core functionality
-.venv\Scripts\python.exe api/test_nosql.py    # NoSQL-specific
-.venv\Scripts\python.exe api/test_api_key.py  # API key validation
+python api/test.py          # Core functionality
+python api/test_nosql.py    # NoSQL-specific
+python api/test_api_key.py  # API key validation
 ```
 
 ### Deploying to Vercel
@@ -383,7 +383,7 @@ import { worldsAPI, storiesAPI, gptAPI } from '../services/api'
 
 ## VS Code Configuration
 
-**launch.json**: All configurations use `.venv/Scripts/python.exe` explicitly
+**launch.json**: All configurations use `python` explicitly
 
 **tasks.json**: Available tasks:
 - `Run API Backend` — starts Flask API on port 5000

@@ -108,12 +108,12 @@ os.remove('story_creator.db')    # Xóa thủ công
 Để xác minh tính an toàn của cơ sở dữ liệu:
 ```bash
 # 1. Tạo một số dữ liệu
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 
 # 2. Dừng server (Ctrl+C)
 
 # 3. Khởi động lại server
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 
 # 4. Kiểm tra dữ liệu vẫn còn
 # Truy cập http://localhost:5000/api/worlds

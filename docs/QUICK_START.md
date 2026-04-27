@@ -11,7 +11,7 @@ python -m venv .venv
 .venv/Scripts/activate  # Windows
 # or
 source .venv/bin/activate  # macOS/Linux
-pip install -r api/requirements.txt
+pip install -r requirements.txt
 
 # Node.js (frontend)
 cd frontend
@@ -30,7 +30,7 @@ OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # Full stack (recommended)
 
 # Or run backend and frontend separately:
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 cd frontend && npm run dev
 ```
 
@@ -118,20 +118,20 @@ Mô tả chi tiết để GPT tạo entities tốt hơn:
 
 ```bash
 # Web interface (default)
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 
 # Debug mode (xem logs chi tiết)
-.venv\Scripts\python.exe api/main.py -i api --debug
+python api/main.py -i api --debug
 
 # Custom port
-.venv\Scripts\python.exe api/main.py -i api --port 8080
+python api/main.py -i api --port 8080
 
 # Simulation mode
-.venv\Scripts\python.exe api/main.py -i simulation
+python api/main.py -i simulation
 
 # Specify storage
-.venv\Scripts\python.exe api/main.py -i api -s nosql    # Default, fast
-.venv\Scripts\python.exe api/main.py -i api -s json     # Legacy, slow
+python api/main.py -i api -s nosql    # Default, fast
+python api/main.py -i api -s json     # Legacy, slow
 ```
 
 ## VS Code Tasks
@@ -161,14 +161,14 @@ netstat -ano | findstr :5000
 taskkill /PID 12345 /F
 
 # Hoặc dùng port khác
-.venv\Scripts\python.exe api/main.py -i api --port 8080
+python api/main.py -i api --port 8080
 ```
 
 ### GPT không hoạt động
 
 1. Check `.env` file tồn tại
 2. Check API key format: `sk-proj-...`
-3. Test với: `.venv\Scripts\python.exe api/test_api_key.py`
+3. Test với: `python api/test_api_key.py`
 4. Check internet connection
 
 ### Database errors
@@ -178,7 +178,7 @@ taskkill /PID 12345 /F
 del story_creator.db
 
 # Restart application
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 ```
 
 ### Import errors
@@ -191,7 +191,7 @@ del story_creator.db
 .venv\Scripts\Activate.ps1
 
 # Reinstall dependencies
-pip install -r api/requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Common Workflows
@@ -312,7 +312,7 @@ copy backup_20260118_143000.db story_creator.db
 
 ```bash
 # Start web interface
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 
 # Open in browser
 http://127.0.0.1:5000
@@ -332,7 +332,7 @@ Click world name → See tabs
 Dashboard → View all stats
 
 # Test
-.venv\Scripts\python.exe api/test.py
+python api/test_nosql.py
 
 # Clean database
 del *.db

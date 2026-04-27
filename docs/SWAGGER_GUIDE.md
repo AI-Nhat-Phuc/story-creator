@@ -8,7 +8,7 @@ Swagger UI đã được tích hợp thành công vào Story Creator API!
 
 ### 1. Chạy API backend
 ```bash
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 ```
 
 ### 2. Mở trình duyệt
@@ -214,7 +214,7 @@ def before_request():
 ### Swagger UI không hiển thị
 ```bash
 pip install flasgger
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 ```
 
 ### Docstring không xuất hiện

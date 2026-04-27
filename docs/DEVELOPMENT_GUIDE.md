@@ -27,7 +27,7 @@ cp .env.example .env
 npm run dev
 
 # 5. Verify setup
-.venv/Scripts/python.exe api/test.py
+python api/test_nosql.py
 ```
 
 ---
@@ -39,7 +39,7 @@ story-creator/
 ├── api/                              # Python Flask backend
 │   ├── app.py                        # Vercel serverless entrypoint
 │   ├── main.py                       # Local development entrypoint
-│   ├── requirements.txt
+│
 │   │
 │   ├── ai/                           # GPT-4o-mini integration
 │   │   ├── gpt_client.py            # OpenAI API wrapper
@@ -91,19 +91,18 @@ story-creator/
 │       ├── responses.py              # Standardized response helpers
 │       └── validation.py            # @validate_request decorator
 │
-├── frontend/                         # React + Vite
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── components/              # Reusable UI components
-│   │   ├── containers/              # Data-fetching containers
-│   │   ├── pages/                   # Route pages
-│   │   ├── services/api.js          # Centralized Axios client
-│   │   └── contexts/                # AuthContext, GptTaskContext
-│   ├── vite.config.js
-│   └── package.json
+├── app/                              # Next.js app router (pages, layouts)
+├── src/                              # React components and client code
+│   ├── components/                  # Reusable UI components
+│   ├── containers/                  # Data-fetching containers
+│   ├── contexts/                    # AuthContext, GptTaskContext
+│   ├── hooks/                       # Custom hooks
+│   ├── services/api.js              # Centralized Axios client
+│   └── views/                       # Page-level view components
 │
+├── requirements.txt                  # Python dependencies
 ├── vercel.json                       # Vercel deployment config
-├── package.json                      # Root npm scripts
+├── package.json                      # Root npm scripts + Next.js frontend
 ├── CLAUDE.md                         # Claude Code instructions
 └── .env                              # OPENAI_API_KEY, JWT_SECRET, etc.
 ```
@@ -117,18 +116,17 @@ story-creator/
 npm run dev
 
 # Backend only
-.venv/Scripts/python.exe api/main.py -i api
+python api/main.py -i api
 
 # Frontend only
-cd frontend && npm run dev
+npm run dev:frontend
 
 # Tests
-.venv/Scripts/python.exe api/test.py
-.venv/Scripts/python.exe api/test_nosql.py
-.venv/Scripts/python.exe api/test_api.py
+python api/test_nosql.py
+python api/test_api.py
 
 # Build for production
-npm run build:frontend
+npm run build
 ```
 
 **URLs:**
@@ -283,7 +281,7 @@ class ListFooQuerySchema(Schema):
 
 ### API Calls
 
-All HTTP calls go through `frontend/src/services/api.js`. Never use `fetch` or `axios` directly in components:
+All HTTP calls go through `src/services/api.js`. Never use `fetch` or `axios` directly in components:
 
 ```javascript
 // ✅ Correct
@@ -321,19 +319,19 @@ try {
 
 ```bash
 # Core unit tests
-.venv/Scripts/python.exe api/test.py
+python api/test_nosql.py
 
 # Storage tests
-.venv/Scripts/python.exe api/test_nosql.py
+python api/test_nosql.py
 
 # API key validation
-.venv/Scripts/python.exe api/test_api_key.py
+python api/test_api_key.py
 
 # API integration tests
-.venv/Scripts/python.exe api/test_api.py
+python api/test_api.py
 
 # Permission system
-.venv/Scripts/python.exe api/test_permissions.py
+python api/test_permissions.py
 ```
 
 ### Manual Testing Checklist

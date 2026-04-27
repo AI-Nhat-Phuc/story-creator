@@ -194,7 +194,7 @@ Thêm table `events` + `event_analysis_cache` vào TinyDB:
 ### 1. Components mới
 
 ```
-frontend/src/
+src/
 ├── components/
 │   └── timeline/
 │       ├── EventTimelineSection.jsx    # Section wrapper (lazy load, toggle)
@@ -241,7 +241,7 @@ frontend/src/
 - Tooltip hiện thêm chi tiết khi hover
 - Click → navigate to story
 
-### 5. API Client (`frontend/src/services/api.js`)
+### 5. API Client (`src/services/api.js`)
 
 ```javascript
 export const eventsAPI = {
@@ -333,9 +333,9 @@ localStorage.setItem('timelinePrefs', JSON.stringify({
 - [x] **3.8** Register blueprint trong `api/interfaces/routes/__init__.py`
 
 ### Phase 4: Frontend - API & Infrastructure
-- [x] **4.1** Thêm `eventsAPI` vào `frontend/src/services/api.js`
+- [x] **4.1** Thêm `eventsAPI` vào `src/services/api.js`
 - [x] **4.2** Cài đặt React Flow: `npm install @xyflow/react`
-- [x] **4.3** Tạo `frontend/src/components/timeline/` folder
+- [x] **4.3** Tạo `src/components/timeline/` folder
 
 ### Phase 5: Frontend - Timeline Components
 - [x] **5.1** Tạo `EventTimelineSection.jsx` — wrapper với lazy load (IntersectionObserver) + toggle bar
@@ -502,7 +502,7 @@ Kết quả GPT phân tích sự kiện được **cache vào database** để t
 
 ### Frontend
 ```bash
-cd frontend && npm install @xyflow/react
+npm install @xyflow/react
 ```
 
 ### Backend

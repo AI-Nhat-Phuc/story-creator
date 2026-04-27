@@ -11,13 +11,12 @@ npm run dev
 
 ### Backend/API Only
 ```bash
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 # API at http://localhost:5000
 ```
 
 ### Frontend Only
 ```bash
-cd frontend
 npm install  # First time only
 npm run dev
 # UI at http://localhost:3000
@@ -25,7 +24,7 @@ npm run dev
 
 ### Simulation Mode (Terminal)
 ```bash
-.venv\Scripts\python.exe api/main.py -i simulation [--world-id <id> --character-id <id>]
+python api/main.py -i simulation [--world-id <id> --character-id <id>]
 ```
 
 ## Features
@@ -36,9 +35,9 @@ npm run dev
 
 ## Testing
 ```bash
-.venv\Scripts\python.exe api/test.py         # Core tests
-.venv\Scripts\python.exe api/test_nosql.py   # NoSQL tests
-.venv\Scripts\python.exe api/test_api_key.py # GPT API key check
+# Core functionality tests (api/test.py removed; use api/test_nosql.py, api/test_api.py)
+python api/test_nosql.py   # NoSQL tests
+python api/test_api_key.py # GPT API key check
 ```
 
 ## Storage

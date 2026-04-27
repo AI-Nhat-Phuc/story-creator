@@ -32,7 +32,7 @@ This works because both `app.py` and `main.py` add `api/` to `sys.path`.
 
 ```bash
 # Local dev
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 
 # On Vercel — api/app.py is auto-detected as serverless function
 ```

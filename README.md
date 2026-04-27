@@ -51,10 +51,10 @@ An interactive storytelling platform with a **React frontend** and **Flask API b
 git clone https://github.com/your-username/story-creator.git
 cd story-creator
 
-# Create Python virtual environment
+# Create and activate Python virtual environment
 python -m venv .venv
-.venv\Scripts\Activate.ps1       # Windows PowerShell
-# source .venv/bin/activate      # macOS/Linux
+source .venv/bin/activate        # macOS/Linux
+# .venv\Scripts\Activate.ps1    # Windows PowerShell
 
 # Install all dependencies (backend + frontend)
 npm run install:all
@@ -86,10 +86,10 @@ npm run dev
 
 # Or start separately:
 # Terminal 1 — API (port 5000)
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 
 # Terminal 2 — Frontend (port 3000)
-cd frontend && npm run dev
+npm run dev:frontend
 ```
 
 Access:
@@ -105,7 +105,6 @@ story-creator/
 ├── api/                          # Python Flask backend
 │   ├── app.py                    # Vercel serverless entrypoint
 │   ├── main.py                   # Local development entrypoint
-│   ├── requirements.txt
 │   ├── ai/                       # GPT-4o-mini integration
 │   ├── core/
 │   │   ├── models/               # Domain models (World, Story, Entity, Location, TimeCone)
@@ -120,30 +119,25 @@ story-creator/
 │   │   └── routes/               # world, story, auth, gpt, event routes
 │   ├── schemas/                  # Marshmallow validation schemas
 │   ├── services/                 # Business logic (GPTService, AuthService, ...)
-│   ├── storage/                  # TinyDB (default) and MongoDB backends
+│   ├── storage/                  # MongoDB backend (mongomock fallback for dev)
 │   ├── utils/
 │   │   ├── responses.py          # success_response, created_response, paginated_response
 │   │   └── validation.py         # @validate_request, @validate_query_params decorators
 │   └── visualization/            # Relationship diagrams
 │
-├── frontend/                     # React application
-│   ├── e2e/                      # Playwright end-to-end tests
-│   ├── src/
-│   │   ├── components/           # Reusable UI components
-│   │   │   └── storyEditor/      # Story editor (NovelEditor, FormattingToolbar, ...)
-│   │   ├── containers/           # Data-fetching containers
-│   │   ├── contexts/             # AuthContext, GptTaskContext
-│   │   ├── hooks/                # useKeepAlive, and other custom hooks
-│   │   ├── pages/                # Dashboard, Worlds, Stories, detail pages
-│   │   ├── services/api.js       # Centralized Axios API client
-│   │   └── App.jsx               # Root component + React Router
-│   ├── playwright.config.cjs
-│   ├── vite.config.js
-│   └── package.json
-│
+├── app/                          # Next.js app router (pages, layouts)
+├── src/                          # React components and client code
+│   ├── components/               # Reusable UI components
+│   ├── containers/               # Data-fetching containers
+│   ├── contexts/                 # AuthContext, GptTaskContext
+│   ├── hooks/                    # useKeepAlive and other custom hooks
+│   ├── services/api.js           # Centralized Axios API client
+│   └── views/                    # Page-level view components
+├── e2e/                          # Playwright end-to-end tests
 ├── docs/                         # Documentation
+├── requirements.txt              # Python dependencies
 ├── vercel.json                   # Vercel deployment config
-├── package.json                  # Root npm scripts
+├── package.json                  # Root npm scripts + Next.js frontend
 └── .env                          # Environment variables (not committed)
 ```
 
@@ -180,11 +174,10 @@ vercel --prod   # production deploy
 ```
 
 **How it works** (`vercel.json`):
-- Builds the React frontend (`cd frontend && npm run build`)
-- Serves `frontend/dist` as static files
+- Builds the Next.js frontend (`npm run build`)
+- Serves the built output as static files
 - Routes `/api/*` to `api/app.py` as a Python serverless function
-- Default storage: TinyDB at `/tmp/story_creator.db` (ephemeral per instance)
-- For persistent storage, set `MONGODB_URI` to use MongoDB instead
+- For persistent storage, set `MONGODB_URI` to use MongoDB Atlas (falls back to in-memory mongomock)
 
 ---
 
@@ -193,23 +186,27 @@ vercel --prod   # production deploy
 ### Backend unit tests
 
 ```bash
-.venv\Scripts\python.exe api/test.py                   # Core functionality
-.venv\Scripts\python.exe api/test_nosql.py             # NoSQL storage
-.venv\Scripts\python.exe api/test_api_key.py           # API key validation
-.venv\Scripts\python.exe api/test_api.py               # API integration
-.venv\Scripts\python.exe api/test_permissions.py       # Permission system
-.venv\Scripts\python.exe api/test_collaboration.py     # Collaboration features
-.venv\Scripts\python.exe api/test_novel.py             # Novel editor
-.venv\Scripts\python.exe api/test_story_editor.py      # Story editor
-.venv\Scripts\python.exe api/test_cold_start.py        # API cold-start behavior
-.venv\Scripts\python.exe api/test_world_publish_mode.py # World publish mode
+python api/test_nosql.py             # NoSQL storage
+python api/test_api_key.py           # API key validation
+python api/test_api.py               # API integration
+python api/test_permissions.py       # Permission system
+python api/test_collaboration.py     # Collaboration features
+python api/test_novel.py             # Novel editor
+python api/test_story_editor.py      # Story editor
+python api/test_cold_start.py        # API cold-start behavior
+python api/test_world_publish_mode.py # World publish mode
+```
+
+### Frontend unit tests
+
+```bash
+npm test                             # Vitest unit tests
 ```
 
 ### Playwright E2E tests
 
 ```bash
-cd frontend
-npx playwright test                  # Run all E2E tests
+npm run test:e2e                     # Run all E2E tests
 npx playwright test e2e/login.spec.cjs        # Login flow
 npx playwright test e2e/storyEditor.spec.cjs  # Story editor flow
 ```
@@ -220,8 +217,8 @@ npx playwright test e2e/storyEditor.spec.cjs  # Story editor flow
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Vite 5, TailwindCSS 3.4 + DaisyUI 4.6, React Router 6, Axios |
-| Backend | Flask 3.0, TinyDB / MongoDB, OpenAI (GPT-4o-mini), PyJWT, Marshmallow, Flasgger |
+| Frontend | Next.js 14, React 18, TailwindCSS 3.4 + DaisyUI 4.6, Axios |
+| Backend | Flask 3.0, MongoDB Atlas (mongomock fallback), OpenAI (GPT-4o-mini), PyJWT, Marshmallow, Flasgger |
 | Auth | Google OAuth, Facebook OAuth, JWT sessions |
 | Testing | pytest (backend), Playwright (E2E) |
 | Deploy | Vercel (static + serverless) |
@@ -252,7 +249,7 @@ When creating a story, the system picks a default world based on the story genre
 ## GPT Simulation Mode
 
 ```bash
-.venv\Scripts\python.exe api/main.py -i simulation
+python api/main.py -i simulation
 ```
 
 Simulates characters making decisions inside a story. At each step:
@@ -270,7 +267,7 @@ Pre-configured tasks in `.vscode/tasks.json`:
 |------|-------------|
 | `Full Stack Dev` | Run API + frontend together |
 | `Run API Backend` | Flask API on port 5000 |
-| `Run React Frontend` | Vite dev server on port 3000 |
+| `Run React Frontend` | Next.js dev server on port 3000 |
 | `Run Tests` / `Run NoSQL Tests` | Test suites |
 | `Build React` | Production frontend build |
 

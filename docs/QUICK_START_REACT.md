@@ -9,7 +9,7 @@ npm run dev
 ## 2. Start Backend or Frontend Separately
 ```bash
 # Backend only
-.venv\Scripts\python.exe api/main.py -i api
+python api/main.py -i api
 # Frontend only
 cd frontend && npm run dev
 ```
@@ -21,7 +21,7 @@ cd frontend && npm run dev
 - `npm run install:all` - Install all dependencies
 
 ## 4. Main Files
-- `frontend/src/` - React components
+- `src/` - React components
 - `api/interfaces/api_backend.py` - Flask API
 - `services/` - Business logic
 - `storage/` - NoSQL/JSON storage
