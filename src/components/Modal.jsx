@@ -54,7 +54,7 @@ export default function Modal({ open, onClose, title, children, className = '' }
             // shape: rounded top on mobile, rounded all on desktop
             'rounded-t-2xl sm:rounded-2xl',
             // colours & depth
-            'bg-base-100 shadow-2xl',
+            'bg-base-100 text-base-content shadow-2xl',
             // spacing
             'p-6',
             // height constraints
