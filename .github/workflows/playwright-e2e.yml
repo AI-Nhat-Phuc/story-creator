@@ -46,6 +46,24 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      # `deployment_status: success` fires the moment Vercel marks the
+      # deployment ready, but the project's "Vercel" check on the commit
+      # may still be propagating — and the URL routing / CDN layer is
+      # often a few seconds behind that. Block here until every Vercel
+      # check on this SHA has reached a successful conclusion before we
+      # start curling the URL. This eliminates the recurring "wait
+      # loop times out" failures whose only fix was re-running the job.
+      - name: Wait for Vercel check on this commit to finish
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.event.deployment.sha }}
+          # Match every check Vercel publishes (e.g. "Vercel",
+          # "Vercel — Preview — story-creator", future renames).
+          check-regexp: '^Vercel.*'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+          allowed-conclusions: success,skipped,neutral
+
       # Wait until the deployment URL returns 2xx WITH the bypass header.
       # A 401/403 means Vercel Deployment Protection is blocking — treat as
       # not ready, capture the response body so the log explains what the
