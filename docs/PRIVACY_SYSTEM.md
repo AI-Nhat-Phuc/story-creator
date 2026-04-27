@@ -230,7 +230,7 @@ def flexible_route():
 ### Cập Nhật API Service
 
 ```javascript
-// frontend/src/services/api.js
+// src/services/api.js
 import axios from 'axios';
 
 const api = axios.create({ baseURL: '/api' });

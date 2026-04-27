@@ -9,7 +9,7 @@ Hướng dẫn tổng quan cách **MongoDB (data)**, **Flask API (backend)**, v�
 ```
 ┌─────────────────┐   HTTP (JSON)    ┌─────────────────┐   pymongo    ┌─────────────────┐
 │  React Frontend │ ───────────────▶ │  Flask Backend  │ ───────────▶ │  MongoDB Atlas  │
-│  (Vite, :3000)  │ ◀─────────────── │  (Flask, :5000) │ ◀─────────── │  (or mongomock) │
+│ (Next.js, :3000)│ ◀─────────────── │  (Flask, :5000) │ ◀─────────── │  (or mongomock) │
 └─────────────────┘                  └─────────────────┘              └─────────────────┘
        │                                      │                              │
        │ services/api.js                      │ interfaces/routes/*          │ collections:
@@ -21,7 +21,7 @@ Hướng dẫn tổng quan cách **MongoDB (data)**, **Flask API (backend)**, v�
 ```
 
 Dev URL: React `http://localhost:3000`, API Swagger `http://localhost:5000/api/docs`.
-Prod: Vercel serves `frontend/dist` + rewrites `/api/*` → `api/app.py` serverless.
+Prod: Vercel serves the Next.js build output + rewrites `/api/*` → `api/app.py` serverless.
 
 ---
 
@@ -139,9 +139,9 @@ Detail endpoints (`GET /api/worlds/<id>`) vẫn trả về document đầy đủ
 
 ---
 
-## 4. Frontend — React + Vite
+## 4. Frontend — Next.js + React
 
-Thư mục: `frontend/src/`
+Thư mục: `src/`
 
 ```
 src/

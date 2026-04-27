@@ -46,7 +46,7 @@ pip install python-dotenv>=0.19.0
 
 ```bash
 # Kiểm tra API key có hoạt động
-.venv\Scripts\python.exe api/test_api_key.py
+python api/test_api_key.py
 ```
 
 **Expected Output**:
@@ -310,7 +310,7 @@ def get_gpt_results(task_id):
     return jsonify(result)
 ```
 
-**Frontend** (`frontend/src/services/api.js`):
+**Frontend** (`src/services/api.js`):
 ```javascript
 async function analyzeWorldWithGPT() {
     const description = document.getElementById('worldDescription').value;
@@ -530,7 +530,7 @@ class TestGPT(unittest.TestCase):
 
 ```bash
 # Test với real API
-.venv\Scripts\python.exe api/test_api_key.py
+python api/test_api_key.py
 
 # Test simulation mode
 python demo_gpt_simulation.py
@@ -556,7 +556,7 @@ dir .env
 type .env
 
 # 3. Test API key
-.venv\Scripts\python.exe api/test_api_key.py
+python api/test_api_key.py
 
 # 4. Check internet connection
 ping api.openai.com

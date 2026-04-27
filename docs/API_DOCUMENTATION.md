@@ -10,13 +10,13 @@ After starting the API backend, access Swagger UI at:
 
 ```bash
 # Install dependencies
-pip install -r api/requirements.txt
+pip install -r requirements.txt
 
 # Start API server
 npm run dev
 
 # Or backend only
-.venv/Scripts/python.exe api/main.py -i api
+python api/main.py -i api
 
 # Access Swagger UI
 http://localhost:5000/api/docs
