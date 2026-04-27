@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Link } from '../utils/router-compat'
-import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { worldsAPI, gptAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import GptButton, { OpenAILogo } from '../components/GptButton'
 import {
@@ -18,11 +18,17 @@ import {
 } from '@heroicons/react/24/outline'
 import Tag from '../components/Tag'
 
-function WorldsPage({ showToast }) {
+function WorldsPage({ initialWorlds }) {
+  const { showToast } = useToast()
   const { t } = useTranslation()
   const { isAuthenticated, user, loading: authLoading } = useAuth()
-  const [worlds, setWorlds] = useState([])
-  const [loading, setLoading] = useState(true)
+
+  // Skip the initial client-side fetch when SSR pre-fetched public worlds.
+  // Re-fetch still fires when the user authenticates (private worlds become visible).
+  const hasSSRData = initialWorlds != null
+  const skipFirstFetch = useRef(hasSSRData)
+  const [worlds, setWorlds] = useState(initialWorlds ?? [])
+  const [loading, setLoading] = useState(!hasSSRData)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -34,6 +40,10 @@ function WorldsPage({ showToast }) {
   const dialogRef = useRef(null)
 
   useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false
+      return
+    }
     loadWorlds()
   }, [isAuthenticated])
 
@@ -253,10 +263,6 @@ function WorldsPage({ showToast }) {
 
   return (
     <div>
-      <Helmet>
-        <title>{t('meta.worlds.title')}</title>
-        <meta name="description" content={t('meta.worlds.description')} />
-      </Helmet>
       <div className="flex justify-between items-center mb-6">
         <h1 className="font-bold text-3xl"><GlobeAltIcon className="inline w-8 h-8" /> {t('pages.worlds.title')}</h1>
         {authLoading ? (
