@@ -1,5 +1,5 @@
 import NovelPage from '../../../../../src/views/NovelPage'
-import { getServerLocale, getServerT } from '../../../../../src/i18n/serverI18n'
+import { getServerT } from '../../../../../src/i18n/serverI18n'
 
 function getServerApiBase() {
   if (process.env.VERCEL_URL) {
@@ -64,9 +64,6 @@ async function fetchInitialNovelData(worldId) {
 
 export default async function Page({ params }) {
   const { worldId } = params
-  const [initialData, locale] = await Promise.all([
-    fetchInitialNovelData(worldId),
-    Promise.resolve(getServerLocale()),
-  ])
-  return <NovelPage initialData={initialData} locale={locale} />
+  const initialData = await fetchInitialNovelData(worldId)
+  return <NovelPage initialData={initialData} />
 }
