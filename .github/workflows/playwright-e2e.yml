@@ -78,31 +78,26 @@ jobs:
           if [ -z "$BYPASS_SECRET" ]; then
             echo "::warning::VERCEL_AUTOMATION_BYPASS_SECRET is empty — requests without the bypass header will be blocked if Deployment Protection is enabled."
           fi
-          LAST_STATUS=0
-          for i in $(seq 1 18); do
-            # `|| echo "000"` keeps the loop alive when curl returns
-            # non-zero (timeout = 28, connect refused = 7, dns fail = 6).
-            # GitHub Actions runs scripts with `set -e` by default, so
-            # without this fallback the very first slow response would
-            # abort the whole step with the curl exit code instead of
-            # cycling through to the next retry.
-            STATUS=$(curl -s -o /tmp/deploy-body -w "%{http_code}" \
-              -H "x-vercel-protection-bypass: ${BYPASS_SECRET}" \
-              -L --max-time 10 \
-              "$DEPLOY_URL" || echo "000")
-            LAST_STATUS=$STATUS
-            echo "Attempt $i: HTTP $STATUS"
-            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
-              echo "Deployment is reachable (HTTP $STATUS)."
-              echo "reachable=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            sleep 5
-          done
+          # Single request with a generous overall budget. curl's own
+          # --retry handles transient failures (5xx, timeouts, connection
+          # refused) so we don't need a bash retry loop. `|| echo "000"`
+          # keeps the script alive under `set -e` if curl still ends up
+          # exhausting its retries.
+          STATUS=$(curl -s -o /tmp/deploy-body -w "%{http_code}" \
+            -H "x-vercel-protection-bypass: ${BYPASS_SECRET}" \
+            -L --max-time 180 \
+            --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors \
+            "$DEPLOY_URL" || echo "000")
+          echo "HTTP $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "Deployment is reachable (HTTP $STATUS)."
+            echo "reachable=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           echo "reachable=false" >> "$GITHUB_OUTPUT"
-          echo "last_status=$LAST_STATUS" >> "$GITHUB_OUTPUT"
-          echo "::error::Deployment was not reachable after 90 s (last HTTP $LAST_STATUS)."
-          if [ "$LAST_STATUS" = "401" ] || [ "$LAST_STATUS" = "403" ]; then
+          echo "last_status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "::error::Deployment was not reachable (HTTP $STATUS)."
+          if [ "$STATUS" = "401" ] || [ "$STATUS" = "403" ]; then
             echo "::error::Vercel Deployment Protection is blocking the E2E runner."
             echo "::error::Confirm VERCEL_AUTOMATION_BYPASS_SECRET is set in repo Settings → Secrets → Actions, and that 'Protection Bypass for Automation' is enabled on the Vercel project."
             echo "::error::See: https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection"
