@@ -508,8 +508,8 @@ function UserPermissionsPage({ showToast }) {
         adminAPI.getAllUsers({}),
         adminAPI.getRoles(),
       ])
-      setUsers(usersRes.data.users || [])
-      setRoles(rolesRes.data.roles || [])
+      setUsers(usersRes.data.data || [])
+      setRoles(rolesRes.data.data?.roles || [])
     } catch {
       // Use rich mock data for development
       setUsers(MOCK_USERS)
