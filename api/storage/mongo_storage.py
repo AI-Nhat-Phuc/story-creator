@@ -133,6 +133,8 @@ class MongoStorage:
             self.users.create_index('user_id', unique=True)
             self.users.create_index('username', unique=True)
             self.users.create_index('email', unique=True, sparse=True)
+            self.users.create_index('metadata.oauth_accounts.google', sparse=True)
+            self.users.create_index('metadata.oauth_accounts.facebook', sparse=True)
             self.gpt_tasks.create_index('task_id', unique=True)
             self.gpt_tasks.create_index('created_at')
         except Exception as e:
@@ -537,6 +539,17 @@ class MongoStorage:
     def find_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         self._connect()
         doc = self.users.find_one({'email': email})
+        return self._clean_doc(doc)
+
+    def find_user_by_oauth(self, provider: str, provider_user_id: str) -> Optional[Dict[str, Any]]:
+        """Find a user by OAuth provider and provider-issued user ID.
+
+        Uses the sparse index on metadata.oauth_accounts.<provider> so this
+        is a single index-backed find_one — no full-collection scan.
+        """
+        self._connect()
+        field = f'metadata.oauth_accounts.{provider}'
+        doc = self.users.find_one({field: provider_user_id})
         return self._clean_doc(doc)
 
     def list_users(self) -> List[Dict[str, Any]]:
