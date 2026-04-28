@@ -58,8 +58,8 @@ function AdminPanel({ showToast }) {
         adminAPI.getAdminStats()
       ])
 
-      setUsers(usersRes.data.data || [])
-      setRoles(rolesRes.data.data?.roles || [])
+      setUsers(usersRes.data.users || [])
+      setRoles(rolesRes.data.roles || [])
       setStats(statsRes.data.stats || {})
     } catch (error) {
       console.error('Error loading admin data:', error)
