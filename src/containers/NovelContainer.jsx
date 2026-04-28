@@ -2,35 +2,34 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams } from '../utils/router-compat'
-import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
-import { usePageTitle } from '../hooks/usePageTitle'
 import { novelAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import NovelView from '../components/novel/NovelView'
 
 const LINE_BUDGET = 100
 
-function NovelContainer({ showToast }) {
+function NovelContainer({ showToast, initialData }) {
   const { t } = useTranslation()
   const { worldId } = useParams()
   const { user } = useAuth()
 
-  const [novel, setNovel] = useState(null)
-  const [chapters, setChapters] = useState([])
-  const [contentBlocks, setContentBlocks] = useState([])
-  const [nextCursor, setNextCursor] = useState(null)
-  const [hasMore, setHasMore] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  // When the server pre-fetched data, seed state from it and skip the initial
+  // client-side fetch. `null` means the server fetch failed → fall back to
+  // client-side loading so the page still works.
+  const hasSSRData = initialData != null
+  const [novel, setNovel] = useState(initialData?.novel ?? null)
+  const [chapters, setChapters] = useState(initialData?.chapters ?? [])
+  const [contentBlocks, setContentBlocks] = useState(initialData?.contentBlocks ?? [])
+  const [nextCursor, setNextCursor] = useState(initialData?.nextCursor ?? null)
+  const [hasMore, setHasMore] = useState(initialData?.hasMore ?? false)
+  const [isLoading, setIsLoading] = useState(!hasSSRData)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   // Synchronous guard against observer double-fires (state updates lag).
   const loadingMoreRef = useRef(false)
-  const novelTitle = usePageTitle('novel', novel?.title)
-  const novelDescription = novel?.title
-    ? t('meta.novel.descriptionTemplate', { name: novel.title })
-    : t('meta.novel.descriptionFallback')
 
   useEffect(() => {
+    if (hasSSRData) return
     load()
   }, [worldId])
 
@@ -100,10 +99,6 @@ function NovelContainer({ showToast }) {
 
   return (
     <>
-      <Helmet>
-        <title>{novelTitle}</title>
-        <meta name="description" content={novelDescription} />
-      </Helmet>
       <NovelView
         worldId={worldId}
         novel={novel}
@@ -121,5 +116,6 @@ function NovelContainer({ showToast }) {
     </>
   )
 }
+
 
 export default NovelContainer

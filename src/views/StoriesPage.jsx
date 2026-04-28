@@ -1,9 +1,11 @@
 'use client'
 
+import { useToast } from '../contexts/ToastContext'
 import StoriesContainer from '../containers/StoriesContainer'
 
-function StoriesPage(props) {
-    return <StoriesContainer {...props} />
+function StoriesPage({ initialData }) {
+  const { showToast } = useToast()
+  return <StoriesContainer showToast={showToast} initialData={initialData} />
 }
 
 export default StoriesPage

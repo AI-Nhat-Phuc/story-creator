@@ -1,21 +1,22 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { worldsAPI, storiesAPI } from '../services/api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import StoriesView from '../components/stories/StoriesView'
 import { useAuth } from '../contexts/AuthContext'
 
-function StoriesContainer({ showToast }) {
+function StoriesContainer({ showToast, initialData }) {
   const { t } = useTranslation()
   const { user, loading: authLoading } = useAuth()
-  const [worlds, setWorlds] = useState([])
-  const [stories, setStories] = useState([])
-  const [loading, setLoading] = useState(true)
+  const hasSSRData = initialData != null
+  const [worlds, setWorlds] = useState(initialData?.worlds ?? [])
+  const [stories, setStories] = useState(initialData?.stories ?? [])
+  const [loading, setLoading] = useState(!hasSSRData)
 
   useEffect(() => {
+    if (hasSSRData) return
     loadData()
   }, [])
 
@@ -53,10 +54,6 @@ function StoriesContainer({ showToast }) {
 
   return (
     <>
-      <Helmet>
-        <title>{t('meta.stories.title')}</title>
-        <meta name="description" content={t('meta.stories.description')} />
-      </Helmet>
       <StoriesView
       stories={stories}
       worlds={worlds}
