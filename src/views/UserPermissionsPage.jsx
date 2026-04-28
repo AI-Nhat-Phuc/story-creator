@@ -472,7 +472,7 @@ function UserCard({ u, selected, onClick }) {
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 function UserPermissionsPage({ showToast }) {
-  const { user: currentUser, isAuthenticated } = useAuth()
+  const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
@@ -491,6 +491,7 @@ function UserPermissionsPage({ showToast }) {
   const hasUnsaved = JSON.stringify(permissions) !== JSON.stringify(savedPermissions)
 
   useEffect(() => {
+    if (authLoading) return
     if (!isAuthenticated) { navigate('/login'); return }
     if (currentUser?.role !== 'admin' && currentUser?.role !== 'moderator') {
       showToast('Access denied', 'error')
@@ -498,7 +499,7 @@ function UserPermissionsPage({ showToast }) {
       return
     }
     loadUsers()
-  }, [isAuthenticated, currentUser])
+  }, [authLoading, isAuthenticated, currentUser])
 
   const loadUsers = async () => {
     try {
@@ -571,7 +572,7 @@ function UserPermissionsPage({ showToast }) {
     JSON.stringify(defaults) === JSON.stringify(permissions)
   )?.[0] ?? 'custom'
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-3">
