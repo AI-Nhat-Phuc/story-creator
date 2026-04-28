@@ -6,7 +6,7 @@ from core.exceptions import (
     BusinessRuleError,
     PermissionDeniedError
 )
-from utils.responses import success_response, paginated_response
+from utils.responses import success_response
 from utils.validation import validate_request, validate_query_params
 from utils.i18n import t
 from interfaces.auth_middleware import token_required, admin_required, moderator_required
@@ -76,7 +76,13 @@ def create_admin_bp(storage, auth_service):
         start = (page - 1) * per_page
         page_users = safe_users[start:start + per_page]
 
-        return paginated_response(page_users, page, per_page, total)
+        return success_response({
+            'users': page_users,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': (total + per_page - 1) // per_page if per_page > 0 else 0
+        })
 
     @admin_bp.route('/api/admin/users/<user_id>', methods=['GET'])
     @token_required
