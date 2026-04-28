@@ -26,7 +26,7 @@ function StoryEditorContainer({ showToast }) {
   const { storyId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, canUseGpt } = useAuth()
 
   const worldId = searchParams.get('worldId')
 
@@ -370,6 +370,7 @@ function StoryEditorContainer({ showToast }) {
 
   const gptProps = {
     ...gpt,
+    userCanUseGpt: canUseGpt,
     onParaphrase: handleParaphrase,
     onExpand: handleExpand,
     onApply: handleApply,

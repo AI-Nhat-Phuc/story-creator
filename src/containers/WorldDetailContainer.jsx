@@ -16,7 +16,7 @@ const STORIES_PER_PAGE = 20
 function WorldDetailContainer({ showToast }) {
   const { t } = useTranslation()
   const { worldId } = useParams()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, canUseGpt } = useAuth()
   const { registerTask } = useGptTasks()
   const [world, setWorld] = useState(null)
   const [stories, setStories] = useState([])
@@ -141,6 +141,10 @@ function WorldDetailContainer({ showToast }) {
   const handleBatchAnalyze = async (storyIds) => {
     if (!user) {
       showToast(t('pages.worldDetail.loginRequired'), 'warning')
+      return
+    }
+    if (!canUseGpt) {
+      showToast(t('pages.worldDetail.gptNotEnabled', { defaultValue: 'Tính năng GPT chưa được kích hoạt cho tài khoản của bạn' }), 'warning')
       return
     }
     try {

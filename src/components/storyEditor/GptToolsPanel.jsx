@@ -8,12 +8,13 @@ function GptToolsPanel({
   selectionLength,
   isLoading,
   suggestions,
+  userCanUseGpt,
   onParaphrase,
   onExpand,
   onApply,
   onClear,
 }) {
-  const canUseGpt = selectionLength >= 10
+  const canUseGpt = userCanUseGpt && selectionLength >= 10
   const [previewIdx, setPreviewIdx] = useState(null)
 
   function closePreview() {
@@ -50,7 +51,12 @@ function GptToolsPanel({
         </button>
       </div>
 
-      {!canUseGpt && (
+      {!userCanUseGpt && (
+        <p className="text-xs text-base-content/40 italic">
+          Tính năng GPT chưa được kích hoạt cho tài khoản của bạn
+        </p>
+      )}
+      {userCanUseGpt && !canUseGpt && (
         <p className="text-xs text-base-content/40 italic">
           Chọn ≥ 10 ký tự để sử dụng
         </p>

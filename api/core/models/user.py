@@ -63,6 +63,8 @@ class User:
             self.metadata['gpt_requests_today'] = 0
         if 'gpt_last_reset' not in self.metadata:
             self.metadata['gpt_last_reset'] = datetime.utcnow().date().isoformat()
+        if 'gpt_enabled' not in self.metadata:
+            self.metadata['gpt_enabled'] = False
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert User to dictionary."""
@@ -86,6 +88,7 @@ class User:
         'public_worlds_count',
         'public_stories_limit',
         'public_stories_count',
+        'gpt_enabled',
         'gpt_requests_per_day',
         'gpt_requests_today',
         'gpt_last_reset',
@@ -148,6 +151,10 @@ class User:
     def can_use_gpt(self) -> bool:
         """Check if user can use GPT (within daily quota)."""
         from core.permissions import has_permission, Permission
+
+        # Explicit whitelist gate — must be enabled per-user regardless of role
+        if not self.metadata.get('gpt_enabled', False):
+            return False
 
         # Check if unlimited GPT
         if has_permission(self.role, Permission.USE_GPT_UNLIMITED):
