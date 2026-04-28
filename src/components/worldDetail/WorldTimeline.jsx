@@ -145,7 +145,7 @@ function WorldTimeline({
           : 'hidden md:block timeline-start md:text-right'
         const cardPos = flip
           ? 'timeline-end md:timeline-start'
-          : 'timeline-end'
+          : 'timeline-start md:timeline-end'
         const isDragging = draggingIdx === groupIndex
         const showGap = canReorder && draggingIdx !== null && hoverIdx === groupIndex && draggingIdx !== groupIndex
 
