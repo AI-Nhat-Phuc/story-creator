@@ -413,5 +413,30 @@
       "dragToReorder": "Drag to reorder",
       "viewFullInNovel": "Read full content in Novel →"
     }
+  },
+  "errors": {
+    "notFound": {
+      "title": "Page Not Found",
+      "description": "The page you're looking for may have been moved, deleted, or never existed in this fictional world.",
+      "goHome": "Go Home",
+      "goBack": "Go Back",
+      "suggestionsTitle": "You might try",
+      "suggestion1": "Double-check the URL for typos",
+      "suggestion2": "Browse the story collection",
+      "suggestion3": "Explore available worlds"
+    },
+    "serverError": {
+      "badge": "System error",
+      "title": "Something Went Wrong",
+      "description": "We're experiencing a technical hiccup. Don't worry — your stories are safe. Please try again in a moment.",
+      "retry": "Try Again",
+      "retrying": "Retrying…",
+      "goHome": "Go Home",
+      "dataNote": "Your data is safe",
+      "dataDescription": "All your stories and worlds are securely saved. This error is temporary.",
+      "tip1": "Wait a few seconds, then click Try Again",
+      "tip2": "If the problem persists, try refreshing the page",
+      "devDetails": "Error details (development mode)"
+    }
   }
 }

@@ -413,5 +413,30 @@
       "dragToReorder": "Kéo để sắp xếp lại",
       "viewFullInNovel": "Xem đầy đủ trong Novel →"
     }
+  },
+  "errors": {
+    "notFound": {
+      "title": "Không Tìm Thấy Trang",
+      "description": "Trang bạn đang tìm kiếm có thể đã được chuyển đi, xóa, hoặc chưa từng tồn tại trong thế giới hư cấu này.",
+      "goHome": "Về Trang Chủ",
+      "goBack": "Quay Lại",
+      "suggestionsTitle": "Bạn có thể thử",
+      "suggestion1": "Kiểm tra lại đường dẫn URL",
+      "suggestion2": "Duyệt qua kho câu chuyện",
+      "suggestion3": "Khám phá các thế giới hư cấu"
+    },
+    "serverError": {
+      "badge": "Lỗi hệ thống",
+      "title": "Đã Xảy Ra Lỗi",
+      "description": "Chúng tôi đang gặp sự cố kỹ thuật. Đừng lo lắng — câu chuyện của bạn vẫn an toàn. Hãy thử lại sau vài giây.",
+      "retry": "Thử Lại",
+      "retrying": "Đang thử lại…",
+      "goHome": "Về Trang Chủ",
+      "dataNote": "Dữ liệu của bạn an toàn",
+      "dataDescription": "Tất cả câu chuyện và thế giới của bạn đã được lưu an toàn. Lỗi này chỉ là tạm thời.",
+      "tip1": "Chờ vài giây rồi nhấn Thử Lại",
+      "tip2": "Nếu vẫn còn lỗi, hãy thử tải lại trang",
+      "devDetails": "Chi tiết lỗi (chế độ phát triển)"
+    }
   }
 }
