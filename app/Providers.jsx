@@ -31,15 +31,15 @@ export default function Providers({ children }) {
     <HelmetProvider>
       <ThemeProvider>
         <GoogleOAuthProvider clientId={clientId}>
-          <AuthProvider>
-            <ToastProvider>
+          <ToastProvider>
+            <AuthProvider>
               <GptTaskBridge>
                 <KeepAlive />
                 {children}
                 <ToastOutlet />
               </GptTaskBridge>
-            </ToastProvider>
-          </AuthProvider>
+            </AuthProvider>
+          </ToastProvider>
         </GoogleOAuthProvider>
       </ThemeProvider>
     </HelmetProvider>

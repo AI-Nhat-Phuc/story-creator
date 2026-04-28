@@ -49,7 +49,7 @@ class AuthService:
             )
 
         self.algorithm = 'HS256'
-        self.token_expiry_hours = 24  # Tokens expire after 24 hours
+        self.token_expiry_hours = 168  # Tokens expire after 7 days
 
     def hash_password(self, password: str) -> str:
         """

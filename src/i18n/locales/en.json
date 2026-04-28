@@ -1,5 +1,6 @@
 {
   "common": {
+    "sessionExpired": "Your session has expired. Please log in again.",
     "loading": "Loading...",
     "error": "An error occurred",
     "cancel": "Cancel",

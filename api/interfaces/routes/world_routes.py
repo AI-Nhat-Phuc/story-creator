@@ -125,13 +125,14 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
         if visibility == 'public':
             user_data = storage.load_user(g.current_user.user_id)
-            user = User.from_dict(user_data)
-            if not user.can_create_public_world():
-                raise QuotaExceededError(
-                    'Bạn đã đạt giới hạn số thế giới công khai',
-                    current_count=user.metadata.get('public_worlds_count', 0),
-                    limit=user.metadata.get('public_worlds_limit', 1)
-                )
+            if user_data:
+                user = User.from_dict(user_data)
+                if not user.can_create_public_world():
+                    raise QuotaExceededError(
+                        'Bạn đã đạt giới hạn số thế giới công khai',
+                        current_count=user.metadata.get('public_worlds_count', 0),
+                        limit=user.metadata.get('public_worlds_limit', 1)
+                    )
 
         world = world_generator.generate(data.get('description', ''), world_type=data['world_type'])
         if data.get('name'):
@@ -154,9 +155,10 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
 
         if visibility == 'public':
             user_data = storage.load_user(g.current_user.user_id)
-            user = User.from_dict(user_data)
-            user.increment_public_worlds()
-            storage.save_user(user.to_dict())
+            if user_data:
+                user = User.from_dict(user_data)
+                user.increment_public_worlds()
+                storage.save_user(user.to_dict())
 
         flush_data()
 
