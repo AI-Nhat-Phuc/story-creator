@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test')
-const { login } = require('./utils/auth.cjs')
+const { login, TEST_USER } = require('./utils/auth.cjs')
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ test.describe('Story Editor', () => {
   let worldId
 
   test.beforeEach(async ({ page }) => {
-    await login(page)
+    await login(page, TEST_USER)
     worldId = await ensureWorld(page)
     await openEditor(page, worldId)
   })

@@ -121,6 +121,7 @@ class AuthService:
             'username': user.username,
             'email': user.email,
             'role': user.role,
+            'gpt_enabled': user.metadata.get('gpt_enabled', False),
             'exp': expiry_time,
             'iat': datetime.utcnow()
         }

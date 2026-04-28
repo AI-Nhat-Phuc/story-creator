@@ -48,6 +48,43 @@ module.exports = async function globalSetup(config) {
       console.error('[global-setup] admin login failed — tests will likely fail')
     }
 
+    // Enable GPT access for testuser so GPT button E2E tests can pass
+    if (loginRes.ok()) {
+      const adminToken = (await loginRes.json()).token
+      const adminCtx = await request.newContext({
+        baseURL,
+        extraHTTPHeaders: {
+          ...extraHeaders,
+          Authorization: `Bearer ${adminToken}`,
+        },
+      })
+      try {
+        // Look up testuser's ID via the admin users list
+        const usersRes = await adminCtx.get('/api/admin/users?search=testuser')
+        if (usersRes.ok()) {
+          const usersData = await usersRes.json()
+          const testUser = (usersData.data || usersData.users || []).find(
+            (u) => u.username === 'testuser'
+          )
+          if (testUser) {
+            const gptRes = await adminCtx.put(
+              `/api/admin/users/${testUser.user_id}/gpt-access`,
+              { data: { enabled: true } }
+            )
+            if (gptRes.ok()) {
+              console.log('[global-setup] testuser GPT access enabled ✓')
+            } else {
+              console.warn(`[global-setup] failed to enable GPT for testuser: ${gptRes.status()}`)
+            }
+          } else {
+            console.warn('[global-setup] testuser not found in admin users list')
+          }
+        }
+      } finally {
+        await adminCtx.dispose()
+      }
+    }
+
     // Warm up the Vercel Python lambda before tests start.
     // A cold-start can take 5-15 s; hitting /api/health forces the instance
     // to finish initialising so the first storyEditor test's API calls

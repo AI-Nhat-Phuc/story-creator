@@ -173,6 +173,53 @@ def create_admin_bp(storage, auth_service):
             }
         }, t('admin.role_changed', old_role=old_role, new_role=new_role))
 
+    @admin_bp.route('/api/admin/users/<user_id>/gpt-access', methods=['PUT'])
+    @token_required
+    @admin_required
+    def set_user_gpt_access(user_id):
+        """Enable or disable GPT access for a user (admin only).
+        ---
+        tags:
+          - Admin
+        parameters:
+          - in: path
+            name: user_id
+            type: string
+            required: true
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              required:
+                - enabled
+              properties:
+                enabled:
+                  type: boolean
+        responses:
+          200:
+            description: GPT access updated
+          404:
+            description: User not found
+        """
+        data = request.get_json(silent=True) or {}
+        enabled = data.get('enabled')
+        if not isinstance(enabled, bool):
+            from core.exceptions import ValidationError
+            raise ValidationError('enabled must be a boolean')
+
+        user_data = storage.load_user(user_id)
+        if not user_data:
+            raise ResourceNotFoundError('User', user_id)
+
+        user_data.setdefault('metadata', {})['gpt_enabled'] = enabled
+        storage.save_user(user_data)
+
+        return success_response({
+            'user_id': user_id,
+            'gpt_enabled': enabled
+        }, f"GPT access {'enabled' if enabled else 'disabled'} for user")
+
     @admin_bp.route('/api/admin/users/<user_id>/ban', methods=['POST'])
     @token_required
     @moderator_required

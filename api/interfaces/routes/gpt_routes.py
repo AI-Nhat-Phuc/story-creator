@@ -1,12 +1,13 @@
 """GPT routes for the API backend."""
 
 import logging
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from core.exceptions import (
     ResourceNotFoundError,
     ValidationError as APIValidationError,
     ExternalServiceError,
-    BusinessRuleError
+    BusinessRuleError,
+    PermissionDeniedError,
 )
 from utils.responses import success_response
 from utils.validation import validate_request
@@ -90,6 +91,9 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
           503:
             description: GPT not available
         """
+        if not g.current_user.can_use_gpt():
+            raise PermissionDeniedError('use_gpt', 'feature')
+
         backend._ensure_gpt()
         if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
@@ -246,6 +250,9 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
           503:
             description: GPT not available
         """
+        if not g.current_user.can_use_gpt():
+            raise PermissionDeniedError('use_gpt', 'feature')
+
         backend._ensure_gpt()
         if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
@@ -350,6 +357,9 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
           503:
             description: GPT not available
         """
+        if not g.current_user.can_use_gpt():
+            raise PermissionDeniedError('use_gpt', 'feature')
+
         backend._ensure_gpt()
         if not backend.has_gpt:
             raise ExternalServiceError('GPT', 'GPT not available')
@@ -483,6 +493,9 @@ def create_gpt_bp(backend, gpt_results, storage=None, flush_data=None, limiter=N
           429:
             description: Quota exceeded
         """
+        if not g.current_user.can_use_gpt():
+            raise PermissionDeniedError('use_gpt', 'feature')
+
         data = request.validated_data
         text = data['text']
         mode = data.get('mode', 'paraphrase')

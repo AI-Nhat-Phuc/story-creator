@@ -174,6 +174,7 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     isAuthenticated: !!user,
+    canUseGpt: user?.metadata?.gpt_enabled === true,
     login,
     register,
     logout,
