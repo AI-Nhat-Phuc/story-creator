@@ -49,7 +49,7 @@ class AuthService:
             )
 
         self.algorithm = 'HS256'
-        self.token_expiry_hours = 24  # Tokens expire after 24 hours
+        self.token_expiry_hours = 168  # Tokens expire after 7 days
 
     def hash_password(self, password: str) -> str:
         """
@@ -307,15 +307,12 @@ class AuthService:
         Returns:
             Tuple of (success, message, user_object)
         """
-        # Check if user already exists with this OAuth provider
-        users = self.storage.list_users()
-        for user_data in users:
-            oauth_accounts = user_data.get('metadata', {}).get('oauth_accounts', {})
-            if oauth_accounts.get(provider) == provider_user_id:
-                # Found existing OAuth user
-                user = User.from_dict(user_data)
-                logger.info(f"OAuth login: existing user {user.username} via {provider}")
-                return True, "Đăng nhập thành công", user
+        # Check if user already exists with this OAuth provider (index-backed lookup)
+        existing_oauth_data = self.storage.find_user_by_oauth(provider, provider_user_id)
+        if existing_oauth_data:
+            user = User.from_dict(existing_oauth_data)
+            logger.info(f"OAuth login: existing user {user.username} via {provider}")
+            return True, "Đăng nhập thành công", user
 
         # Check if user exists with this email (link accounts)
         existing_user_data = self.storage.find_user_by_email(email)

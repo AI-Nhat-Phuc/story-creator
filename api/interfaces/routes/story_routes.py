@@ -131,13 +131,14 @@ def create_story_bp(storage, story_generator, flush_data):
 
         if visibility == 'public':
             user_data = storage.load_user(g.current_user.user_id)
-            user = User.from_dict(user_data)
-            if not user.can_create_public_story():
-                raise QuotaExceededError(
-                    t('story.quota_exceeded'),
-                    current_count=user.metadata.get('public_stories_count', 0),
-                    limit=user.metadata.get('public_stories_limit', 20)
-                )
+            if user_data:
+                user = User.from_dict(user_data)
+                if not user.can_create_public_story():
+                    raise QuotaExceededError(
+                        t('story.quota_exceeded'),
+                        current_count=user.metadata.get('public_stories_count', 0),
+                        limit=user.metadata.get('public_stories_limit', 20)
+                    )
 
         title = data.get('title', t('story.untitled'))
         description = data.get('description', '')
@@ -187,9 +188,10 @@ def create_story_bp(storage, story_generator, flush_data):
 
         if visibility == 'public':
             user_data = storage.load_user(g.current_user.user_id)
-            user = User.from_dict(user_data)
-            user.increment_public_stories()
-            storage.save_user(user.to_dict())
+            if user_data:
+                user = User.from_dict(user_data)
+                user.increment_public_stories()
+                storage.save_user(user.to_dict())
 
         flush_data()
 
@@ -306,21 +308,23 @@ def create_story_bp(storage, story_generator, flush_data):
 
         if old_visibility != new_visibility:
             user_data = storage.load_user(g.current_user.user_id)
-            user = User.from_dict(user_data)
+            user = User.from_dict(user_data) if user_data else None
 
             if old_visibility != 'public' and new_visibility == 'public':
-                if not user.can_create_public_story():
+                if user and not user.can_create_public_story():
                     raise QuotaExceededError(
                         'Bạn đã đạt giới hạn số câu chuyện công khai',
                         current_count=user.metadata.get('public_stories_count', 0),
                         limit=user.metadata.get('public_stories_limit', 20)
                     )
-                user.increment_public_stories()
-                storage.save_user(user.to_dict())
+                if user:
+                    user.increment_public_stories()
+                    storage.save_user(user.to_dict())
 
             elif old_visibility == 'public' and new_visibility != 'public':
-                user.decrement_public_stories()
-                storage.save_user(user.to_dict())
+                if user:
+                    user.decrement_public_stories()
+                    storage.save_user(user.to_dict())
 
             story_data['visibility'] = new_visibility
 

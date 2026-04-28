@@ -1,5 +1,6 @@
 {
   "common": {
+    "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
     "loading": "Đang tải...",
     "error": "Có lỗi xảy ra",
     "cancel": "Hủy",

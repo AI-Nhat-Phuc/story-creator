@@ -4,6 +4,10 @@ module.exports = {
     "./app/**/*.{js,ts,jsx,tsx}",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'md:timeline-start',
+    'md:timeline-end',
+  ],
   theme: {
     extend: {
       colors: {

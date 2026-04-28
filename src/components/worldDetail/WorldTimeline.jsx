@@ -134,16 +134,18 @@ function WorldTimeline({
           badgeColor: 'accent'
         }
 
-        // Mobile (< md): every card stacks on the right of the line, single
-        // column. md+: alternate sides per row (zigzag) — odd rows put the
-        // card on the left and meta on the right; even rows do the reverse.
+        // Mobile (<md, timeline-compact active): base class is always timeline-end
+        // so every card sits on the right of the dot in a single column.
+        // Desktop (md+): md:timeline-start overrides to the left column for
+        // odd rows → zigzag. Both md:timeline-start / md:timeline-end are
+        // safelisted in tailwind.config.js so they survive the production build.
         const flip = groupIndex % 2 === 1
         const metaPos = flip
           ? 'hidden md:block timeline-end md:text-left'
           : 'hidden md:block timeline-start md:text-right'
         const cardPos = flip
           ? 'timeline-end md:timeline-start'
-          : 'timeline-end'
+          : 'timeline-start md:timeline-end'
         const isDragging = draggingIdx === groupIndex
         const showGap = canReorder && draggingIdx !== null && hoverIdx === groupIndex && draggingIdx !== groupIndex
 

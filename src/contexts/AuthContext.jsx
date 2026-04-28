@@ -1,8 +1,10 @@
 'use client'
 
 import React, { createContext, useState, useContext, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { authAPI } from '../services/api'
 import api from '../services/api'
+import { useToast } from './ToastContext'
 
 const AuthContext = createContext(null)
 
@@ -15,6 +17,8 @@ export const useAuth = () => {
 }
 
 export const AuthProvider = ({ children }) => {
+  const { t } = useTranslation()
+  const { showToast } = useToast()
   const [user, setUser] = useState(null)
   // Start with loading=true so protected routes wait for token verification before
   // deciding whether the user is authenticated. Without this, navigating directly
@@ -69,6 +73,8 @@ export const AuthProvider = ({ children }) => {
           if (error.response?.status === 401) {
             localStorage.removeItem('auth_token')
             setToken(null)
+            setUser(null)
+            showToast(t('common.sessionExpired'), 'warning')
           }
         }
       }
