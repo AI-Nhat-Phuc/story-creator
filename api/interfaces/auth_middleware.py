@@ -64,7 +64,8 @@ def token_required(f):
                         email=payload.get('email', ''),
                         password_hash='',
                         role=payload.get('role', 'user'),
-                        user_id=payload.get('user_id')
+                        user_id=payload.get('user_id'),
+                        metadata={'gpt_enabled': payload.get('gpt_enabled', False)}
                     )
                     logger.info(f"Using token payload fallback for user: {payload.get('username')}")
                 else:
@@ -155,7 +156,8 @@ def optional_auth(f):
                             email=payload.get('email', ''),
                             password_hash='',
                             role=payload.get('role', 'user'),
-                            user_id=payload.get('user_id')
+                            user_id=payload.get('user_id'),
+                            metadata={'gpt_enabled': payload.get('gpt_enabled', False)}
                         )
                         logger.info(f"Using token payload fallback for user: {payload.get('username')}")
             except Exception as e:

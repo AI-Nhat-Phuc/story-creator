@@ -14,7 +14,7 @@ function GptToolsPanel({
   onApply,
   onClear,
 }) {
-  const canUseGpt = userCanUseGpt && selectionLength >= 10
+  const canUseGpt = (userCanUseGpt ?? false) && selectionLength >= 10
   const [previewIdx, setPreviewIdx] = useState(null)
 
   function closePreview() {
