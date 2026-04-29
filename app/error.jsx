@@ -16,13 +16,6 @@ import {
 function ServerErrorIllustration() {
   return (
     <div className="relative w-64 h-56 mx-auto select-none" aria-hidden="true">
-      {/* Ghost "500" backdrop */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <span className="text-9xl font-black text-warning/8 leading-none tracking-tighter">
-          500
-        </span>
-      </div>
-
       <svg
         viewBox="0 0 220 180"
         className="w-full h-full drop-shadow-sm"
