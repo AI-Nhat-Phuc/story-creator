@@ -129,6 +129,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                 user = User.from_dict(user_data)
                 if not user.can_create_public_world():
                     raise QuotaExceededError(
+                        """TODO: message should english/i18n"""
                         'Bạn đã đạt giới hạn số thế giới công khai',
                         current_count=user.metadata.get('public_worlds_count', 0),
                         limit=user.metadata.get('public_worlds_limit', 1)
@@ -148,8 +149,6 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
         gpt_entities = data.get('gpt_entities')
         if gpt_entities and 'entities' in gpt_entities and 'locations' in gpt_entities:
             _create_entities_from_gpt(storage, world, gpt_entities)
-        else:
-            _create_random_entities(storage, world_generator, world)
 
         storage.save_world(world.to_dict())
 
@@ -265,6 +264,7 @@ def create_world_bp(storage, world_generator, diagram_generator, flush_data):
                 if old_visibility != 'public' and new_visibility == 'public':
                     if not user.can_create_public_world():
                         raise QuotaExceededError(
+                            """TODO: message should english/i18n"""
                             'Bạn đã đạt giới hạn số thế giới công khai',
                             current_count=user.metadata.get('public_worlds_count', 0),
                             limit=user.metadata.get('public_worlds_limit', 1)
