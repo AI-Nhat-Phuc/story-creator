@@ -14,6 +14,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   ArrowPathIcon,
+  GlobeAltIcon,
 } from '@heroicons/react/24/outline'
 
 // Pages where the modal should be hidden (user is already in an editor)
@@ -67,6 +68,7 @@ function WritingModal() {
   const {
     modalState,
     draft,
+    worlds,
     editorRef,
     storyIdRef,
     openModal,
@@ -74,6 +76,7 @@ function WritingModal() {
     closeModal,
     handleTitleChange,
     handleContentUpdate,
+    handleWorldChange,
     handleSave,
     handlePublish,
   } = useWritingModal()
@@ -148,15 +151,37 @@ function WritingModal() {
     <div className="hidden md:flex fixed bottom-0 right-6 z-50 flex-col w-[38%] min-w-[340px] max-w-[560px] h-[60vh] min-h-[400px] bg-base-100 border border-base-300 rounded-t-xl shadow-2xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-base-200 border-b border-base-300 shrink-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <PencilSquareIcon className="w-4 h-4 text-primary shrink-0" />
-          <input
-            type="text"
-            value={draft.title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder={t('writingModal.titlePlaceholder')}
-            className="input input-ghost input-xs text-sm font-medium w-full min-w-0 focus:outline-none px-0"
-          />
+        <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <PencilSquareIcon className="w-4 h-4 text-primary shrink-0" />
+            <input
+              type="text"
+              value={draft.title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder={t('writingModal.titlePlaceholder')}
+              className="input input-ghost input-xs text-sm font-medium w-full min-w-0 focus:outline-none px-0"
+            />
+          </div>
+          {/* World selector — always visible; editable only when story not yet saved */}
+          <div className="flex items-center gap-1 pl-6">
+            <GlobeAltIcon className="w-3 h-3 text-base-content/40 shrink-0" />
+            {!draft.storyId ? (
+              <select
+                value={draft.worldId || ''}
+                onChange={(e) => handleWorldChange(e.target.value)}
+                className="select select-ghost select-xs h-5 min-h-0 text-xs pl-0 pr-4 border-0 bg-transparent focus:outline-none max-w-[180px]"
+              >
+                <option value="" disabled>{t('writingModal.worldPlaceholder')}</option>
+                {worlds.map(w => (
+                  <option key={w.world_id} value={w.world_id}>{w.name}</option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-xs text-base-content/50 truncate max-w-[180px]">
+                {worlds.find(w => w.world_id === draft.worldId)?.name ?? t('writingModal.world')}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-1 shrink-0 ml-2">
           <SaveStatusBadge status={draft.saveStatus} />

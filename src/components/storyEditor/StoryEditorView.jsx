@@ -35,6 +35,10 @@ function StoryEditorView({
   onBack,
   initialFormat,
   showToast,
+  worldId,
+  worldName,
+  worlds,
+  onWorldChange,
 }) {
   const [panelOpen, setPanelOpen] = useState(false)
 
@@ -59,6 +63,10 @@ function StoryEditorView({
         isPublished={editor.isPublished}
         onBack={onBack}
         onTitleFocus={() => setPanelOpen(false)}
+        worldId={worldId}
+        worldName={worldName}
+        worlds={worlds}
+        onWorldChange={onWorldChange}
       />
 
       <FormattingToolbar editorRef={editorRef} activeFormats={activeFormats} />

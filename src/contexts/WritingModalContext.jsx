@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react'
 import TurndownService from 'turndown'
 import { marked } from 'marked'
-import { storiesAPI } from '../services/api'
+import { storiesAPI, worldsAPI } from '../services/api'
 import { useAuth } from './AuthContext'
 
 const turndownSvc = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-' })
@@ -18,6 +18,7 @@ export function WritingModalProvider({ children, showToast }) {
 
   // Modal visibility state
   const [modalState, setModalState] = useState('closed') // 'closed' | 'open' | 'minimized'
+  const [worlds, setWorlds] = useState([])
 
   // Draft content state
   const [draft, setDraft] = useState({
@@ -162,11 +163,25 @@ export function WritingModalProvider({ children, showToast }) {
     }
   }, [doSave, showToast])
 
+  const loadWorlds = useCallback(async () => {
+    try {
+      const res = await worldsAPI.getAll()
+      setWorlds(res.data?.worlds ?? res.data ?? [])
+    } catch {
+      // not critical
+    }
+  }, [])
+
+  const handleWorldChange = useCallback((worldId) => {
+    worldIdRef.current = worldId
+    setDraft(prev => ({ ...prev, worldId }))
+  }, [])
+
   const openModal = useCallback(async () => {
     // Always refetch from server on open (server is source of truth)
     setModalState('open')
-    await loadDraft()
-  }, [loadDraft])
+    await Promise.all([loadDraft(), loadWorlds()])
+  }, [loadDraft, loadWorlds])
 
   const minimizeModal = useCallback(() => {
     setModalState('minimized')
@@ -197,6 +212,7 @@ export function WritingModalProvider({ children, showToast }) {
     <WritingModalContext.Provider value={{
       modalState,
       draft,
+      worlds,
       editorRef,
       storyIdRef,
       openModal,
@@ -204,6 +220,7 @@ export function WritingModalProvider({ children, showToast }) {
       closeModal,
       handleTitleChange,
       handleContentUpdate,
+      handleWorldChange,
       handleSave,
       handlePublish,
     }}>

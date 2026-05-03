@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
 
 function EditorHeader({
   title,
@@ -10,6 +10,10 @@ function EditorHeader({
   wordCount,
   readTime,
   isPublished,
+  worldId,
+  worldName,
+  worlds,
+  onWorldChange,
   onTitleChange,
   onSave,
   onPublish,
@@ -20,13 +24,35 @@ function EditorHeader({
   const titleRef = useRef(null)
 
   const STATUS_TEXT = {
-    new:    { cls: 'text-base-content/40',          label: t('pages.storyEditor.statusNew')    },
-    idle:   { cls: 'text-accent font-medium',        label: t('pages.storyEditor.statusDraft')  },
-    saving: { cls: 'text-primary/60 italic',        label: t('pages.storyEditor.statusSaving') },
-    saved:  { cls: 'text-base-content/50',          label: t('pages.storyEditor.statusSaved')  },
-    error:  { cls: 'text-error font-medium',        label: t('pages.storyEditor.statusError')  },
+    new:    { cls: 'text-base-content/40',   label: t('pages.storyEditor.statusNew')    },
+    idle:   { cls: 'text-accent font-medium', label: t('pages.storyEditor.statusDraft')  },
+    saving: { cls: 'text-primary/60 italic',  label: t('pages.storyEditor.statusSaving') },
+    saved:  { cls: 'text-base-content/50',   label: t('pages.storyEditor.statusSaved')  },
+    error:  { cls: 'text-error font-medium',  label: t('pages.storyEditor.statusError')  },
   }
   const badge = STATUS_TEXT[saveStatus] || STATUS_TEXT.idle
+
+  // Editable selector for new stories; read-only label for existing ones
+  const worldSelector = onWorldChange ? (
+    <div className="flex items-center gap-1 shrink-0">
+      <GlobeAltIcon className="w-3.5 h-3.5 text-base-content/40 shrink-0" />
+      <select
+        value={worldId || ''}
+        onChange={(e) => onWorldChange(e.target.value)}
+        className="select select-ghost select-xs h-6 min-h-0 text-xs pr-5 pl-0 border-0 focus:outline-none bg-transparent max-w-[140px]"
+      >
+        <option value="" disabled>{t('pages.storyEditor.worldPlaceholder')}</option>
+        {(worlds || []).map(w => (
+          <option key={w.world_id} value={w.world_id}>{w.name}</option>
+        ))}
+      </select>
+    </div>
+  ) : worldName ? (
+    <div className="flex items-center gap-1 shrink-0 text-xs text-base-content/50">
+      <GlobeAltIcon className="w-3.5 h-3.5 shrink-0" />
+      <span className="hidden sm:inline truncate max-w-[120px]">{worldName}</span>
+    </div>
+  ) : null
 
   return (
     <header className="sticky top-0 z-10 flex items-center flex-wrap gap-1 px-3 py-1.5 bg-base-100 border-b border-base-300 shrink-0">
@@ -37,6 +63,8 @@ function EditorHeader({
       >
         <ArrowLeftIcon className="w-4 h-4" />
       </button>
+
+      {worldSelector}
 
       <div className="flex-1 min-w-0">
         <input

@@ -5,7 +5,7 @@ import { useParams, useSearchParams, useNavigate } from '../utils/router-compat'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { usePageTitle } from '../hooks/usePageTitle'
-import { storiesAPI, gptAPI, authAPI } from '../services/api'
+import { storiesAPI, gptAPI, authAPI, worldsAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import StoryEditorView from '../components/storyEditor/StoryEditorView'
 import UnsavedChangesModal from '../components/storyEditor/UnsavedChangesModal'
@@ -46,6 +46,8 @@ function StoryEditorContainer({ showToast }) {
   const [showTitleModal, setShowTitleModal] = useState(false)
   const [titleSuggestion, setTitleSuggestion] = useState('')
   const [showSignatureModal, setShowSignatureModal] = useState(false)
+  const [worlds, setWorlds] = useState([])
+  const [worldName, setWorldName] = useState('')
   const editTitle = usePageTitle('storyEdit', editor.title || null)
 
   // Refs — mirror mutable values so doSave is always reading current data (no stale closures)
@@ -66,7 +68,7 @@ function StoryEditorContainer({ showToast }) {
   useEffect(() => {
     if (!user) return
     const storyLoad = storyId ? loadStory() : checkForDraft()
-    Promise.all([storyLoad, loadUserSignatures()])
+    Promise.all([storyLoad, loadUserSignatures(), loadWorlds()])
   }, [user, storyId])
 
   // Flush on unmount
@@ -102,6 +104,21 @@ function StoryEditorContainer({ showToast }) {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
+  const loadWorlds = async () => {
+    try {
+      const res = await worldsAPI.getAll()
+      const list = res.data?.worlds ?? res.data ?? []
+      setWorlds(list)
+      // Set world name for existing story (worldId from URL or loaded story)
+      if (worldIdRef.current) {
+        const found = list.find(w => w.world_id === worldIdRef.current)
+        if (found) setWorldName(found.name)
+      }
+    } catch {
+      // not critical
+    }
+  }
+
   const loadStory = async () => {
     try {
       const res = await storiesAPI.getById(storyId)
@@ -111,6 +128,7 @@ function StoryEditorContainer({ showToast }) {
       const editorContent = data.format === 'markdown' ? marked.parse(rawContent) : rawContent
       const markdownBaseline = data.format === 'markdown' ? rawContent : toMarkdown(rawContent)
       storyIdRef.current = storyId
+      worldIdRef.current = data.world_id || worldIdRef.current
       setInitialFormat('html')
       editorDataRef.current = { title, content: editorContent }
       lastSavedRef.current = { title, content: markdownBaseline }
@@ -122,13 +140,14 @@ function StoryEditorContainer({ showToast }) {
   }
 
   const checkForDraft = async () => {
-    if (!worldId) {
-      showToast(t('pages.storyEditor.noWorld'), 'warning')
-      navigate('/worlds')
-      return
-    }
     setEditor(prev => ({ ...prev, isLoading: false }))
   }
+
+  const handleWorldChange = useCallback((newWorldId) => {
+    worldIdRef.current = newWorldId
+    const found = worlds.find(w => w.world_id === newWorldId)
+    setWorldName(found?.name || '')
+  }, [worlds])
 
   const loadUserSignatures = async () => {
     try {
@@ -181,6 +200,10 @@ function StoryEditorContainer({ showToast }) {
     // Allow saving without title — fallback to "(no title)"
     const effectiveTitle = title.trim() || t('pages.storyEditor.titleNoTitle')
 
+    if (!storyIdRef.current && !worldIdRef.current) {
+      showToast(t('pages.storyEditor.noWorldSave'), 'warning')
+      return
+    }
     setEditor(prev => ({ ...prev, saveStatus: 'saving' }))
     try {
       if (!storyIdRef.current) {
@@ -409,6 +432,10 @@ function StoryEditorContainer({ showToast }) {
         onBack={handleBack}
         initialFormat={initialFormat}
         showToast={showToast}
+        worldId={worldIdRef.current}
+        worldName={worldName}
+        worlds={!storyId ? worlds : undefined}
+        onWorldChange={!storyId ? handleWorldChange : undefined}
       />
 
       {showUnsavedModal && (

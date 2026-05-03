@@ -304,7 +304,10 @@
       "titleSuggestTitle": "Lưu bản nháp",
       "titleSuggestMessage": "Đặt tiêu đề cho câu chuyện của bạn",
       "titleSuggestPlaceholder": "Nhập tiêu đề…",
-      "titleSuggestSkip": "Lưu không có tiêu đề"
+      "titleSuggestSkip": "Lưu không có tiêu đề",
+      "world": "Thế giới",
+      "worldPlaceholder": "Chọn thế giới…",
+      "noWorldSave": "Hãy chọn thế giới trước khi lưu"
     },
     "signatureModal": {
       "title": "Chữ ký",
@@ -451,6 +454,9 @@
     "statusIdle": "Chưa lưu",
     "statusSaving": "Đang lưu…",
     "statusSaved": "Đã lưu",
-    "statusError": "Lỗi"
+    "statusError": "Lỗi",
+    "world": "Thế giới",
+    "worldPlaceholder": "Chọn thế giới…",
+    "noWorldSave": "Hãy chọn thế giới trước khi lưu"
   }
 }

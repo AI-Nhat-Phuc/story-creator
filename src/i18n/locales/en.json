@@ -304,7 +304,10 @@
       "titleSuggestTitle": "Save draft",
       "titleSuggestMessage": "Give your story a title",
       "titleSuggestPlaceholder": "Enter a titleâ€¦",
-      "titleSuggestSkip": "Save without title"
+      "titleSuggestSkip": "Save without title",
+      "world": "World",
+      "worldPlaceholder": "Select worldâ€¦",
+      "noWorldSave": "Select a world before saving"
     },
     "signatureModal": {
       "title": "Signature",
@@ -440,7 +443,7 @@
     }
   },
   "writingModal": {
-    "titlePlaceholder": "Story title…",
+    "titlePlaceholder": "Story titleï¿½",
     "minimize": "Minimize",
     "maximize": "Open full editor",
     "close": "Close",
@@ -449,8 +452,11 @@
     "save": "Save",
     "publish": "Publish",
     "statusIdle": "Unsaved",
-    "statusSaving": "Saving…",
+    "statusSaving": "Savingï¿½",
     "statusSaved": "Saved",
-    "statusError": "Error"
+    "statusError": "Error",
+    "world": "World",
+    "worldPlaceholder": "Select worldâ€¦",
+    "noWorldSave": "Select a world before saving"
   }
 }
