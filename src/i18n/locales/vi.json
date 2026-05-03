@@ -457,6 +457,8 @@
     "statusError": "Lỗi",
     "world": "Thế giới",
     "worldPlaceholder": "Chọn thế giới…",
-    "noWorldSave": "Hãy chọn thế giới trước khi lưu"
+    "noWorldSave": "Hãy chọn thế giới trước khi lưu",
+    "switchDraft": "Chuyển nháp",
+    "newDraft": "+ Nháp mới"
   }
 }

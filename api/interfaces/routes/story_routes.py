@@ -233,6 +233,27 @@ def create_story_bp(storage, story_generator, flush_data):
         story = drafts[0] if drafts else None
         return success_response({'story': story})
 
+    @story_bp.route('/api/stories/my-drafts', methods=['GET'])
+    @token_required
+    def get_my_drafts():
+        """Get all draft stories owned by the current user.
+        ---
+        tags:
+          - Stories
+        parameters:
+          - in: header
+            name: Authorization
+            type: string
+            required: true
+        responses:
+          200:
+            description: List of draft stories
+          401:
+            description: Unauthorized
+        """
+        drafts = _get_user_drafts(storage, g.current_user.user_id)
+        return success_response({'stories': drafts})
+
     @story_bp.route('/api/stories/<story_id>', methods=['GET'])
     @optional_auth
     def get_story_detail(story_id):

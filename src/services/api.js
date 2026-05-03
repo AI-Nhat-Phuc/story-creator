@@ -86,6 +86,7 @@ export const storiesAPI = {
   linkEntities: (id, data) => api.post(`/stories/${id}/link-entities`, data),
   clearLinks: (id) => api.post(`/stories/${id}/clear-links`),
   getMyDraft: () => api.get('/stories/my-draft'),
+  getMyDrafts: () => api.get('/stories/my-drafts'),
   getNeighbors: (id) => api.get(`/stories/${id}/neighbors`),
 }
 

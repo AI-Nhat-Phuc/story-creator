@@ -19,6 +19,7 @@ export function WritingModalProvider({ children, showToast }) {
   // Modal visibility state
   const [modalState, setModalState] = useState('closed') // 'closed' | 'open' | 'minimized'
   const [worlds, setWorlds] = useState([])
+  const [draftList, setDraftList] = useState([])
 
   // Draft content state
   const [draft, setDraft] = useState({
@@ -38,6 +39,7 @@ export function WritingModalProvider({ children, showToast }) {
   const worldIdRef = useRef(null)
   const saveTimerRef = useRef(null)
   const editorRef = useRef(null)
+  const doSaveRef = useRef(null)
 
   // Check for active draft when user logs in
   useEffect(() => {
@@ -57,37 +59,69 @@ export function WritingModalProvider({ children, showToast }) {
     }
   }, [])
 
+  const applyStory = useCallback((story) => {
+    const rawContent = story.content || ''
+    const htmlContent = story.format === 'markdown' ? marked.parse(rawContent) : rawContent
+    const markdownBaseline = story.format === 'markdown' ? rawContent : toMarkdown(rawContent)
+    storyIdRef.current = story.story_id
+    worldIdRef.current = story.world_id
+    draftRef.current = { title: story.title || '', content: htmlContent }
+    lastSavedRef.current = { title: story.title || '', content: markdownBaseline }
+    setDraft({
+      storyId: story.story_id,
+      worldId: story.world_id,
+      title: story.title || '',
+      content: htmlContent,
+      saveStatus: 'saved',
+      isPublished: story.visibility === 'public',
+      isLoading: false,
+    })
+    // Sync editor content
+    if (editorRef.current?.commands) {
+      editorRef.current.commands.setContent(htmlContent)
+    }
+  }, [])
+
+  const loadDraftList = useCallback(async () => {
+    try {
+      const res = await storiesAPI.getMyDrafts()
+      setDraftList(res.data?.stories ?? [])
+    } catch {
+      // not critical
+    }
+  }, [])
+
   const loadDraft = useCallback(async () => {
     setDraft((prev) => ({ ...prev, isLoading: true }))
     try {
-      const res = await storiesAPI.getMyDraft()
-      const story = res.data?.story ?? res.data
+      const [draftRes] = await Promise.all([storiesAPI.getMyDraft(), loadDraftList()])
+      const story = draftRes.data?.story ?? draftRes.data
       if (!story) {
         setDraft((prev) => ({ ...prev, isLoading: false }))
         return
       }
-      const rawContent = story.content || ''
-      const htmlContent = story.format === 'markdown' ? marked.parse(rawContent) : rawContent
-      const markdownBaseline = story.format === 'markdown' ? rawContent : toMarkdown(rawContent)
-
-      storyIdRef.current = story.story_id
-      worldIdRef.current = story.world_id
-      draftRef.current = { title: story.title || '', content: htmlContent }
-      lastSavedRef.current = { title: story.title || '', content: markdownBaseline }
-
-      setDraft({
-        storyId: story.story_id,
-        worldId: story.world_id,
-        title: story.title || '',
-        content: htmlContent,
-        saveStatus: 'saved',
-        isPublished: story.visibility === 'public',
-        isLoading: false,
-      })
+      applyStory(story)
     } catch {
       setDraft((prev) => ({ ...prev, isLoading: false }))
     }
-  }, [])
+  }, [applyStory, loadDraftList])
+
+  const switchDraft = useCallback(async (storyId) => {
+    if (storyId === storyIdRef.current) return
+    // Flush pending save before switching
+    clearTimeout(saveTimerRef.current)
+    await doSaveRef.current?.()
+    setDraft((prev) => ({ ...prev, isLoading: true }))
+    try {
+      const res = await storiesAPI.getById(storyId)
+      const story = res.data
+      applyStory(story)
+      // Refresh draft list to keep titles in sync
+      loadDraftList()
+    } catch {
+      setDraft((prev) => ({ ...prev, isLoading: false }))
+    }
+  }, [applyStory, loadDraftList])
 
   const doSave = useCallback(async () => {
     const { title, content } = draftRef.current
@@ -126,6 +160,7 @@ export function WritingModalProvider({ children, showToast }) {
       showToast?.('Failed to save draft', 'error')
     }
   }, [showToast])
+  doSaveRef.current = doSave
 
   const scheduleAutoSave = useCallback(() => {
     clearTimeout(saveTimerRef.current)
@@ -183,6 +218,20 @@ export function WritingModalProvider({ children, showToast }) {
     await Promise.all([loadDraft(), loadWorlds()])
   }, [loadDraft, loadWorlds])
 
+  const startNewDraft = useCallback(async () => {
+    clearTimeout(saveTimerRef.current)
+    await doSaveRef.current?.()
+    storyIdRef.current = null
+    worldIdRef.current = null
+    draftRef.current = { title: '', content: '' }
+    lastSavedRef.current = { title: '', content: '' }
+    setDraft({ storyId: null, worldId: null, title: '', content: '', saveStatus: 'new', isPublished: false, isLoading: false })
+    if (editorRef.current?.commands) {
+      editorRef.current.commands.setContent('')
+    }
+    loadDraftList()
+  }, [loadDraftList])
+
   const minimizeModal = useCallback(() => {
     setModalState('minimized')
   }, [])
@@ -212,6 +261,7 @@ export function WritingModalProvider({ children, showToast }) {
     <WritingModalContext.Provider value={{
       modalState,
       draft,
+      draftList,
       worlds,
       editorRef,
       storyIdRef,
@@ -223,6 +273,8 @@ export function WritingModalProvider({ children, showToast }) {
       handleWorldChange,
       handleSave,
       handlePublish,
+      switchDraft,
+      startNewDraft,
     }}>
       {children}
     </WritingModalContext.Provider>

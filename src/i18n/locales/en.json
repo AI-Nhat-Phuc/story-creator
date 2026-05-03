@@ -457,6 +457,8 @@
     "statusError": "Error",
     "world": "World",
     "worldPlaceholder": "Select world…",
-    "noWorldSave": "Select a world before saving"
+    "noWorldSave": "Select a world before saving",
+    "switchDraft": "Switch draft",
+    "newDraft": "+ New draft"
   }
 }

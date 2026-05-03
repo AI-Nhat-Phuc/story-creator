@@ -79,6 +79,9 @@ function WritingModal() {
     handleWorldChange,
     handleSave,
     handlePublish,
+    switchDraft,
+    startNewDraft,
+    draftList,
   } = useWritingModal()
 
   const [activeFormats, setActiveFormats] = useState({})
@@ -232,7 +235,35 @@ function WritingModal() {
       </div>
 
       {/* Footer actions */}
-      <div className="flex items-center justify-end gap-2 px-3 py-2 border-t border-base-300 bg-base-100 shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 border-t border-base-300 bg-base-100 shrink-0">
+        {/* Draft switcher — left side */}
+        {draftList.length > 0 && (
+          <div className="flex-1 min-w-0">
+            <select
+              value={draft.storyId || ''}
+              onChange={(e) => {
+                const val = e.target.value
+                if (val === '__new__') {
+                  startNewDraft()
+                } else if (val) {
+                  switchDraft(val)
+                }
+              }}
+              className="select select-ghost select-xs h-7 min-h-0 text-xs border border-base-300 bg-base-100 max-w-full w-full"
+              title={t('writingModal.switchDraft')}
+            >
+              {!draft.storyId && <option value="">{t('writingModal.switchDraft')}…</option>}
+              {draftList.map(d => (
+                <option key={d.story_id} value={d.story_id}>
+                  {d.title || '(no title)'}
+                </option>
+              ))}
+              <option value="__new__">{t('writingModal.newDraft')}</option>
+            </select>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 shrink-0 ml-auto">
         <button
           onClick={handleSave}
           disabled={draft.saveStatus === 'saving'}
@@ -247,6 +278,7 @@ function WritingModal() {
         >
           {t('writingModal.publish')}
         </button>
+        </div>
       </div>
     </div>
   )
