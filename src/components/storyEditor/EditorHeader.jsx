@@ -21,8 +21,8 @@ function EditorHeader({
 
   const STATUS_TEXT = {
     new:    { cls: 'text-base-content/40',          label: t('pages.storyEditor.statusNew')    },
-    idle:   { cls: 'text-warning font-medium',      label: t('pages.storyEditor.statusDraft')  },
-    saving: { cls: 'text-base-content/50 italic',   label: t('pages.storyEditor.statusSaving') },
+    idle:   { cls: 'text-accent font-medium',        label: t('pages.storyEditor.statusDraft')  },
+    saving: { cls: 'text-primary/60 italic',        label: t('pages.storyEditor.statusSaving') },
     saved:  { cls: 'text-base-content/50',          label: t('pages.storyEditor.statusSaved')  },
     error:  { cls: 'text-error font-medium',        label: t('pages.storyEditor.statusError')  },
   }
@@ -62,7 +62,7 @@ function EditorHeader({
         {saveStatus === 'saved' && !isPublished && wordCount > 0 && (
           <button
             onClick={onPublish}
-            className="btn btn-xs btn-outline btn-success h-7 min-h-0 px-2 shrink-0"
+            className="btn btn-xs btn-outline btn-primary h-7 min-h-0 px-2 shrink-0"
           >
             {t('pages.storyEditor.publish')}
           </button>

@@ -29,8 +29,8 @@ function isEditorPage(pathname) {
 
 const STATUS_CONFIG = {
   idle: { label: 'writingModal.statusIdle', cls: 'text-base-content/40' },
-  saving: { label: 'writingModal.statusSaving', cls: 'text-info', icon: ArrowPathIcon },
-  saved: { label: 'writingModal.statusSaved', cls: 'text-success', icon: CheckCircleIcon },
+  saving: { label: 'writingModal.statusSaving', cls: 'text-primary/60', icon: ArrowPathIcon },
+  saved: { label: 'writingModal.statusSaved', cls: 'text-primary', icon: CheckCircleIcon },
   error: { label: 'writingModal.statusError', cls: 'text-error', icon: ExclamationCircleIcon },
 }
 
