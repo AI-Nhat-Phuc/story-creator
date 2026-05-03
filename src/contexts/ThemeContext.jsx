@@ -27,10 +27,10 @@ function loadFromStorage() {
   }
 }
 
-function saveToStorage(mode, primaryColor) {
+function saveToStorage(mode, primaryColor, cssVars, base) {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ mode, primaryColor }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ mode, primaryColor, cssVars, base }))
   } catch {
     // localStorage unavailable — silent fail (e.g. private browsing)
   }
@@ -54,17 +54,25 @@ function clearCustomVars() {
   CSS_VARS.forEach((v) => document.documentElement.style.removeProperty(v))
 }
 
+function buildCustomVars(palette) {
+  return {
+    '--p':  hexToDaisyOklch(palette.primary),
+    '--pc': contrastOklch(palette.primary),
+    '--s':  hexToDaisyOklch(palette.secondary),
+    '--sc': contrastOklch(palette.secondary),
+    '--a':  hexToDaisyOklch(palette.accent),
+    '--ac': contrastOklch(palette.accent),
+    '--b1': hexToDaisyOklch(palette.base100),
+    '--n':  hexToDaisyOklch(palette.base100),
+    '--b2': hexToDaisyOklch(palette.base200),
+  }
+}
+
 function injectCustomVars(palette) {
-  if (typeof document === 'undefined') return
-  document.documentElement.style.setProperty('--p', hexToDaisyOklch(palette.primary))
-  document.documentElement.style.setProperty('--pc', contrastOklch(palette.primary))
-  document.documentElement.style.setProperty('--s', hexToDaisyOklch(palette.secondary))
-  document.documentElement.style.setProperty('--sc', contrastOklch(palette.secondary))
-  document.documentElement.style.setProperty('--a', hexToDaisyOklch(palette.accent))
-  document.documentElement.style.setProperty('--ac', contrastOklch(palette.accent))
-  document.documentElement.style.setProperty('--b1', hexToDaisyOklch(palette.base100))
-  document.documentElement.style.setProperty('--n', hexToDaisyOklch(palette.base100))
-  document.documentElement.style.setProperty('--b2', hexToDaisyOklch(palette.base200))
+  if (typeof document === 'undefined') return null
+  const vars = buildCustomVars(palette)
+  Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v))
+  return vars
 }
 
 export function getPalette(mode, primaryColor) {
@@ -73,20 +81,24 @@ export function getPalette(mode, primaryColor) {
   return deriveCustomPalette(primaryColor)
 }
 
-// Accept a pre-computed palette to avoid double-deriving in custom mode
+// Accept a pre-computed palette to avoid double-deriving in custom mode.
+// Returns { cssVars, base } for custom mode (used to persist to storage).
 function applyTheme(mode, palette) {
-  if (typeof document === 'undefined') return
+  if (typeof document === 'undefined') return {}
   const html = document.documentElement
   if (mode === THEME_MODES.LIGHT) {
     html.setAttribute('data-theme', 'sc-light')
     clearCustomVars()
+    return {}
   } else if (mode === THEME_MODES.DARK) {
     html.setAttribute('data-theme', 'sc-dark')
     clearCustomVars()
+    return {}
   } else {
     const base = relativeLuminance(palette.base100) > 0.22 ? 'sc-light' : 'sc-dark'
     html.setAttribute('data-theme', base)
-    injectCustomVars(palette)
+    const cssVars = injectCustomVars(palette)
+    return { cssVars, base }
   }
 }
 
@@ -117,27 +129,31 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     const stored = getStoredState()
-    if (stored) {
-      setTheme(stored)
-      applyTheme(stored.mode, getPalette(stored.mode, stored.primaryColor))
-    } else {
-      applyTheme(mode, getPalette(mode, primaryColor))
+    const state = stored ?? { mode, primaryColor }
+    if (stored) setTheme(stored)
+    const palette = getPalette(state.mode, state.primaryColor)
+    const { cssVars, base } = applyTheme(state.mode, palette)
+    // Persist computed vars so the inline script can apply them next load
+    if (state.mode === THEME_MODES.CUSTOM && cssVars) {
+      saveToStorage(state.mode, state.primaryColor, cssVars, base)
     }
+    // Reveal body (was hidden by inline script for custom theme without stored vars)
+    document.body.style.removeProperty('visibility')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function setMode(newMode) {
     setTheme((prev) => ({ ...prev, mode: newMode }))
     applyTheme(newMode, getPalette(newMode, primaryColor))
-    saveToStorage(newMode, primaryColor)
+    saveToStorage(newMode, primaryColor, null, null)
   }
 
   function setPrimaryColor(hex) {
     const safe = isValidHex(hex) ? hex : DEFAULT_PRIMARY
     const palette = deriveCustomPalette(safe)
     setTheme({ mode: THEME_MODES.CUSTOM, primaryColor: safe })
-    applyTheme(THEME_MODES.CUSTOM, palette)
-    saveToStorage(THEME_MODES.CUSTOM, safe)
+    const { cssVars, base } = applyTheme(THEME_MODES.CUSTOM, palette)
+    saveToStorage(THEME_MODES.CUSTOM, safe, cssVars, base)
   }
 
   const colors = getPalette(mode, primaryColor)

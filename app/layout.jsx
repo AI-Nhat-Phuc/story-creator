@@ -38,10 +38,41 @@ export const viewport = {
   initialScale: 1,
 }
 
+// Inline script runs synchronously before first paint — no React involved.
+// It reads sc_theme from localStorage and applies the custom CSS vars
+// immediately so custom-theme users never see the default light flash.
+const themeScript = `(function(){
+  try {
+    var s = localStorage.getItem('sc_theme');
+    if (!s) return;
+    var t = JSON.parse(s);
+    var html = document.documentElement;
+    if (t.mode === 'dark') {
+      html.setAttribute('data-theme', 'sc-dark');
+    } else if (t.mode === 'custom') {
+      if (t.cssVars && t.base) {
+        html.setAttribute('data-theme', t.base);
+        var v = t.cssVars;
+        for (var k in v) { html.style.setProperty(k, v[k]); }
+      } else {
+        // First-ever custom load: no vars cached yet — hide until JS applies them
+        document.body ? (document.body.style.visibility = 'hidden') : null;
+        document.addEventListener('DOMContentLoaded', function() {
+          document.body && (document.body.style.visibility = 'hidden');
+        });
+      }
+    }
+  } catch(e) {}
+})()`
+
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body>
+      <head>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

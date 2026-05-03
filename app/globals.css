@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth color transitions when switching themes */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Exclude elements where color transitions cause jank */
+[data-no-theme-transition],
+[data-no-theme-transition] *,
+.animate-spin,
+.animate-ping,
+.animate-pulse,
+.animate-bounce,
+.loading {
+  transition: none !important;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
