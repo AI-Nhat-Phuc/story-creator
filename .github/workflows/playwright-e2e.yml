@@ -185,6 +185,9 @@ jobs:
                 const raw = fs.readFileSync(resultsPath, 'utf8')
                 const report = JSON.parse(raw)
                 const BAD_STATUSES = new Set(['failed', 'timedOut', 'interrupted'])
+                // Strip ANSI escape codes (colour, dim, bold, etc.) that
+                // Playwright embeds in error messages and call logs.
+                const stripAnsi = s => s.replace(/\[[0-9;]*m/g, '')
                 const failures = []
 
                 // Walk suite tree, building a readable breadcrumb path per spec.
@@ -200,8 +203,8 @@ jobs:
                       path: [...trail, spec.title].join(' › '),
                       status: worst.status,
                       duration: worst.duration ?? 0,
-                      message: worst.error?.message || worst.status,
-                      stack: worst.error?.stack || '',
+                      message: stripAnsi(worst.error?.message || worst.status),
+                      stack: stripAnsi(worst.error?.stack || ''),
                     })
                   }
                   for (const child of (suite.suites || [])) walk(child, trail)
