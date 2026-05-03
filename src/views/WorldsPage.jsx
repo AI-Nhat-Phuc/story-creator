@@ -21,10 +21,11 @@ function WorldsPage({ initialWorlds }) {
   const { t } = useTranslation()
   const { isAuthenticated, user, loading: authLoading, canUseGpt } = useAuth()
 
-  // Skip the initial client-side fetch when SSR pre-fetched public worlds.
-  // Re-fetch still fires when the user authenticates (private worlds become visible).
+  // SSR pre-fetches public worlds (no auth token). We skip the initial client-side
+  // fetch only for anonymous users — the SSR data already shows everything they
+  // can see. For authenticated users we always refetch so their private/draft worlds
+  // are included.
   const hasSSRData = initialWorlds != null
-  const skipFirstFetch = useRef(hasSSRData)
   const [worlds, setWorlds] = useState(initialWorlds ?? [])
   const [loading, setLoading] = useState(!hasSSRData)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -37,12 +38,12 @@ function WorldsPage({ initialWorlds }) {
   const dialogRef = useRef(null)
 
   useEffect(() => {
-    if (skipFirstFetch.current) {
-      skipFirstFetch.current = false
-      return
-    }
+    // Wait until auth is resolved before deciding whether to fetch
+    if (authLoading) return
+    // Anonymous users: SSR data is complete, no refetch needed
+    if (!isAuthenticated && hasSSRData) return
     loadWorlds()
-  }, [isAuthenticated])
+  }, [isAuthenticated, authLoading])
 
   // Sync native <dialog> open/close state with React state
   useEffect(() => {
