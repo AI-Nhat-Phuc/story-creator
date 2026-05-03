@@ -70,24 +70,10 @@ function StoriesView({
         <h1 className="font-bold text-3xl">
           <BookOpenIcon className="inline w-8 h-8" /> Câu chuyện
         </h1>
-        {worlds.length > 0 ? (
-          authLoading ? (
-            <button className="btn btn-primary" disabled>
-              <span className="loading loading-spinner loading-xs" />
-            </button>
-          ) : user ? (
-            <button onClick={handleCreateStoryClick} className="btn btn-primary">
-              + Tạo câu chuyện mới
-            </button>
-          ) : (
-            <div className="tooltip tooltip-left" data-tip="Vui lòng đăng nhập để tạo câu chuyện">
-              <button className="btn btn-disabled" disabled>+ Tạo câu chuyện mới</button>
-            </div>
-          )
-        ) : (
-          <div className="tooltip tooltip-left" data-tip="Tạo thế giới trước để bắt đầu">
-            <button className="btn btn-disabled" disabled>+ Tạo câu chuyện mới</button>
-          </div>
+        {worlds.length > 0 && !authLoading && user && (
+          <button onClick={handleCreateStoryClick} className="btn btn-primary">
+            + Tạo câu chuyện mới
+          </button>
         )}
       </div>
 

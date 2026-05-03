@@ -7,13 +7,11 @@ import { worldsAPI, gptAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from '../components/LoadingSpinner'
-import GptButton, { OpenAILogo } from '../components/GptButton'
+import GptButton from '../components/GptButton'
 import {
   GlobeAltIcon,
   LockClosedIcon,
   UserIcon,
-  MapPinIcon,
-  ArrowPathIcon,
   BookOpenIcon,
 } from '@heroicons/react/24/outline'
 import Tag from '../components/Tag'
@@ -21,7 +19,7 @@ import Tag from '../components/Tag'
 function WorldsPage({ initialWorlds }) {
   const { showToast } = useToast()
   const { t } = useTranslation()
-  const { isAuthenticated, user, loading: authLoading } = useAuth()
+  const { isAuthenticated, user, loading: authLoading, canUseGpt } = useAuth()
 
   // Skip the initial client-side fetch when SSR pre-fetched public worlds.
   // Re-fetch still fires when the user authenticates (private worlds become visible).
@@ -36,7 +34,6 @@ function WorldsPage({ initialWorlds }) {
     world_type: 'fantasy',
   })
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
-  const [gptEntities, setGptEntities] = useState(null)
   const dialogRef = useRef(null)
 
   useEffect(() => {
@@ -131,56 +128,6 @@ function WorldsPage({ initialWorlds }) {
     }
   }
 
-  const analyzeWithGPT = async () => {
-    if (!isAuthenticated) {
-      showToast(t('pages.worlds.toast.loginRequired'), 'warning')
-      return
-    }
-    if (!formData.description) {
-      showToast(t('pages.worlds.toast.descRequired'), 'warning')
-      return
-    }
-    if (!formData.name) {
-      showToast(t('pages.worlds.toast.nameRequiredGpt'), 'warning')
-      return
-    }
-
-    try {
-      setGptAnalyzing(true)
-      const response = await gptAPI.analyze({
-        world_description: formData.description,
-        world_type: formData.world_type
-      })
-
-      const taskId = response.data.task_id
-
-      // Poll for results
-      const checkResults = async () => {
-        try {
-          const result = await gptAPI.getResults(taskId)
-          if (result.data.status === 'completed') {
-            setGptEntities(result.data.result)
-            showToast(t('pages.worlds.toast.gptAnalysisDone'), 'success')
-            setGptAnalyzing(false)
-          } else if (result.data.status === 'error') {
-            showToast(result.data.result, 'error')
-            setGptAnalyzing(false)
-          } else {
-            setTimeout(checkResults, 500)
-          }
-        } catch (err) {
-          showToast(t('pages.worlds.toast.gptAnalysisError'), 'error')
-          setGptAnalyzing(false)
-        }
-      }
-
-      checkResults()
-    } catch (error) {
-      showToast(t('pages.worlds.toast.gptAnalysisError'), 'error')
-      setGptAnalyzing(false)
-    }
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -196,55 +143,19 @@ function WorldsPage({ initialWorlds }) {
 
     try {
       setGptAnalyzing(true)
-
-      // Auto-analyze with GPT
-      const gptResponse = await gptAPI.analyze({
-        world_description: formData.description,
-        world_type: formData.world_type
-      })
-
-      const taskId = gptResponse.data.task_id
-
-      // Poll for GPT results
-      const checkResults = async () => {
-        try {
-          const result = await gptAPI.getResults(taskId)
-          if (result.data.status === 'completed') {
-            const entities = result.data.result
-
-            // Create world with GPT entities
-            const payload = {
-              ...formData,
-              gpt_entities: entities
-            }
-
-            await worldsAPI.create(payload)
-            showToast(t('pages.worlds.toast.createSuccess', { chars: entities.characters?.length || 0, locs: entities.locations?.length || 0 }), 'success')
-            setShowCreateModal(false)
-            setGptAnalyzing(false)
-            loadWorlds()
-          } else if (result.data.status === 'error') {
-            showToast(t('pages.worlds.toast.createError'), 'error')
-            setGptAnalyzing(false)
-          } else {
-            setTimeout(checkResults, 500)
-          }
-        } catch (err) {
-          showToast(t('pages.worlds.toast.createError'), 'error')
-          setGptAnalyzing(false)
-        }
-      }
-
-      checkResults()
+      await worldsAPI.create(formData)
+      showToast(t('pages.worlds.toast.createSuccess', { chars: 0, locs: 0 }), 'success')
+      setShowCreateModal(false)
+      loadWorlds()
     } catch (error) {
       showToast(t('pages.worlds.toast.createError'), 'error')
+    } finally {
       setGptAnalyzing(false)
     }
   }
 
   const resetForm = () => {
     setFormData({ name: '', description: '', world_type: 'fantasy' })
-    setGptEntities(null)
   }
 
   const deleteWorld = async (worldId) => {
@@ -383,16 +294,18 @@ function WorldsPage({ initialWorlds }) {
                   <label className="label py-0">
                     <span className="label-text">{t('pages.worlds.description')}</span>
                   </label>
-                  <GptButton
-                    onClick={generateDescriptionWithGPT}
-                    loading={gptAnalyzing}
-                    loadingText={t('pages.worlds.gptGenerating')}
-                    disabled={!formData.name}
-                    variant="secondary"
-                    size="xs"
-                  >
-                    Tạo mô tả
-                  </GptButton>
+                  {canUseGpt && (
+                    <GptButton
+                      onClick={generateDescriptionWithGPT}
+                      loading={gptAnalyzing}
+                      loadingText={t('pages.worlds.gptGenerating')}
+                      disabled={!formData.name}
+                      variant="secondary"
+                      size="xs"
+                    >
+                      Tạo mô tả
+                    </GptButton>
+                  )}
                 </div>
                 <textarea
                   name="description"
@@ -404,70 +317,19 @@ function WorldsPage({ initialWorlds }) {
                 />
                 <label className="label">
                   <span className="label-text-alt">{t('pages.worlds.charCount', { count: formData.description.length })}</span>
-                  <span className="label-text-alt text-base-content/40">{t('pages.worlds.gptHint')}</span>
                 </label>
               </div>
 
-              {/* GPT Entities Preview */}
-              {gptEntities && (
-                <div className="bg-base-200/50 mb-4 p-4 border border-base-300 rounded-xl">
-                  <div className="w-full">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="flex items-center gap-2 font-semibold">
-                        <span className="flex justify-center items-center bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full w-6 h-6 text-emerald-600">
-                          <OpenAILogo className="w-3.5 h-3.5" />
-                        </span>
-                        {t('pages.worlds.analysisResult')}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setGptEntities(null)}
-                        className="opacity-50 hover:opacity-100 btn btn-ghost btn-xs btn-circle"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    {gptEntities.characters?.length > 0 && (
-                      <div className="mb-3">
-                        <span className="opacity-70 text-sm"><UserIcon className="inline w-3.5 h-3.5" /> Nhân vật ({gptEntities.characters.length}):</span>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {gptEntities.characters.map((char, i) => (
-                            <span key={i} className="bg-primary/10 px-2 py-1 border border-primary/30 rounded-lg font-medium text-primary text-sm">
-                              {char.name} - {char.entity_type}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {gptEntities.locations?.length > 0 && (
-                      <div>
-                        <span className="opacity-70 text-sm"><MapPinIcon className="inline w-3.5 h-3.5" /> Địa điểm ({gptEntities.locations.length}):</span>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {gptEntities.locations.map((loc, i) => (
-                            <span key={i} className="bg-secondary/10 px-2 py-1 border border-secondary/30 rounded-lg font-medium text-secondary text-sm">
-                              {loc.name} - {loc.location_type}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {(!gptEntities.characters?.length && !gptEntities.locations?.length) && (
-                      <p className="opacity-70 text-sm">{t('pages.worlds.noEntities')}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
               <div className="modal-action">
-                <GptButton
-                  onClick={handleSubmit}
-                  loading={gptAnalyzing}
-                  loadingText={t('actions.processing')}
-                  variant="primary"
-                  size="md"
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={gptAnalyzing}
                 >
-                  {t('pages.worlds.createAndAnalyze')}
-                </GptButton>
+                  {gptAnalyzing ? (
+                    <><span className="loading loading-spinner loading-xs" />{t('actions.processing')}</>
+                  ) : t('pages.worlds.createBtn')}
+                </button>
                 <button type="button" onClick={() => dialogRef.current?.close()} className="btn" disabled={gptAnalyzing}>{t('common.cancel')}</button>
               </div>
             </form>

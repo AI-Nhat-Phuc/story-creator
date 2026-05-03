@@ -117,6 +117,7 @@ function Navbar() {
   )
 
   return (
+    <>
     <div
       className={[
         'bg-primary shadow-lg text-primary-content navbar',
@@ -234,19 +235,22 @@ function Navbar() {
         )}
       </div>
 
-      {/* Logout Confirmation Modal */}
-      <Modal open={showLogoutModal} onClose={cancelLogout} title={t('nav.logoutConfirmTitle')} className="max-w-sm">
-        <p className="text-sm opacity-80 mb-6">{t('nav.logoutConfirmMsg')}</p>
-        <div className="flex justify-end gap-2">
-          <button className="btn btn-ghost btn-sm" onClick={cancelLogout}>
-            {t('common.cancel')}
-          </button>
-          <button className="btn btn-error btn-sm" onClick={confirmLogout}>
-            {t('actions.logout')}
-          </button>
-        </div>
-      </Modal>
     </div>
+
+    {/* Logout Confirmation Modal — rendered outside the sticky navbar to avoid
+        will-change:transform creating a new stacking context that breaks fixed positioning */}
+    <Modal open={showLogoutModal} onClose={cancelLogout} title={t('nav.logoutConfirmTitle')} className="max-w-sm">
+      <p className="text-sm opacity-80 mb-6">{t('nav.logoutConfirmMsg')}</p>
+      <div className="flex justify-end gap-2">
+        <button className="btn btn-ghost btn-sm" onClick={cancelLogout}>
+          {t('common.cancel')}
+        </button>
+        <button className="btn btn-error btn-sm" onClick={confirmLogout}>
+          {t('actions.logout')}
+        </button>
+      </div>
+    </Modal>
+    </>
   )
 }
 
