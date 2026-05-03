@@ -159,37 +159,79 @@ jobs:
 
             // Parse Playwright JSON results for failed test details.
             // Suites can nest (file-suite → describe-suite → specs), so walk
-            // the tree recursively instead of looking only two levels deep.
-            let failedLines = ''
+            // the tree recursively, collecting full breadcrumb paths.
+            let failedSection = ''
             const resultsPath = 'test-results/results.json'
             if (!fs.existsSync(resultsPath)) {
-              failedLines = [
-                '_No `test-results/results.json` was produced — the Playwright step likely did not run._',
-                '_Common cause: the "Wait for deployment to be reachable" step failed (e.g. Vercel Deployment Protection is blocking). Check the job log for details._',
-              ].join('\n\n')
+              failedSection = [
+                '### ⚙️ Setup step failed — no tests ran',
+                '',
+                'The Playwright test runner never started. Most common causes:',
+                '',
+                '| Symptom | Fix |',
+                '|---------|-----|',
+                '| `HTTP 401` / `403` in job log | `VERCEL_AUTOMATION_BYPASS_SECRET` is missing or wrong in GitHub Secrets |',
+                '| `HTTP 000` / curl error | Deployment URL unreachable / DNS not propagated yet |',
+                '| Browser install error | Run `npx playwright install` in the workflow before tests |',
+                '',
+                '**Steps to fix the bypass secret:**',
+                '1. Vercel → Project → Settings → Deployment Protection → copy the _Protection Bypass for Automation_ token',
+                '2. GitHub repo → Settings → Secrets → Actions → update `VERCEL_AUTOMATION_BYPASS_SECRET`',
+                '',
+                '> Check the **"Wait for deployment to be reachable"** step in the [job log](' + runUrl + ') for the exact HTTP status.',
+              ].join('\n')
             } else {
               try {
                 const raw = fs.readFileSync(resultsPath, 'utf8')
                 const report = JSON.parse(raw)
                 const BAD_STATUSES = new Set(['failed', 'timedOut', 'interrupted'])
                 const failures = []
-                const walk = (suite) => {
+
+                // Walk suite tree, building a readable breadcrumb path per spec.
+                const walk = (suite, crumbs = []) => {
+                  const trail = suite.title ? [...crumbs, suite.title] : crumbs
                   for (const spec of (suite.specs || [])) {
-                    const bad = (spec.tests || []).flatMap(t => t.results || []).filter(r => BAD_STATUSES.has(r.status))
+                    const bad = (spec.tests || [])
+                      .flatMap(t => t.results || [])
+                      .filter(r => BAD_STATUSES.has(r.status))
                     if (!bad.length) continue
                     const worst = bad[0]
-                    const label = worst.status === 'timedOut' ? '⏱ timeout' : '❌ failed'
-                    const err = worst.error?.message?.split('\n')[0] || worst.status
-                    failures.push(`| \`${spec.title}\` | ${label} | ${err.slice(0, 120)} |`)
+                    failures.push({
+                      path: [...trail, spec.title].join(' › '),
+                      status: worst.status,
+                      duration: worst.duration ?? 0,
+                      message: worst.error?.message || worst.status,
+                      stack: worst.error?.stack || '',
+                    })
                   }
-                  for (const child of (suite.suites || [])) walk(child)
+                  for (const child of (suite.suites || [])) walk(child, trail)
                 }
                 for (const suite of (report.suites || [])) walk(suite)
-                failedLines = failures.length
-                  ? `| Test | Status | Error |\n|------|--------|-------|\n${failures.join('\n')}`
-                  : '_Job failed but no individual test was marked as failed — the wait/setup step likely failed. Check the job log._'
+
+                if (failures.length === 0) {
+                  failedSection = [
+                    '### ⚙️ Setup step failed — no tests ran',
+                    '',
+                    '_Job failed but no individual test was marked as failed.',
+                    'The wait/setup step most likely failed before Playwright started — check the [job log](' + runUrl + ')._',
+                  ].join('\n')
+                } else {
+                  const icon = s => s === 'timedOut' ? '⏱️ timed out' : s === 'interrupted' ? '🚫 interrupted' : '❌ failed'
+                  const blocks = failures.map(({ path, status, duration, message, stack }) => {
+                    const secs = duration ? ` _(${(duration / 1000).toFixed(1)}s)_` : ''
+                    // Full error message in a code block (capped at 800 chars)
+                    const msgBlock = '```\n' + message.slice(0, 800) + (message.length > 800 ? '\n…(truncated)' : '') + '\n```'
+                    // Stack trace in a collapsible block, strip redundant first line if dupe of message
+                    const stackBody = stack.replace(/^.+\n/, '').trim()
+                    const stackBlock = stackBody
+                      ? '<details>\n<summary>Stack trace</summary>\n\n```\n' + stackBody.slice(0, 1500) + (stackBody.length > 1500 ? '\n…(truncated)' : '') + '\n```\n\n</details>'
+                      : ''
+                    return [`**\`${path}\`** — ${icon(status)}${secs}`, '', msgBlock, stackBlock].filter(Boolean).join('\n')
+                  })
+                  failedSection = `### ❌ ${failures.length} test(s) failed\n\n---\n\n` + blocks.join('\n\n---\n\n')
+                }
               } catch (e) {
-                failedLines = `_Could not parse \`test-results/results.json\`: ${e.message}_`
+                failedSection = `_Could not parse \`test-results/results.json\`: ${e.message}_`
               }
             }
 
@@ -200,10 +242,9 @@ jobs:
               `**Deploy:** ${deployUrl}`,
               `**Run:** [Logs & artifacts](${runUrl})`,
               '',
-              '### Failed tests',
-              failedLines,
+              failedSection,
               '',
-              '> Screenshots and videos are attached as artifacts on the Actions run.',
+              '> 📎 Screenshots and videos are attached as artifacts on the Actions run.',
             ].join('\n')
 
             // Delete all previous failure comments from this workflow so
