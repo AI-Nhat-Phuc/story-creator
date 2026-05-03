@@ -11,7 +11,6 @@ import {
   UserIcon,
 } from '@heroicons/react/24/outline'
 import { marked } from 'marked'
-import Modal from '../Modal'
 
 function toPlainText(content) {
   if (!content) return ''
@@ -53,40 +52,43 @@ function StoriesView({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [showWorldPicker, setShowWorldPicker] = useState(false)
+  const [selectedWorldId, setSelectedWorldId] = useState('')
+
+  const effectiveWorldId = selectedWorldId || (worlds[0]?.world_id ?? '')
 
   const handleCreateStoryClick = () => {
-    if (worlds.length === 1) {
-      navigate(`/stories/new?worldId=${worlds[0].world_id}`)
-    } else {
-      setShowWorldPicker(true)
-    }
+    if (effectiveWorldId) navigate(`/stories/new?worldId=${effectiveWorldId}`)
   }
 
   return (
     <div>
       {/* ── Page header ─────────────────────────────────────────────── */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="font-bold text-3xl">
+      <div className="mb-6">
+        <h1 className="font-bold text-3xl mb-4">
           <BookOpenIcon className="inline w-8 h-8" /> Câu chuyện
         </h1>
-        {worlds.length > 0 ? (
-          authLoading ? (
-            <button className="btn btn-primary" disabled>
-              <span className="loading loading-spinner loading-xs" />
-            </button>
-          ) : user ? (
-            <button onClick={handleCreateStoryClick} className="btn btn-primary">
+
+        {/* World selector + CTA — only shown for authenticated users with worlds */}
+        {!authLoading && user && worlds.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-3">
+            <select
+              className="select select-bordered flex-1 max-w-xs"
+              value={effectiveWorldId}
+              onChange={e => setSelectedWorldId(e.target.value)}
+            >
+              {worlds.map(world => (
+                <option key={world.world_id} value={world.world_id}>
+                  {world.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleCreateStoryClick}
+              disabled={!effectiveWorldId}
+              className="btn btn-primary"
+            >
               + Tạo câu chuyện mới
             </button>
-          ) : (
-            <div className="tooltip tooltip-left" data-tip="Vui lòng đăng nhập để tạo câu chuyện">
-              <button className="btn btn-disabled" disabled>+ Tạo câu chuyện mới</button>
-            </div>
-          )
-        ) : (
-          <div className="tooltip tooltip-left" data-tip="Tạo thế giới trước để bắt đầu">
-            <button className="btn btn-disabled" disabled>+ Tạo câu chuyện mới</button>
           </div>
         )}
       </div>
@@ -200,40 +202,6 @@ function StoriesView({
         </div>
       )}
 
-      {/* ── World picker modal ──────────────────────────────────────── */}
-      <Modal
-        open={showWorldPicker}
-        onClose={() => setShowWorldPicker(false)}
-        title="Chọn thế giới"
-        className="max-w-sm"
-      >
-        <p className="mb-4 text-sm text-base-content/70">
-          Câu chuyện sẽ được tạo trong thế giới nào?
-        </p>
-        <div className="flex flex-col gap-2">
-          {worlds.map(world => {
-            const c = paletteFor(world.name)
-            return (
-              <Link
-                key={world.world_id}
-                to={`/stories/new?worldId=${world.world_id}`}
-                className={`btn btn-outline justify-start border-l-4 ${c.border}`}
-                onClick={() => setShowWorldPicker(false)}
-              >
-                <span className={`w-2 h-2 rounded-full ${c.dot}`} />
-                <GlobeAltIcon className="w-4 h-4 shrink-0" />
-                <span className="truncate">{world.name}</span>
-                <span className="ml-auto text-xs opacity-50">{world.world_type}</span>
-              </Link>
-            )
-          })}
-        </div>
-        <div className="flex justify-end mt-6">
-          <button type="button" onClick={() => setShowWorldPicker(false)} className="btn btn-ghost btn-sm">
-            Hủy
-          </button>
-        </div>
-      </Modal>
     </div>
   )
 }
