@@ -8,6 +8,8 @@ import { GptTaskProvider } from '../src/contexts/GptTaskContext'
 import { ToastProvider, useToast } from '../src/contexts/ToastContext'
 import Toast from '../src/components/Toast'
 import { useKeepAlive } from '../src/hooks/useKeepAlive'
+import { WritingModalProvider } from '../src/contexts/WritingModalContext'
+import WritingModal from '../src/components/writingModal/WritingModal'
 import '../src/i18n'
 
 function ToastOutlet() {
@@ -25,6 +27,16 @@ function KeepAlive() {
   return null
 }
 
+function WritingModalBridge({ children }) {
+  const { showToast } = useToast()
+  return (
+    <WritingModalProvider showToast={showToast}>
+      {children}
+      <WritingModal />
+    </WritingModalProvider>
+  )
+}
+
 export default function Providers({ children }) {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
   return (
@@ -34,9 +46,11 @@ export default function Providers({ children }) {
           <ToastProvider>
             <AuthProvider>
               <GptTaskBridge>
-                <KeepAlive />
-                {children}
-                <ToastOutlet />
+                <WritingModalBridge>
+                  <KeepAlive />
+                  {children}
+                  <ToastOutlet />
+                </WritingModalBridge>
               </GptTaskBridge>
             </AuthProvider>
           </ToastProvider>
