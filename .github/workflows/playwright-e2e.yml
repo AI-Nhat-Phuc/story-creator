@@ -1,7 +1,7 @@
 name: Playwright E2E Tests
 
-# Runs automatically after every successful Vercel deployment.
-# BASE_URL is taken from the deployment_status event — no hardcoded URL.
+# Runs once Vercel marks a preview deployment successful.
+# Tests hit the live Vercel preview URL — no local servers are started.
 #
 # REQUIRED secret (repo Settings → Secrets and variables → Actions):
 #   VERCEL_AUTOMATION_BYPASS_SECRET
@@ -18,9 +18,7 @@ permissions:
 jobs:
   e2e:
     name: Run E2E tests
-    # Only run on successful preview deployments — never on Production to avoid
-    # polluting real user data. Vercel sets environment to "Production" for the
-    # main branch and "Preview" for PR / branch deployments.
+    # Only run on successful Vercel preview deploys (not production).
     if: >
       github.event.deployment_status.state == 'success' &&
       github.event.deployment.environment != 'Production'
@@ -46,19 +44,17 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
-      # `deployment_status: success` fires the moment Vercel marks the
-      # deployment ready, but the project's "Vercel" check on the commit
-      # may still be propagating — and the URL routing / CDN layer is
-      # often a few seconds behind that. Block here until every Vercel
-      # check on this SHA has reached a successful conclusion before we
-      # start curling the URL. This eliminates the recurring "wait
-      # loop times out" failures whose only fix was re-running the job.
+      - name: Set BASE_URL
+        run: echo "BASE_URL=${{ github.event.deployment_status.target_url }}" >> "$GITHUB_ENV"
+
+      # `deployment_status: success` fires the moment Vercel marks the deployment
+      # ready, but the URL routing / CDN layer is often a few seconds behind.
+      # Block here until every Vercel check on this SHA has reached a successful
+      # conclusion before curling the URL.
       - name: Wait for Vercel check on this commit to finish
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.event.deployment.sha }}
-          # Match every check Vercel publishes (e.g. "Vercel",
-          # "Vercel — Preview — story-creator", future renames).
           check-regexp: '^Vercel.*'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
@@ -71,31 +67,22 @@ jobs:
       - name: Wait for deployment to be reachable
         id: wait
         env:
-          DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
           BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          echo "Target URL: $DEPLOY_URL"
+          echo "Target URL: $BASE_URL"
           if [ -z "$BYPASS_SECRET" ]; then
             echo "::warning::VERCEL_AUTOMATION_BYPASS_SECRET is empty — requests without the bypass header will be blocked if Deployment Protection is enabled."
           fi
-          # Single request with a generous overall budget. curl's own
-          # --retry handles transient failures (5xx, timeouts, connection
-          # refused) so we don't need a bash retry loop. `|| echo "000"`
-          # keeps the script alive under `set -e` if curl still ends up
-          # exhausting its retries.
           STATUS=$(curl -s -o /tmp/deploy-body -w "%{http_code}" \
             -H "x-vercel-protection-bypass: ${BYPASS_SECRET}" \
             -L --max-time 180 \
             --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors \
-            "$DEPLOY_URL" || echo "000")
+            "$BASE_URL" || echo "000")
           echo "HTTP $STATUS"
           if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
             echo "Deployment is reachable (HTTP $STATUS)."
-            echo "reachable=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "reachable=false" >> "$GITHUB_OUTPUT"
-          echo "last_status=$STATUS" >> "$GITHUB_OUTPUT"
           echo "::error::Deployment was not reachable (HTTP $STATUS)."
           if [ "$STATUS" = "401" ] || [ "$STATUS" = "403" ]; then
             echo "::error::Vercel Deployment Protection is blocking the E2E runner."
@@ -110,25 +97,8 @@ jobs:
       - name: Run Playwright E2E tests
         env:
           CI: 'true'
-          BASE_URL: ${{ github.event.deployment_status.target_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: npx playwright test --config=playwright.config.cjs
-
-      - name: Upload Playwright HTML report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-${{ github.run_id }}
-          path: playwright-report/
-          retention-days: 7
-
-      - name: Upload screenshots and videos on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results-${{ github.run_id }}
-          path: test-results/
-          retention-days: 7
 
       - name: Comment failures on PR
         if: failure()
@@ -136,15 +106,11 @@ jobs:
         with:
           script: |
             const fs = require('fs')
-            // Hidden marker so we can find and delete previous failure
-            // comments posted by this workflow. Bots only — humans never
-            // type this string.
             const MARKER = '<!-- e2e-failure-comment -->'
             const sha = context.payload.deployment?.sha || context.sha
             const deployUrl = context.payload.deployment_status?.target_url || ''
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
 
-            // Find open PR associated with the deployed commit SHA
             const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -157,9 +123,6 @@ jobs:
             }
             const prNumber = openPR.number
 
-            // Parse Playwright JSON results for failed test details.
-            // Suites can nest (file-suite → describe-suite → specs), so walk
-            // the tree recursively, collecting full breadcrumb paths.
             let failedSection = ''
             const resultsPath = 'test-results/results.json'
             if (!fs.existsSync(resultsPath)) {
@@ -185,12 +148,9 @@ jobs:
                 const raw = fs.readFileSync(resultsPath, 'utf8')
                 const report = JSON.parse(raw)
                 const BAD_STATUSES = new Set(['failed', 'timedOut', 'interrupted'])
-                // Strip ANSI escape codes (colour, dim, bold, etc.) that
-                // Playwright embeds in error messages and call logs.
-                const stripAnsi = s => s.replace(/\[[0-9;]*m/g, '')
+                const stripAnsi = s => s.replace(/\[[0-9;]*m/g, '')
                 const failures = []
 
-                // Walk suite tree, building a readable breadcrumb path per spec.
                 const walk = (suite, crumbs = []) => {
                   const trail = suite.title ? [...crumbs, suite.title] : crumbs
                   for (const spec of (suite.specs || [])) {
@@ -222,9 +182,7 @@ jobs:
                   const icon = s => s === 'timedOut' ? '⏱️ timed out' : s === 'interrupted' ? '🚫 interrupted' : '❌ failed'
                   const blocks = failures.map(({ path, status, duration, message, stack }) => {
                     const secs = duration ? ` _(${(duration / 1000).toFixed(1)}s)_` : ''
-                    // Full error message in a code block (capped at 800 chars)
                     const msgBlock = '```\n' + message.slice(0, 800) + (message.length > 800 ? '\n…(truncated)' : '') + '\n```'
-                    // Stack trace in a collapsible block, strip redundant first line if dupe of message
                     const stackBody = stack.replace(/^.+\n/, '').trim()
                     const stackBlock = stackBody
                       ? '<details>\n<summary>Stack trace</summary>\n\n```\n' + stackBody.slice(0, 1500) + (stackBody.length > 1500 ? '\n…(truncated)' : '') + '\n```\n\n</details>'
@@ -250,8 +208,6 @@ jobs:
               '> 📎 Screenshots and videos are attached as artifacts on the Actions run.',
             ].join('\n')
 
-            // Delete all previous failure comments from this workflow so
-            // only the latest run's report remains on the PR.
             const stale = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,

@@ -8,6 +8,7 @@ from ai.gpt_client import GPTIntegration
 from services import GPTService, AuthService
 from services import EventService
 from services.task_store import TaskStore
+from services.activity_log_service import init_activity_log_service
 from visualization import RelationshipDiagram
 from interfaces.auth_middleware import init_auth_middleware
 from interfaces.routes import (
@@ -155,6 +156,9 @@ class APIBackend:
 
         # Store for async GPT results (persisted in database)
         self.gpt_results = TaskStore(self.storage)
+
+        # Activity log service (in-memory mock, singleton per process)
+        self.activity_log_service = init_activity_log_service()
 
         # Setup signal handlers
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -392,7 +396,8 @@ class APIBackend:
         # Admin routes
         admin_bp = create_admin_bp(
             storage=self.storage,
-            auth_service=self.auth_service
+            auth_service=self.auth_service,
+            activity_log_service=self.activity_log_service,
         )
         self.app.register_blueprint(admin_bp)
 

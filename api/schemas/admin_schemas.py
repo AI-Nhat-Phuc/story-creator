@@ -31,3 +31,30 @@ class ListUsersQuerySchema(Schema):
         allow_none=True
     )
     search = fields.Str(validate=validate.Length(max=100), load_default='')
+
+
+class ToggleUserStatusSchema(Schema):
+    """Schema for PUT /api/admin/users/<id>/status - Toggle active/inactive."""
+
+    active = fields.Bool(required=True)
+
+
+class UpdatePermissionsSchema(Schema):
+    """Schema for PUT /api/admin/users/<id>/permissions - Set custom permission overrides.
+
+    ``permissions`` is a dict of {permission_name: bool} where True grants and
+    False revokes the permission regardless of the user's role defaults.
+    Pass an empty dict to clear all overrides.
+    """
+
+    permissions = fields.Dict(
+        keys=fields.Str(validate=validate.Length(min=1, max=80)),
+        values=fields.Bool(),
+        load_default={},
+    )
+
+
+class ListActivityLogsQuerySchema(Schema):
+    """Schema for GET /api/admin/users/<id>/activity-logs."""
+
+    limit = fields.Int(validate=validate.Range(min=1, max=200), load_default=50)

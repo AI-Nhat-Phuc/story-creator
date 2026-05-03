@@ -2,6 +2,7 @@
 
 import uuid as _uuid
 from datetime import datetime
+from services.activity_log_service import get_activity_log_service
 from flask import Blueprint, request, g
 from core.models.world import World
 from core.models.entity import Entity
@@ -195,6 +196,16 @@ def create_story_bp(storage, story_generator, flush_data):
 
         flush_data()
 
+        _al = get_activity_log_service()
+        if _al:
+            _al.log(
+                user_id=g.current_user.user_id,
+                action='create_story',
+                resource_type='story',
+                resource_id=story.story_id,
+                metadata={'title': story.title, 'visibility': story.visibility},
+            )
+
         return created_response(
             {'story_id': story.story_id, 'story': story.to_dict()},
             t('story.created')
@@ -336,6 +347,16 @@ def create_story_bp(storage, story_generator, flush_data):
         storage.save_story(story_data)
         flush_data()
 
+        _al = get_activity_log_service()
+        if _al:
+            _al.log(
+                user_id=g.current_user.user_id,
+                action='update_story',
+                resource_type='story',
+                resource_id=story_id,
+                metadata={'title': story_data.get('title'), 'visibility': story_data.get('visibility')},
+            )
+
         return success_response(story_data, t('story.updated'))
 
     @story_bp.route('/api/stories/<story_id>', methods=['PATCH'])
@@ -445,9 +466,20 @@ def create_story_bp(storage, story_generator, flush_data):
             user.decrement_public_stories()
             storage.save_user(user.to_dict())
 
+        story_title = story_data.get('title')
         storage.delete_events_by_story(story_id)
         storage.delete_story(story_id)
         flush_data()
+
+        _al = get_activity_log_service()
+        if _al:
+            _al.log(
+                user_id=g.current_user.user_id,
+                action='delete_story',
+                resource_type='story',
+                resource_id=story_id,
+                metadata={'title': story_title},
+            )
 
         return deleted_response(t('story.deleted'))
 

@@ -65,7 +65,12 @@ async function login(page, user = ADMIN) {
   const token = body.token ?? body.data?.token
   expect(token, 'login API did not return a token').toBeTruthy()
 
-  await page.evaluate((t) => localStorage.setItem('auth_token', t), token)
+  await page.evaluate((t) => {
+    localStorage.setItem('auth_token', t)
+    // Force English locale so text-based selectors match English strings.
+    localStorage.setItem('sc_lang', 'en')
+    document.cookie = 'sc_lang=en; path=/; max-age=31536000; samesite=lax'
+  }, token)
 }
 
 module.exports = { login, ADMIN, TEST_USER, LOGIN_TIMEOUT }
