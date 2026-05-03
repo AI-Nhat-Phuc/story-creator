@@ -63,7 +63,7 @@ module.exports = async function globalSetup(config) {
         const usersRes = await adminCtx.get('/api/admin/users?search=testuser')
         if (usersRes.ok()) {
           const usersData = await usersRes.json()
-          const testUser = (usersData.data || usersData.users || []).find(
+          const testUser = (usersData.data?.users || usersData.users || []).find(
             (u) => u.username === 'testuser'
           )
           if (testUser) {

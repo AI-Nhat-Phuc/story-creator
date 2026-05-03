@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { notFound } from 'next/navigation'
 import { useParams } from '../utils/router-compat'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
@@ -27,6 +28,8 @@ function WorldDetailContainer({ showToast }) {
   const [locations, setLocations] = useState([])
   const [activeTab, setActiveTab] = useState('stories')
   const [loading, setLoading] = useState(true)
+  const [isNotFound, setIsNotFound] = useState(false)
+  const [fatalError, setFatalError] = useState(null)
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', description: '', visibility: '' })
   const [autoLinking, setAutoLinking] = useState(false)
@@ -67,7 +70,10 @@ function WorldDetailContainer({ showToast }) {
       setCollaborators(collabRes.data || [])
       setEditForm({ name: worldRes.data.name, description: worldRes.data.description, visibility: worldRes.data.visibility || 'draft' })
     } catch (error) {
-      showToast(t('pages.worldDetail.loadError'), 'error')
+      const status = error.response?.status
+      if (status === 404) setIsNotFound(true)
+      else if (status >= 500) setFatalError(error)
+      else showToast(t('pages.worldDetail.loadError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -315,8 +321,10 @@ function WorldDetailContainer({ showToast }) {
     }
   }
 
+  if (isNotFound) notFound()
+  if (fatalError) throw fatalError
   if (loading) return <LoadingSpinner />
-  if (!world) return <div>{t('pages.worldDetail.notFound')}</div>
+  if (!world) return null
 
   const canEdit = !!(user && world && user.user_id === world.owner_id)
 

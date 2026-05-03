@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import NovelPage from '../../../../../src/views/NovelPage'
 import { getServerT } from '../../../../../src/i18n/serverI18n'
 
@@ -43,12 +44,19 @@ export async function generateMetadata({ params }) {
 async function fetchInitialNovelData(worldId) {
   const base = getServerApiBase()
   const headers = getBypassHeaders()
+  let metaRes, contentRes
   try {
-    const [metaRes, contentRes] = await Promise.all([
+    ;[metaRes, contentRes] = await Promise.all([
       fetch(`${base}/worlds/${worldId}/novel`, { headers, next: { revalidate: 60 } }),
       fetch(`${base}/worlds/${worldId}/novel/content?line_budget=100`, { headers, next: { revalidate: 60 } }),
     ])
-    if (!metaRes.ok || !contentRes.ok) return null
+  } catch {
+    return { networkError: true }
+  }
+  // Return status codes so the Page component can call notFound() / throw
+  // outside any try-catch, ensuring Next.js intercepts them correctly.
+  if (!metaRes.ok) return { httpStatus: metaRes.status }
+  try {
     const [metaJson, contentJson] = await Promise.all([metaRes.json(), contentRes.json()])
     return {
       novel: metaJson.data ?? null,
@@ -64,6 +72,11 @@ async function fetchInitialNovelData(worldId) {
 
 export default async function Page({ params }) {
   const { worldId } = params
-  const initialData = await fetchInitialNovelData(worldId)
+  const result = await fetchInitialNovelData(worldId)
+
+  if (result?.httpStatus === 404) notFound()
+  if (result?.httpStatus >= 500) throw new Error(`Novel API error: ${result.httpStatus}`)
+
+  const initialData = result?.networkError ? null : result
   return <NovelPage initialData={initialData} />
 }

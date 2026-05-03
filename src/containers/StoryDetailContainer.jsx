@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { notFound } from 'next/navigation'
 import { useParams, useSearchParams, useNavigate } from '../utils/router-compat'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
@@ -25,6 +26,8 @@ function StoryDetailContainer({ showToast }) {
   const [linkedCharacters, setLinkedCharacters] = useState([])
   const [linkedLocations, setLinkedLocations] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isNotFound, setIsNotFound] = useState(false)
+  const [fatalError, setFatalError] = useState(null)
   const [gptAnalyzing, setGptAnalyzing] = useState(false)
   const [analyzedEntities, setAnalyzedEntities] = useState(null)
   const [showAnalyzedModal, setShowAnalyzedModal] = useState(false)
@@ -70,7 +73,10 @@ function StoryDetailContainer({ showToast }) {
         setLinkedLocations([])
       }
     } catch (error) {
-      showToast(t('pages.storyDetail.loadError'), 'error')
+      const status = error.response?.status
+      if (status === 404) setIsNotFound(true)
+      else if (status >= 500) setFatalError(error)
+      else showToast(t('pages.storyDetail.loadError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -231,8 +237,10 @@ function StoryDetailContainer({ showToast }) {
     }
   }
 
+  if (isNotFound) notFound()
+  if (fatalError) throw fatalError
   if (loading) return <LoadingSpinner />
-  if (!story) return <div>{t('pages.storyDetail.notFound')}</div>
+  if (!story) return null
 
   const formattedWorldTime = formatWorldTime(story)
 

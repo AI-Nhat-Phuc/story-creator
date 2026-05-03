@@ -11,7 +11,7 @@ function Toast({ message, type = 'info' }) {
   }
 
   return (
-    <div className="toast toast-end top-16 z-50">
+    <div className="toast toast-end top-16 z-[9999]">
       <div className={`alert ${typeClasses[type]} shadow-lg max-w-[calc(100vw-2rem)] break-words`}>
         <span>{message}</span>
       </div>
