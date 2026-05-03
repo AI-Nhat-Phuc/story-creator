@@ -11,7 +11,7 @@ async function openCreateModal(page) {
   await page.goto('/worlds')
   // Wait for auth to settle and the enabled create button to appear.
   // testuser is non-admin, so the button is clickable (no btn-disabled class).
-  const createBtn = page.locator('button.btn-primary:not(.btn-disabled)', {
+  const createBtn = page.locator('button.btn-primary:not(.btn-disabled):not([type="submit"])', {
     hasText: /tạo thế giới mới/i,
   })
   await expect(createBtn).toBeVisible({ timeout: 15000 })
