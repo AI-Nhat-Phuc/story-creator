@@ -17,7 +17,7 @@ import { UsersIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
  * Right panel : UserDetail (info / permissions / activity tabs)
  */
 function AdminUsersPage({ showToast }) {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
   const [users, setUsers] = useState([])
@@ -31,6 +31,10 @@ function AdminUsersPage({ showToast }) {
   const isModerator = user?.role === 'moderator'
 
   useEffect(() => {
+    // Wait until AuthContext has finished verifying the token before acting.
+    // Without this guard the page redirects to /login on the first render
+    // (before the verify call resolves) even when the user has a valid token.
+    if (authLoading) return
     if (!isAuthenticated) {
       navigate('/login')
       return
@@ -42,7 +46,7 @@ function AdminUsersPage({ showToast }) {
     }
     loadAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user])
+  }, [authLoading, isAuthenticated, user])
 
   const loadAll = useCallback(async () => {
     setLoading(true)
@@ -81,7 +85,7 @@ function AdminUsersPage({ showToast }) {
     }
   }, [selectedUser, loadAll])
 
-  if (loading && users.length === 0) return <LoadingSpinner />
+  if (authLoading || (loading && users.length === 0)) return <LoadingSpinner />
 
   return (
     <div className="flex flex-col h-full">

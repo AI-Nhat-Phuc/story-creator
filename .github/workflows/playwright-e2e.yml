@@ -2,7 +2,7 @@ name: Playwright E2E Tests
 
 # Runs in two modes:
 #
-#   push / pull_request  → waits for the Vercel preview to finish deploying,
+#   pull_request         → waits for the Vercel preview to finish deploying,
 #                          then tests against that URL (same as mode 2).
 #
 #   deployment_status    → fires automatically once Vercel marks the preview
@@ -15,8 +15,6 @@ name: Playwright E2E Tests
 #   → Vercel dashboard → Project → Settings → Deployment Protection
 #     → Enable "Protection Bypass for Automation" → copy the secret
 on:
-  push:
-    branches: [main]
   pull_request:
   deployment_status:
 
@@ -29,9 +27,8 @@ jobs:
   e2e:
     name: Run E2E tests
     # deployment_status: only successful Vercel preview deploys.
-    # push / pull_request: always run (we wait for Vercel inside the job).
+    # pull_request: always run (we wait for Vercel inside the job).
     if: >
-      github.event_name == 'push' ||
       github.event_name == 'pull_request' ||
       (github.event_name == 'deployment_status' &&
        github.event.deployment_status.state == 'success' &&
@@ -58,7 +55,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
-      # ── Wait for Vercel (push / pull_request only) ──────────────────────────
+      # ── Wait for Vercel (pull_request only) ────────────────────────────────
       # For deployment_status the deployment is already successful — skip these.
 
       - name: Wait for Vercel check to finish
@@ -186,22 +183,6 @@ jobs:
           CI: 'true'
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: npx playwright test --config=playwright.config.cjs
-
-      - name: Upload Playwright HTML report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-${{ github.run_id }}
-          path: playwright-report/
-          retention-days: 7
-
-      - name: Upload screenshots and videos on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results-${{ github.run_id }}
-          path: test-results/
-          retention-days: 7
 
       - name: Comment failures on PR
         if: failure()
