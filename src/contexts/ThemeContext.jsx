@@ -42,7 +42,7 @@ function hexToDaisyOklch(hex) {
   return `${l}% ${c} ${h}`
 }
 
-const CSS_VARS = ['--p', '--pc', '--s', '--sc', '--a', '--ac', '--b1', '--b2']
+const CSS_VARS = ['--p', '--pc', '--s', '--sc', '--a', '--ac', '--b1', '--b2', '--n', '--nc']
 
 // Returns DaisyUI oklch for readable text on the given background hex color.
 function contrastOklch(hex) {
@@ -63,6 +63,7 @@ function injectCustomVars(palette) {
   document.documentElement.style.setProperty('--a', hexToDaisyOklch(palette.accent))
   document.documentElement.style.setProperty('--ac', contrastOklch(palette.accent))
   document.documentElement.style.setProperty('--b1', hexToDaisyOklch(palette.base100))
+  document.documentElement.style.setProperty('--n', hexToDaisyOklch(palette.base100))
   document.documentElement.style.setProperty('--b2', hexToDaisyOklch(palette.base200))
 }
 
