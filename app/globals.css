@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide content on first load when custom theme vars are not yet cached.
+   ThemeProvider removes this class after applying the correct vars. */
+html.theme-loading { visibility: hidden; }
+
 /* Smooth color transitions when switching themes */
 *, *::before, *::after {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow;

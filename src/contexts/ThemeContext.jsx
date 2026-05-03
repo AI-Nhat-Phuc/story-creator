@@ -137,8 +137,8 @@ export function ThemeProvider({ children }) {
     if (state.mode === THEME_MODES.CUSTOM && cssVars) {
       saveToStorage(state.mode, state.primaryColor, cssVars, base)
     }
-    // Reveal body (was hidden by inline script for custom theme without stored vars)
-    document.body.style.removeProperty('visibility')
+    // Remove class added by inline script when custom vars weren't cached yet
+    document.documentElement.classList.remove('theme-loading')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -38,9 +38,11 @@ export const viewport = {
   initialScale: 1,
 }
 
-// Inline script runs synchronously before first paint — no React involved.
-// It reads sc_theme from localStorage and applies the custom CSS vars
-// immediately so custom-theme users never see the default light flash.
+// Runs synchronously in <head> before first paint — no React involved.
+// Applies the stored custom theme vars immediately so users never see
+// the default light flash. Modifies document.documentElement only
+// (document.body is null at this point), hence suppressHydrationWarning
+// on <html> (not <body>).
 const themeScript = `(function(){
   try {
     var s = localStorage.getItem('sc_theme');
@@ -55,11 +57,10 @@ const themeScript = `(function(){
         var v = t.cssVars;
         for (var k in v) { html.style.setProperty(k, v[k]); }
       } else {
-        // First-ever custom load: no vars cached yet — hide until JS applies them
-        document.body ? (document.body.style.visibility = 'hidden') : null;
-        document.addEventListener('DOMContentLoaded', function() {
-          document.body && (document.body.style.visibility = 'hidden');
-        });
+        // First-ever custom load: vars not cached yet.
+        // Add a class on <html> that hides content via CSS until
+        // ThemeProvider mounts and removes it.
+        html.classList.add('theme-loading');
       }
     }
   } catch(e) {}
@@ -69,10 +70,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body suppressHydrationWarning>
+      <body>
         <Providers>{children}</Providers>
       </body>
     </html>
