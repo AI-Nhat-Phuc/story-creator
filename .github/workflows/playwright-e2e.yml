@@ -1,13 +1,23 @@
 name: Playwright E2E Tests
 
-# Runs automatically after every successful Vercel deployment.
-# BASE_URL is taken from the deployment_status event — no hardcoded URL.
+# Runs in two modes:
+#
+#   push / pull_request  → waits for the Vercel preview to finish deploying,
+#                          then tests against that URL (same as mode 2).
+#
+#   deployment_status    → fires automatically once Vercel marks the preview
+#                          deployment successful (original behaviour).
+#
+# In both modes the tests hit the real Vercel server — no local servers are started.
 #
 # REQUIRED secret (repo Settings → Secrets and variables → Actions):
 #   VERCEL_AUTOMATION_BYPASS_SECRET
 #   → Vercel dashboard → Project → Settings → Deployment Protection
 #     → Enable "Protection Bypass for Automation" → copy the secret
 on:
+  push:
+    branches: [main]
+  pull_request:
   deployment_status:
 
 permissions:
@@ -18,12 +28,14 @@ permissions:
 jobs:
   e2e:
     name: Run E2E tests
-    # Only run on successful preview deployments — never on Production to avoid
-    # polluting real user data. Vercel sets environment to "Production" for the
-    # main branch and "Preview" for PR / branch deployments.
+    # deployment_status: only successful Vercel preview deploys.
+    # push / pull_request: always run (we wait for Vercel inside the job).
     if: >
-      github.event.deployment_status.state == 'success' &&
-      github.event.deployment.environment != 'Production'
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'deployment_status' &&
+       github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment != 'Production')
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -31,7 +43,7 @@ jobs:
       - name: Checkout the deployed commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.deployment.sha }}
+          ref: ${{ github.event_name == 'deployment_status' && github.event.deployment.sha || github.sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -46,6 +58,68 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      # ── Wait for Vercel (push / pull_request only) ──────────────────────────
+      # For deployment_status the deployment is already successful — skip these.
+
+      - name: Wait for Vercel check to finish
+        if: github.event_name != 'deployment_status'
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-regexp: '^Vercel.*'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+          allowed-conclusions: success,skipped,neutral
+
+      - name: Get Vercel preview URL from GitHub Deployments
+        if: github.event_name != 'deployment_status'
+        id: get-url
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Vercel registers a GitHub Deployment for every preview build.
+            // After the Vercel check succeeds above, a successful deployment
+            // status with an environment_url should already exist.
+            const { data: deployments } = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              per_page: 10,
+            })
+
+            for (const dep of deployments) {
+              // Skip production deployments
+              if (dep.environment.toLowerCase() === 'production') continue
+
+              const { data: statuses } = await github.rest.repos.listDeploymentStatuses({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: dep.id,
+                per_page: 5,
+              })
+              const ok = statuses.find(s => s.state === 'success' && s.environment_url)
+              if (ok) {
+                console.log(`Vercel preview URL: ${ok.environment_url}`)
+                core.setOutput('url', ok.environment_url)
+                return
+              }
+            }
+            core.setFailed(
+              'No successful Vercel preview deployment found for commit ' + context.sha +
+              '. Make sure the Vercel GitHub integration is enabled and creates GitHub Deployments.'
+            )
+
+      # ── Resolve BASE_URL ─────────────────────────────────────────────────────
+
+      - name: Set BASE_URL
+        run: |
+          if [ "${{ github.event_name }}" = "deployment_status" ]; then
+            echo "BASE_URL=${{ github.event.deployment_status.target_url }}" >> "$GITHUB_ENV"
+          else
+            echo "BASE_URL=${{ steps.get-url.outputs.url }}" >> "$GITHUB_ENV"
+          fi
+
+      # ── Vercel readiness check ────────────────────────────────────────────────
       # `deployment_status: success` fires the moment Vercel marks the
       # deployment ready, but the project's "Vercel" check on the commit
       # may still be propagating — and the URL routing / CDN layer is
@@ -54,6 +128,7 @@ jobs:
       # start curling the URL. This eliminates the recurring "wait
       # loop times out" failures whose only fix was re-running the job.
       - name: Wait for Vercel check on this commit to finish
+        if: github.event_name == 'deployment_status'
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.event.deployment.sha }}
@@ -71,10 +146,9 @@ jobs:
       - name: Wait for deployment to be reachable
         id: wait
         env:
-          DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
           BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          echo "Target URL: $DEPLOY_URL"
+          echo "Target URL: $BASE_URL"
           if [ -z "$BYPASS_SECRET" ]; then
             echo "::warning::VERCEL_AUTOMATION_BYPASS_SECRET is empty — requests without the bypass header will be blocked if Deployment Protection is enabled."
           fi
@@ -87,7 +161,7 @@ jobs:
             -H "x-vercel-protection-bypass: ${BYPASS_SECRET}" \
             -L --max-time 180 \
             --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors \
-            "$DEPLOY_URL" || echo "000")
+            "$BASE_URL" || echo "000")
           echo "HTTP $STATUS"
           if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
             echo "Deployment is reachable (HTTP $STATUS)."
@@ -110,7 +184,6 @@ jobs:
       - name: Run Playwright E2E tests
         env:
           CI: 'true'
-          BASE_URL: ${{ github.event.deployment_status.target_url }}
           VERCEL_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: npx playwright test --config=playwright.config.cjs
 
@@ -141,7 +214,7 @@ jobs:
             // type this string.
             const MARKER = '<!-- e2e-failure-comment -->'
             const sha = context.payload.deployment?.sha || context.sha
-            const deployUrl = context.payload.deployment_status?.target_url || ''
+            const deployUrl = context.payload.deployment_status?.target_url || process.env.BASE_URL || ''
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
 
             // Find open PR associated with the deployed commit SHA
@@ -151,6 +224,7 @@ jobs:
               commit_sha: sha,
             })
             const openPR = prs.find(pr => pr.state === 'open')
+              || (context.payload.pull_request ? { number: context.payload.pull_request.number } : null)
             if (!openPR) {
               console.log(`No open PR found for commit ${sha} — skipping comment`)
               return
@@ -173,6 +247,7 @@ jobs:
                 '| `HTTP 401` / `403` in job log | `VERCEL_AUTOMATION_BYPASS_SECRET` is missing or wrong in GitHub Secrets |',
                 '| `HTTP 000` / curl error | Deployment URL unreachable / DNS not propagated yet |',
                 '| Browser install error | Run `npx playwright install` in the workflow before tests |',
+                '| No GitHub Deployment found | Confirm the Vercel GitHub integration creates GitHub Deployments |',
                 '',
                 '**Steps to fix the bypass secret:**',
                 '1. Vercel → Project → Settings → Deployment Protection → copy the _Protection Bypass for Automation_ token',
@@ -187,7 +262,7 @@ jobs:
                 const BAD_STATUSES = new Set(['failed', 'timedOut', 'interrupted'])
                 // Strip ANSI escape codes (colour, dim, bold, etc.) that
                 // Playwright embeds in error messages and call logs.
-                const stripAnsi = s => s.replace(/\[[0-9;]*m/g, '')
+                const stripAnsi = s => s.replace(/\[[0-9;]*m/g, '')
                 const failures = []
 
                 // Walk suite tree, building a readable breadcrumb path per spec.
@@ -291,6 +366,7 @@ jobs:
               commit_sha: sha,
             })
             const openPR = prs.find(pr => pr.state === 'open')
+              || (context.payload.pull_request ? { number: context.payload.pull_request.number } : null)
             if (!openPR) {
               console.log(`No open PR found for commit ${sha} — nothing to clean up`)
               return
