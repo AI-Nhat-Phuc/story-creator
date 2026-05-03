@@ -76,6 +76,10 @@ def token_required(f):
             logger.error(f"Error during token verification: {e}")
             raise AuthenticationError('Token không hợp lệ hoặc đã hết hạn')
 
+        # Reject inactive users (status toggled via /api/admin/users/<id>/status)
+        if not user.metadata.get('active', True):
+            raise PermissionDeniedError('access', 'this account is inactive')
+
         # Store user in Flask g for access in route
         g.current_user = user
 

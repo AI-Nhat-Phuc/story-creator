@@ -141,9 +141,17 @@ export const adminAPI = {
   getUserDetail: (userId) => api.get(`/admin/users/${userId}`),
   changeUserRole: (userId, role) => api.put(`/admin/users/${userId}/role`, { role }),
   banUser: (userId, banned, reason) => api.post(`/admin/users/${userId}/ban`, { banned, reason }),
+  // User status (active / inactive)
+  toggleUserStatus: (userId, active) => api.put(`/admin/users/${userId}/status`, { active }),
+  // Granular permission overrides
+  updateUserPermissions: (userId, permissions) =>
+    api.put(`/admin/users/${userId}/permissions`, { permissions }),
+  // Activity logs
+  getUserActivityLogs: (userId, limit = 50) =>
+    api.get(`/admin/users/${userId}/activity-logs`, { params: { limit } }),
   // System info
   getRoles: () => api.get('/admin/roles'),
-  getAdminStats: () => api.get('/admin/stats')
+  getAdminStats: () => api.get('/admin/stats'),
 }
 
 export default api

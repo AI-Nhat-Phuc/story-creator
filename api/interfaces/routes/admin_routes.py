@@ -11,11 +11,25 @@ from utils.validation import validate_request, validate_query_params
 from utils.i18n import t
 from interfaces.auth_middleware import token_required, admin_required, moderator_required
 from core.permissions import Role, Permission, ROLE_INFO, get_role_permissions, get_role_quota
-from schemas.admin_schemas import ChangeUserRoleSchema, BanUserSchema, ListUsersQuerySchema
+from schemas.admin_schemas import (
+    ChangeUserRoleSchema,
+    BanUserSchema,
+    ListUsersQuerySchema,
+    ToggleUserStatusSchema,
+    UpdatePermissionsSchema,
+    ListActivityLogsQuerySchema,
+)
 
 
-def create_admin_bp(storage, auth_service):
-    """Create admin blueprint."""
+def create_admin_bp(storage, auth_service, activity_log_service=None):
+    """Create admin blueprint.
+
+    Args:
+        storage: Storage instance.
+        auth_service: AuthService instance.
+        activity_log_service: ActivityLogService instance (optional, used for
+            activity log endpoints; routes degrade gracefully when None).
+    """
     admin_bp = Blueprint('admin', __name__)
 
     @admin_bp.route('/api/admin/users', methods=['GET'])
@@ -349,5 +363,145 @@ def create_admin_bp(storage, auth_service):
                 'private_stories': len([s for s in all_stories if s.get('visibility') == 'private'])
             }
         })
+
+    # ── User Status (active / inactive) ─────────────────────────────────────
+
+    @admin_bp.route('/api/admin/users/<user_id>/status', methods=['PUT'])
+    @token_required
+    @admin_required
+    @validate_request(ToggleUserStatusSchema)
+    def toggle_user_status(user_id):
+        """Toggle a user's active/inactive status (admin only).
+        ---
+        tags:
+          - Admin
+        parameters:
+          - in: path
+            name: user_id
+            type: string
+            required: true
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              required: [active]
+              properties:
+                active:
+                  type: boolean
+        responses:
+          200:
+            description: Status updated
+          403:
+            description: Cannot change own status or banned user status
+          404:
+            description: User not found
+        """
+        active = request.validated_data['active']
+
+        user_data = storage.load_user(user_id)
+        if not user_data:
+            raise ResourceNotFoundError('User', user_id)
+
+        if user_id == g.current_user.user_id:
+            raise BusinessRuleError(t('admin.cannot_change_own_status'))
+
+        user_data.setdefault('metadata', {})['active'] = active
+        storage.save_user(user_data)
+
+        status_str = 'active' if active else 'inactive'
+        return success_response(
+            {'user_id': user_id, 'active': active},
+            f"User marked as {status_str}"
+        )
+
+    # ── Custom Permission Overrides ──────────────────────────────────────────
+
+    @admin_bp.route('/api/admin/users/<user_id>/permissions', methods=['PUT'])
+    @token_required
+    @admin_required
+    @validate_request(UpdatePermissionsSchema)
+    def update_user_permissions(user_id):
+        """Set granular permission overrides for a user (admin only).
+
+        The ``permissions`` dict contains ``{permission_name: bool}`` pairs.
+        ``true`` grants the permission on top of the role defaults; ``false``
+        revokes it. An empty dict clears all overrides.
+        ---
+        tags:
+          - Admin
+        parameters:
+          - in: path
+            name: user_id
+            type: string
+            required: true
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              properties:
+                permissions:
+                  type: object
+                  additionalProperties:
+                    type: boolean
+        responses:
+          200:
+            description: Permissions updated
+          404:
+            description: User not found
+        """
+        permissions = request.validated_data.get('permissions', {})
+
+        user_data = storage.load_user(user_id)
+        if not user_data:
+            raise ResourceNotFoundError('User', user_id)
+
+        user_data.setdefault('metadata', {})['custom_permissions'] = permissions
+        storage.save_user(user_data)
+
+        return success_response(
+            {'user_id': user_id, 'custom_permissions': permissions},
+            'Permissions updated'
+        )
+
+    # ── Activity Logs ────────────────────────────────────────────────────────
+
+    @admin_bp.route('/api/admin/users/<user_id>/activity-logs', methods=['GET'])
+    @token_required
+    @moderator_required
+    @validate_query_params(ListActivityLogsQuerySchema)
+    def get_user_activity_logs(user_id):
+        """Get activity logs for a specific user (moderator+ only).
+        ---
+        tags:
+          - Admin
+        parameters:
+          - in: path
+            name: user_id
+            type: string
+            required: true
+          - in: query
+            name: limit
+            type: integer
+            default: 50
+        responses:
+          200:
+            description: Activity logs for the user
+          404:
+            description: User not found
+        """
+        user_data = storage.load_user(user_id)
+        if not user_data:
+            raise ResourceNotFoundError('User', user_id)
+
+        limit = request.validated_data.get('limit', 50)
+
+        if activity_log_service is None:
+            logs = []
+        else:
+            logs = activity_log_service.get_user_logs(user_id, limit=limit)
+
+        return success_response({'logs': logs, 'total': len(logs)})
 
     return admin_bp
