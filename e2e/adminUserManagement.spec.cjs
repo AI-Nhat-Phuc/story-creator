@@ -36,15 +36,20 @@ test.describe('Admin User Management', () => {
   })
 
   test('shows at least the admin user in the list', async ({ page }) => {
-    // The admin account is always seeded
-    await expect(page.getByText('admin')).toBeVisible({ timeout: API_TIMEOUT })
+    // The admin account is always seeded. Scope to the list panel so the selector
+    // doesn't conflict with the navbar "Admin" link or role-filter options.
+    await expect(
+      page.getByTestId('user-list-panel').getByText('admin').first()
+    ).toBeVisible({ timeout: API_TIMEOUT })
   })
 
   test('search filters the user list', async ({ page }) => {
     const searchInput = page.getByTestId('user-search')
     await searchInput.fill('admin')
     await searchInput.press('Enter')
-    await expect(page.getByText('admin')).toBeVisible({ timeout: API_TIMEOUT })
+    await expect(
+      page.getByTestId('user-list-panel').getByText('admin').first()
+    ).toBeVisible({ timeout: API_TIMEOUT })
   })
 
   // ── Selecting a user ──────────────────────────────────────────────────────

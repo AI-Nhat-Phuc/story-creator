@@ -23,6 +23,13 @@ permissions:
   pull-requests: write
   issues: write
 
+# Both pull_request and deployment_status fire for the same commit.
+# Group by SHA so the second run (deployment_status, which already has the
+# Vercel URL) cancels the still-waiting pull_request run automatically.
+concurrency:
+  group: e2e-${{ github.event.pull_request.head.sha || github.event.deployment.sha }}
+  cancel-in-progress: true
+
 jobs:
   e2e:
     name: Run E2E tests
