@@ -198,6 +198,7 @@ export function WritingModalProvider({ children, showToast }) {
       modalState,
       draft,
       editorRef,
+      storyIdRef,
       openModal,
       minimizeModal,
       closeModal,

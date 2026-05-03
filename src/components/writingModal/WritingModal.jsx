@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { useWritingModal } from '../../contexts/WritingModalContext'
 import NovelEditor from '../storyEditor/NovelEditor'
@@ -15,6 +15,17 @@ import {
   ExclamationCircleIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline'
+
+// Pages where the modal should be hidden (user is already in an editor)
+const EDITOR_PATH_PATTERNS = [
+  /^\/stories\/[^/]+\/edit(\/|$)/,
+  /^\/stories\/new(\/|$)/,
+  /^\/worlds\/[^/]+\/novel(\/|$)/,
+]
+
+function isEditorPage(pathname) {
+  return EDITOR_PATH_PATTERNS.some((re) => re.test(pathname))
+}
 
 const STATUS_CONFIG = {
   idle: { label: 'writingModal.statusIdle', cls: 'text-base-content/40' },
@@ -52,10 +63,12 @@ function MinimizedButton({ onClick }) {
 function WritingModal() {
   const { t } = useTranslation()
   const router = useRouter()
+  const pathname = usePathname()
   const {
     modalState,
     draft,
     editorRef,
+    storyIdRef,
     openModal,
     minimizeModal,
     closeModal,
@@ -66,6 +79,14 @@ function WritingModal() {
   } = useWritingModal()
 
   const [activeFormats, setActiveFormats] = useState({})
+  const onEditor = isEditorPage(pathname)
+
+  // Auto-minimize when user navigates into an editor page
+  useEffect(() => {
+    if (onEditor && modalState === 'open') {
+      minimizeModal()
+    }
+  }, [onEditor, modalState, minimizeModal])
 
   const getActiveFormats = useCallback((ed) => ({
     bold: ed.isActive('bold'),
@@ -92,17 +113,31 @@ function WritingModal() {
     setActiveFormats(getActiveFormats(editor))
   }, [getActiveFormats])
 
-  const handleMaximize = useCallback(() => {
-    if (draft.storyId) {
-      handleSave()
-      router.push(`/stories/${draft.storyId}/edit`)
+  const handleMaximize = useCallback(async () => {
+    // Use ref to avoid stale closure — storyIdRef always has the current value
+    const sid = storyIdRef.current
+    if (!sid) {
+      // No saved story yet — save first, then navigate
+      await handleSave()
+      const newSid = storyIdRef.current
+      if (newSid) {
+        minimizeModal()
+        router.push(`/stories/${newSid}/edit`)
+      }
+      return
     }
+    handleSave()
     minimizeModal()
-  }, [draft.storyId, handleSave, router, minimizeModal])
+    router.push(`/stories/${sid}/edit`)
+  }, [storyIdRef, handleSave, minimizeModal, router])
 
   const canPublish = draft.saveStatus === 'saved' && !draft.isPublished && !!draft.storyId
 
+  // Nothing to show when closed, or when on an editor page
   if (modalState === 'closed') return null
+
+  // On editor pages: hide everything (user is already editing)
+  if (onEditor) return null
 
   if (modalState === 'minimized') {
     return <MinimizedButton onClick={openModal} />
