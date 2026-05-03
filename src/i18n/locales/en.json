@@ -438,5 +438,19 @@
       "tip2": "If the problem persists, try refreshing the page",
       "devDetails": "Error details (development mode)"
     }
+  },
+  "writingModal": {
+    "titlePlaceholder": "Story title…",
+    "minimize": "Minimize",
+    "maximize": "Open full editor",
+    "close": "Close",
+    "openDraft": "Open draft",
+    "continueDraft": "Continue writing",
+    "save": "Save",
+    "publish": "Publish",
+    "statusIdle": "Unsaved",
+    "statusSaving": "Saving…",
+    "statusSaved": "Saved",
+    "statusError": "Error"
   }
 }

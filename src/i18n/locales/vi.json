@@ -438,5 +438,19 @@
       "tip2": "Nếu vẫn còn lỗi, hãy thử tải lại trang",
       "devDetails": "Chi tiết lỗi (chế độ phát triển)"
     }
+  },
+  "writingModal": {
+    "titlePlaceholder": "Tiêu đề câu chuyện…",
+    "minimize": "Thu nhỏ",
+    "maximize": "Mở trình soạn thảo đầy đủ",
+    "close": "Đóng",
+    "openDraft": "Mở bản nháp",
+    "continueDraft": "Tiếp tục viết",
+    "save": "Lưu",
+    "publish": "Xuất bản",
+    "statusIdle": "Chưa lưu",
+    "statusSaving": "Đang lưu…",
+    "statusSaved": "Đã lưu",
+    "statusError": "Lỗi"
   }
 }
