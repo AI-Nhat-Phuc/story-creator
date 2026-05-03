@@ -556,6 +556,11 @@ class MongoStorage:
         self._connect()
         return self._clean_docs(list(self.users.find()))
 
+    """TODO: implement this one to define function that return list of invitations for a user"""
+    def list_invitations_for_user(self, user_id: str) ->  List[Dict[str, Any]]:
+        self._connect()
+        return self._clean_doc(list())
+
     def delete_user(self, user_id: str) -> bool:
         self._connect()
         result = self.users.delete_one({'user_id': user_id})
