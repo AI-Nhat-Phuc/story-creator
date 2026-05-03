@@ -12,7 +12,7 @@ async function openCreateModal(page) {
   // Wait for auth to settle and the enabled create button to appear.
   // testuser is non-admin, so the button is clickable (no btn-disabled class).
   const createBtn = page.locator('button.btn-primary:not(.btn-disabled):not([type="submit"])', {
-    hasText: /tạo thế giới mới/i,
+    hasText: /create new world/i,
   })
   await expect(createBtn).toBeVisible({ timeout: 15000 })
   await createBtn.click()
@@ -25,8 +25,8 @@ const dialogSel = 'dialog.modal[open]'
 const nameInput = (page) => page.locator(`${dialogSel} input[name="name"]`)
 const descTextarea = (page) => page.locator(`${dialogSel} textarea[name="description"]`)
 const worldTypeSelect = (page) => page.locator(`${dialogSel} select[name="world_type"]`)
-const createBtn = (page) => page.locator(`${dialogSel} button`).filter({ hasText: /phân tích/i })
-const cancelBtn = (page) => page.locator(`${dialogSel} button`).filter({ hasText: /hủy/i })
+const createBtn = (page) => page.locator(`${dialogSel} button`).filter({ hasText: /create new world/i })
+const cancelBtn = (page) => page.locator(`${dialogSel} button`).filter({ hasText: /cancel/i })
 
 // ── Suite ──────────────────────────────────────────────────────────────────
 
@@ -41,7 +41,7 @@ test.describe('Create World Modal', () => {
     await openCreateModal(page)
     await expect(page.locator(dialogSel)).toBeVisible()
     // Modal heading is inside the open dialog
-    await expect(page.locator(`${dialogSel} h3`)).toContainText(/tạo thế giới mới/i)
+    await expect(page.locator(`${dialogSel} h3`)).toContainText(/create new world/i)
   })
 
   test('cancel button closes the modal', async ({ page }) => {
